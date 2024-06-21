@@ -11,6 +11,26 @@ using System.Linq;
 
 public static class StringExtensions
 {
+    public static string AsTextAfter(this string source, string split)
+    {
+        if (source.Contains(split))
+        {
+            var parts = source.Split(split);
+            if (parts.Length > 1)
+                return parts[1];
+        }
+        return "";
+    }
+    public static string AsTextBefore(this string source, string split)
+    {
+        if (source.Contains(split))
+        {
+            var parts = source.Split(split);
+            if (parts.Length > 1)
+                return parts[0];
+        }
+        return "";
+    }
     public static string GetDirectoryPath(this string path)
     {
         if (string.IsNullOrEmpty(path))
@@ -35,6 +55,7 @@ public static class StringExtensions
         return string.Empty;
     }
     public static string SuccessOrFail(this bool flag) => flag ? "SUCCESS" : "FAIL";
+    public static string[] AsArray(this string text) => new string[] { text };
     /// <summary>SUS I don't think this works</summary>
     public static string AsColor(this string text, string color)
     {

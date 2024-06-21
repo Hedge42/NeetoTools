@@ -1,10 +1,19 @@
 {
     "name": "Neeto.Editor",
-    "rootNamespace": "Neeto",
+    "rootNamespace": "",
     "references": [
-        "GUID:593a5b492d29ac6448b1ebf7f035ef33"
+        "GUID:5e352cd6a96fd314c8a10f1340a365f8",
+        "GUID:9e24947de15b9834991c9d8411ea37cf",
+        "GUID:69448af7b92c7f342b298e06a37122aa",
+        "GUID:0046de5c905aeff408e019011d80d21e",
+        "GUID:0a0471484b079be408cb3a0d7fe94736",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:b73ef07971851e14fa74ae50b76f8225",
+        "GUID:48d58eaab94e1de429344393b7653b1f"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
