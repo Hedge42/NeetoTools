@@ -1,0 +1,22 @@
+{
+    "name": "com.neeto.tools",
+    "displayName": "NeetoTools",
+    "author": {
+        "name": "Matchwork LLC"
+    },
+    "version": "0.0.1",
+    "unity": "2022.3.11f1",
+    "description": "Programming Stuff",
+    "keywords": [],
+    "license": "MIT",
+    "category": "Scripting",
+    "dependencies": {
+        "com.unity.addressables": "1.21.21",
+        "com.unity.shadergraph": "latest",
+        "com.unity.visualeffectgraph": "latest",
+        "com.fastscriptreload": "https://github.com/yourcompany/FastScriptReload.git#1.6.1?path=/Assets/Plugins",
+        "com.unitydropdown": "https://github.com/yourcompany/UnityDropdown.git#1.2.0?path=/Assets/Plugins",
+        "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git#2.5.4?path=/Assets/Plugins",
+        "unity-toolbar-extender": "https://github.com/marijnz/unity-toolbar-extender.git#1.4.2?path=/Assets/Plugins"
+    }
+}

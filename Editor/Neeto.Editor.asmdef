@@ -1,0 +1,16 @@
+{
+    "name": "Neeto.Editor",
+    "rootNamespace": "Neeto",
+    "references": [
+        "GUID:593a5b492d29ac6448b1ebf7f035ef33"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
