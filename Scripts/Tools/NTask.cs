@@ -39,6 +39,11 @@ public struct NTask
         cts = cts.Refresh();
     }
 
+    public void Connect(MonoBehaviour mb)
+    {
+        var token = mb.GetCancellationTokenOnDestroy();
+
+    }
 
 
     public NTask Switch(params UniTask[] tasks)
