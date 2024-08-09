@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace mtk
+namespace Neeto
 {
     [CustomPropertyDrawer(typeof(DropdownAttribute), true)]
     public class DropdownAttributeDrawer : PropertyDrawer

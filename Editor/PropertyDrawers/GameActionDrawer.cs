@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Reflection;
 using UnityDropdown.Editor;
 using System.Collections.Generic;
-using Matchwork;
+using Neeto;
 using System.Text;
 using Object = UnityEngine.Object;
 
@@ -18,17 +18,17 @@ public class GameActionDrawer : PropertyDrawer
     {
         EditorGUI.BeginProperty(position, label, property);
 
-        MEdit.IndentBoxGUI(position);
+        NGUI.IndentBoxGUI(position);
 
-        var dropdownRect = InvokeButtonGUI(property, position.With(height: MEdit.lineHeight));
+        var dropdownRect = InvokeButtonGUI(property, position.With(height: NGUI.lineHeight));
 
         if (HandleDropdownGUI(dropdownRect, property, label))
         {
-            position.y += MEdit.fullLineHeight;
-            HandleArgumentsGUI(position.With(height: MEdit.lineHeight), property);
+            position.y += NGUI.fullLineHeight;
+            HandleArgumentsGUI(position.With(height: NGUI.lineHeight), property);
         }
 
-        MEdit.EndShadow();
+        NGUI.EndShadow();
 
         EditorGUI.EndProperty();
     }
@@ -36,7 +36,7 @@ public class GameActionDrawer : PropertyDrawer
     object target;
     private Rect InvokeButtonGUI(SerializedProperty property, Rect position)
     {
-        target ??= MReflect.FindReflectionTarget(property, fieldInfo);
+        target ??= NReflect.FindReflectionTarget(property, fieldInfo);
 
         if (target is GameAction action)
         {
@@ -59,7 +59,7 @@ public class GameActionDrawer : PropertyDrawer
     {
         var args = property.FindPropertyRelative(nameof(GameMethod.arguments));
         var count = args.arraySize;
-        var height = MEdit.fullLineHeight;
+        var height = NGUI.fullLineHeight;
 
         if (property.isExpanded && count > 0)
         {
@@ -78,13 +78,13 @@ public class GameActionDrawer : PropertyDrawer
     public static MethodInfo GetMethod(SerializedProperty property)
     {
         var sig = property.FindPropertyRelative(nameof(GameAction.signature));
-        var result = MReflect.ToMethod(sig.stringValue, out var method);
+        var result = NReflect.ToMethod(sig.stringValue, out var method);
 
         if (!result)
         {
             if (sig != null && !sig.stringValue.IsEmpty())
             {
-                MReflect.ToMethod(sig.stringValue);
+                NReflect.ToMethod(sig.stringValue);
                 Debug.LogError($"Invalid method. Does this code still exist? {sig.stringValue}", property.serializedObject.targetObject);
             }
         }
@@ -101,13 +101,13 @@ public class GameActionDrawer : PropertyDrawer
         var isExpandable = method != null && Arguments(property).arraySize > 0;
 
         if (isExpandable)
-            property.isExpanded = EditorGUI.Foldout(lbRect.With(height: MEdit.lineHeight), property.isExpanded, label, true);
+            property.isExpanded = EditorGUI.Foldout(lbRect.With(height: NGUI.lineHeight), property.isExpanded, label, true);
         else
             EditorGUI.PrefixLabel(lbRect, label);
 
-        if (EditorGUI.DropdownButton(ddRect.With(height: MEdit.lineHeight), content, FocusType.Passive))
+        if (EditorGUI.DropdownButton(ddRect.With(height: NGUI.lineHeight), content, FocusType.Passive))
         {
-            MDropdown.MethodDropdown(fieldInfo, GetMethod(property), _ => Switch(_, property, fieldInfo));
+            DropdownExtensions.MethodDropdown(fieldInfo, GetMethod(property), _ => Switch(_, property, fieldInfo));
         }
         return isExpandable && property.isExpanded;
     }
@@ -157,7 +157,7 @@ public class GameActionDrawer : PropertyDrawer
         // TODO try-catch?
         if (_method != null)
         {
-            sig.stringValue = MReflect.ToSignature(_method);// GetSignature(_);
+            sig.stringValue = NReflect.ToSignature(_method);// GetSignature(_);
 
 
             var methodTypes = GameAction.GetMethodArgumentTypes(_method);
@@ -175,7 +175,7 @@ public class GameActionDrawer : PropertyDrawer
                     var referenceProperty = arg.FindPropertyRelative(nameof(Argument.argReference));
                     var typeProperty = arg.FindPropertyRelative(nameof(Argument.referenceType));
 
-                    var assignableTypes = MReflect.GetAssignableReferenceTypes(methodTypes[a]);
+                    var assignableTypes = NReflect.GetAssignableReferenceTypes(methodTypes[a]);
                     if (assignableTypes.Count() == 1)
                         referenceProperty.managedReferenceValue = Activator.CreateInstance(assignableTypes.ElementAt(0));
                     else
@@ -246,7 +246,7 @@ public class GameActionDrawer : PropertyDrawer
 
         // Append type name
         var tt = methodInfo.DeclaringType;
-        option.Append($"{methodInfo.ModuleName()}/{MReflect.GetDeclaringString(methodInfo.DeclaringType)}.");
+        option.Append($"{methodInfo.ModuleName()}/{NReflect.GetDeclaringString(methodInfo.DeclaringType)}.");
         option.Append(methodInfo.Name).Append(' ');
         if (methodInfo.IsStatic)
             option.Append('*');
@@ -301,9 +301,9 @@ public class GamePropDrawer : PropertyDrawer
     {
         EditorGUI.BeginProperty(position, label, property);
 
-        MEdit.IndentBoxGUI(position);
+        NGUI.IndentBoxGUI(position);
 
-        var dropdownRect = position.With(height: MEdit.lineHeight).WithRightButton(out var buttonPosition);
+        var dropdownRect = position.With(height: NGUI.lineHeight).WithRightButton(out var buttonPosition);
         var info = GetProperty(property);
 
         
@@ -312,21 +312,21 @@ public class GamePropDrawer : PropertyDrawer
         if (GUI.Button(buttonPosition, "?"))
         {
 
-            var target = MReflect.FindReflectionTarget(property, fieldInfo) as GamePropBase;
+            var target = NReflect.FindReflectionTarget(property, fieldInfo) as GamePropBase;
             Debug.Log((target.propertyInfo as PropertyInfo).GetValue(target.target));
         }
         EditorGUI.EndDisabledGroup();
 
         if (HandleDropdownGUI(dropdownRect, property, label))
         {
-            position.y += MEdit.fullLineHeight;
+            position.y += NGUI.fullLineHeight;
 
             HandleTargetGUI(position, property);
             //HandleArgumentsGUI(position.With(h: MEdit.lineHeight), property);
         }
 
 
-        MEdit.EndShadow();
+        NGUI.EndShadow();
 
         EditorGUI.EndProperty();
     }
@@ -334,7 +334,7 @@ public class GamePropDrawer : PropertyDrawer
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
         var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.referenceTarget));
-        var height = MEdit.fullLineHeight;
+        var height = NGUI.fullLineHeight;
 
         if (property.isExpanded)
         {
@@ -347,13 +347,13 @@ public class GamePropDrawer : PropertyDrawer
     public static PropertyInfo GetProperty(SerializedProperty property)
     {
         var sig = property.FindPropertyRelative(nameof(GameAction.signature));
-        var result = MReflect.ToProperty(sig.stringValue, out var Property);
+        var result = NReflect.ToProperty(sig.stringValue, out var Property);
 
         if (!result)
         {
             if (sig != null && !sig.stringValue.IsEmpty())
             {
-                MReflect.ToProperty(sig.stringValue);
+                NReflect.ToProperty(sig.stringValue);
                 Debug.LogError($"Invalid Property. Does this code still exist? {sig.stringValue}", property.serializedObject.targetObject);
             }
         }
@@ -363,20 +363,20 @@ public class GamePropDrawer : PropertyDrawer
     public bool HandleDropdownGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         var info = GetProperty(property);
-        var content = new GUIContent(MDropdown.GetDisplayPath(info));
+        var content = new GUIContent(DropdownExtensions.GetDisplayPath(info));
 
         position.ToLabelAndField(out var lbRect, out var ddRect);
 
         var isExpandable = info != null && !info.GetMethod.IsStatic;// && Arguments(property).arraySize > 0;
 
         if (isExpandable)
-            property.isExpanded = EditorGUI.Foldout(lbRect.With(height: MEdit.lineHeight), property.isExpanded, label, true);
+            property.isExpanded = EditorGUI.Foldout(lbRect.With(height: NGUI.lineHeight), property.isExpanded, label, true);
         else
             EditorGUI.PrefixLabel(lbRect, label);
 
-        if (EditorGUI.DropdownButton(ddRect.With(height: MEdit.lineHeight), content, FocusType.Passive))
+        if (EditorGUI.DropdownButton(ddRect.With(height: NGUI.lineHeight), content, FocusType.Passive))
         {
-            MDropdown.PropertyDropdown(fieldInfo, GetProperty(property), _ => Switch(_, property, fieldInfo));
+            DropdownExtensions.PropertyDropdown(fieldInfo, GetProperty(property), _ => Switch(_, property, fieldInfo));
         }
         return isExpandable && property.isExpanded;
     }
@@ -389,7 +389,7 @@ public class GamePropDrawer : PropertyDrawer
         if (typeof(Object).IsAssignableFrom(info.DeclaringType))
         {
             var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.objectTarget));
-            targetProperty.objectReferenceValue = EditorGUI.ObjectField(position.With(height: MEdit.lineHeight), "target", targetProperty.objectReferenceValue, info.DeclaringType, true);
+            targetProperty.objectReferenceValue = EditorGUI.ObjectField(position.With(height: NGUI.lineHeight), "target", targetProperty.objectReferenceValue, info.DeclaringType, true);
         }
         else
         {
@@ -421,7 +421,7 @@ public class GamePropDrawer : PropertyDrawer
         // TODO try-catch?
         if (info != null)
         {
-            sig.stringValue = MReflect.ToSignature(info);// GetSignature(_);
+            sig.stringValue = NReflect.ToSignature(info);// GetSignature(_);
 
             if (!info.GetMethod.IsStatic)
             {

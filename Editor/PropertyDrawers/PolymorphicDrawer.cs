@@ -12,7 +12,7 @@ using UnityEditor;
 #endif
 
 
-namespace Matchwork
+namespace Neeto
 {
 #if UNITY_EDITOR
     [CustomPropertyDrawer(typeof(PolymorphicAttribute))]
@@ -68,25 +68,25 @@ namespace Matchwork
 
             //MEdit.BeginShadow(position.WithHeight(EditorGUI.GetPropertyHeight(property)));
             if (shadow)
-                MEdit.IndentBoxGUI(position);
+                NGUI.IndentBoxGUI(position);
 
             var linePosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
             //GUI.Box(linePosition, GUIContent.none); // draw below the label
-            if (EditorGUI.DropdownButton(position: position.Add(xMin: EditorGUIUtility.labelWidth).With(height: MEdit.lineHeight),
+            if (EditorGUI.DropdownButton(position: position.Add(xMin: EditorGUIUtility.labelWidth).With(height: NGUI.lineHeight),
                                          content: new GUIContent(property.managedReferenceValue.TypeNameOrNull()), FocusType.Passive))
                 ActivatorMenu(property, returnType).ShowAsContext();
 
-            CopyBuffer.ContextMenu(property, linePosition);
+            ManagedReferenceCopyPaste.ContextMenu(property, linePosition);
             EditorGUI.PropertyField(position, property, label, true);
             if (shadow)
-                MEdit.EndShadow();
+                NGUI.EndShadow();
             EditorGUI.EndProperty();
         }
         public static DropdownMenu<Type> ActivatorMenu(SerializedProperty property, Type valueType)
         {
             var serializedObject = property.serializedObject;
             var propertyPath = property.propertyPath;
-            var types = MReflect.GetAssignableReferenceTypes(valueType);
+            var types = NReflect.GetAssignableReferenceTypes(valueType);
 
             //Debug.Log($"Showing ({types.Count()}) potential classes for ({valueType.NameOrNull()})");
 
