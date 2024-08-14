@@ -11,7 +11,7 @@ using UnityEngine.ResourceManagement.ResourceProviders;
 
 namespace Neeto
 {
-    [CreateAssetMenu(menuName = MenuPath.Neeto + nameof(ScriptGenerator), order = Priority.Mid)]
+    [CreateAssetMenu(menuName = MenuPath.Neeto + nameof(ScriptGenerator), order = MenuOrder.Mid)]
     public class ScriptGenerator : ScriptableObject
     {
         #region editor
@@ -72,6 +72,18 @@ namespace Neeto
         //    Editor.CreateCachedEditor(this, null, ref editor);
         //}
 
+        public static bool TryGetFirstDefinitionName(string scriptContent, out string output)
+        {
+            output = string.Empty; // default
+            var match = Regex.Match(scriptContent, @"\b(class|struct|enum)\s+(\w+)");
+
+            if (match.Success)
+            {
+                output = match.Groups[2].Value;
+            }
+
+            return match.Success;
+        }
         public static void OverwriteRegion(TextAsset script, string region, string content)
         {
             string startRegion = $"#region {region}";

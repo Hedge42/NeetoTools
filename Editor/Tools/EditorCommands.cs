@@ -12,7 +12,7 @@ using UnityEngine.AI;
 public static partial class EditorCommands
 {
 
-    [MenuItem(MenuPath.Open + "Build Settings", priority = Neeto.Priority.High)]
+    [MenuItem(MenuPath.Open + "Build Settings", priority = Neeto.MenuOrder.High)]
     static void OpenBuildSettings()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
@@ -30,7 +30,7 @@ public static partial class EditorCommands
         EditorWindow.GetWindow(Type.GetType("UnityEditor.OcclusionCullingWindow,UnityEditor"));
     }
 
-    [MenuItem(MenuPath.Open + "Player Settings", priority = Neeto.Priority.High)]
+    [MenuItem(MenuPath.Open + "Player Settings", priority = Neeto.MenuOrder.High)]
     static void OpenPlayerSettings()
     {
         SettingsService.OpenProjectSettings("Project/Player");
@@ -42,19 +42,19 @@ public static partial class EditorCommands
         EditorWindow.GetWindow(Type.GetType("UnityEditor.ProfilerWindow,UnityEditor"));
     }
 
-    [MenuItem(MenuPath.Open + "Addressable Groups", priority = Neeto.Priority.High)]
+    [MenuItem(MenuPath.Open + "Addressable Groups", priority = Neeto.MenuOrder.High)]
     static void OpenAddressableGroups()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.AddressableAssets.GUI.AddressableAssetsWindow,Unity.Addressables.Editor"));
     }
 
-    [MenuItem(MenuPath.Open + "Lighting Settings", priority = Neeto.Priority.High)]
+    [MenuItem(MenuPath.Open + "Lighting Settings", priority = Neeto.MenuOrder.High)]
     static void OpenLightingSettings()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.LightingWindow,UnityEditor"));
     }
 
-    [MenuItem(MenuPath.Open + "Graphics Settings", priority = Neeto.Priority.High)]
+    [MenuItem(MenuPath.Open + "Graphics Settings", priority = Neeto.MenuOrder.High)]
     static void OpenGraphicsSettings()
     {
         SettingsService.OpenProjectSettings("Project/Graphics");
@@ -72,23 +72,23 @@ public static partial class EditorCommands
         EditorWindow.GetWindow(Type.GetType("UnityEditor.PackageManager.UI.PackageManagerWindow,UnityEditor"));
     }
 
-    [MenuItem(MenuPath.Open + "Physics Settings", priority = Neeto.Priority.High)]
+    [MenuItem(MenuPath.Open + "Physics Settings", priority = Neeto.MenuOrder.High)]
     public static void OpenPhysicsSettings()
     {
         SettingsService.OpenProjectSettings("Project/Physics");
     }
-    [MenuItem(MenuPath.Open + "Neeto Settings", priority = Neeto.Priority.High)]
+    [MenuItem(MenuPath.Open + "Neeto Settings", priority = Neeto.MenuOrder.High)]
     public static void OpenNeetoSettings()
     {
         SettingsService.OpenProjectSettings("Project/Neeto");
     }
 
-    [MenuItem(MenuPath.Open + "Persistent Data Directory", priority = Neeto.Priority.Max)]
+    [MenuItem(MenuPath.Open + "Persistent Data Directory", priority = Neeto.MenuOrder.Max)]
     public static void OpenPersistentDataDirectory()
     {
         EditorUtility.OpenWithDefaultApp(Application.persistentDataPath);
     }
-    [MenuItem(MenuPath.Open + "Project Directory", priority = Neeto.Priority.Max)]
+    [MenuItem(MenuPath.Open + "Project Directory", priority = Neeto.MenuOrder.Max)]
     public static void OpenProjectDirectory()
     {
         EditorUtility.OpenWithDefaultApp(SystemPath.Project);

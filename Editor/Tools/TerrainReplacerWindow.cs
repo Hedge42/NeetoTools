@@ -13,7 +13,7 @@ namespace Neeto
 #if UNITY_EDITOR
     public class TerrainReplacerWindow : EditorWindow
     {
-        [MenuItem(MenuPath.Open + nameof(TerrainReplacerWindow), priority = Priority.Min)]
+        [MenuItem(MenuPath.Open + nameof(TerrainReplacerWindow), priority = MenuOrder.Min)]
         public static TerrainReplacerWindow Open()
         {
             var window = GetWindow<TerrainReplacerWindow>(false, "Terrain Replacer", true);

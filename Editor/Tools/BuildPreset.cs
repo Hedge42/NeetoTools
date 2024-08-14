@@ -13,7 +13,7 @@ using UnityEditor;
 
 namespace Neeto
 {
-    [CreateAssetMenu(menuName = MenuPath.Neeto + nameof(BuildPreset), order = Priority.Low)]
+    [CreateAssetMenu(menuName = MenuPath.Neeto + nameof(BuildPreset), order = MenuOrder.Low)]
     public class BuildPreset : ScriptableObject
     {
         #region Editor
@@ -62,7 +62,7 @@ namespace Neeto
         public Flags defineFlags;
 
 
-        [RichTooltip("Should these be the ONLY defines?")]
+        [Note("Should these be the ONLY defines?")]
         public bool explicitDefines;
 
         [Tooltip("Are these defines subject to ONLY the build?")]
@@ -288,7 +288,7 @@ namespace Neeto
 
             Build(new BuildPlayerOptions()
             {
-                scenes = SceneRef.buildScenePaths.ToArray(),
+                scenes = SceneX.buildScenePaths.ToArray(),
                 locationPathName = path,
                 target = EditorUserBuildSettings.activeBuildTarget,
                 options = options
@@ -301,7 +301,7 @@ namespace Neeto
 
             Build(new BuildPlayerOptions()
             {
-                scenes = SceneRef.buildScenePaths.ToArray(),
+                scenes = SceneX.buildScenePaths.ToArray(),
                 locationPathName = path,
                 target = EditorUserBuildSettings.activeBuildTarget,
                 options = options

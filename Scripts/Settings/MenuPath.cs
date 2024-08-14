@@ -12,7 +12,8 @@ public partial struct MenuPath
     public MenuPath(string content) => this.content = content;
 
 
-    public const string Neeto = "Neeto (ง'̀-'́)ง/";
+    public const string Neeto = "(ง'̀-'́)ง/";
+    public const string Main = "(つ ͡ꈍ ͜ʖ̫ ͡ꈍ )";
     public const string Events = Neeto + nameof(Events) + "/";
     public const string Run = Neeto + "Run/";
     public const string Open = Neeto + "Open/";
@@ -22,6 +23,7 @@ public partial struct MenuPath
     public const string Dialogue = Neeto + "Dialogue/";
     public const string Var = Neeto + "Var";
     public const string Assets = "Assets/" + Neeto;
+    public const string Create = "Assets/Create/" + Neeto;
     public const string GameObject = "GameObject/" + Neeto;
 }
 
