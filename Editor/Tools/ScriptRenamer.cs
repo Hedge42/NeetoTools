@@ -4,9 +4,13 @@ using System.IO;
 
 public class ScriptRenamer : EditorWindow
 {
-    string findText = "";
-    string replaceText = "";
-    string[] selectedScriptPaths;
+    public string findText = "";
+    public string replaceText = "";
+
+    [Disabled]
+    public string[] selectedScriptPaths;
+
+    Editor editor;
 
     [MenuItem("Tools/Script Renamer")]
     public static void ShowWindow()
@@ -16,9 +20,11 @@ public class ScriptRenamer : EditorWindow
 
     void OnGUI()
     {
+        Editor.CreateCachedEditor(this, null, ref editor);
+
         GUILayout.Label("Find and Replace", EditorStyles.boldLabel);
-        findText = EditorGUILayout.TextField("Find", findText);
-        replaceText = EditorGUILayout.TextField("Replace", replaceText);
+
+        editor.OnInspectorGUI();
 
         if (GUILayout.Button("Select Scripts"))
         {

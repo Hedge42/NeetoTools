@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditorInternal;
 using System;
+using UnityEngine.AddressableAssets;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -21,6 +22,7 @@ public class NeetoSettings : ScriptableObject
 #endif
 
     public static NeetoSettings instance => _instance ??= LoadOrCreate();
+
 
     #region editor
     public const string assetPath = "Assets/_Neeto/Resources/" + assetName + ".asset";
