@@ -2,18 +2,40 @@ using Neeto;
 using System;
 using System.IO;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 #if UNITY_EDITOR
 using UnityEditor;
-public class TextureGeneratorWindow : EditorWindow
+public class TextureGenerator : EditorWindow
 {
+    [SerializeReference, Polymorphic]
+    public ITextureGenerator generator = new Texture1x1();
+
+    static string lastPath = "";
+    Editor editor;
+
+    [MenuItem(MenuPath.Open + nameof(TextureGenerator), priority = MenuOrder.Bottom)]
+    static void Open()
+    {
+        var window = GetWindow<TextureGenerator>("Gradient Texture Generator");
+        window.editor = Editor.CreateEditor(window, null);
+        window.Show();
+    }
+
+    void OnGUI()
+    {
+        editor.OnInspectorGUI();
+
+        if (GUILayout.Button("Export"))
+        {
+            generator.Export();
+        }
+    }
+
     public interface ITextureGenerator
     {
         public void Export();
     }
-
-    [SerializeReference, Polymorphic]
-    public ITextureGenerator generator = new Texture1x1();
 
     [Serializable]
     public class Texture1x1 : ITextureGenerator
@@ -45,6 +67,47 @@ public class TextureGeneratorWindow : EditorWindow
         }
     }
     [Serializable]
+    public class GradientLUT : ITextureGenerator
+    {
+        public Gradient gradient = new Gradient();
+        public int resolution = 128;
+        public Axis axis;
+
+        public enum Axis
+        {
+            X,
+            Y
+        }
+        public async void Export()
+        {
+            Vector2Int size = axis == Axis.X ? new Vector2Int(resolution, 1) : new Vector2Int(1, resolution);
+
+            Texture2D tex = new Texture2D(size.x, size.y);
+            for (int r = 0; r < resolution; r++)
+            {
+                Color color = gradient.Evaluate((float)r / (float)resolution);
+
+                if (axis == Axis.X)
+                    tex.SetPixel(r, 0, color);
+
+                else
+                    tex.SetPixel(0, r, color);
+            }
+
+            tex.alphaIsTransparency = true;
+            tex.Apply();
+            byte[] bytes = tex.EncodeToPNG();
+            string path = EditorUtility.SaveFilePanel("Save Texture", "Assets/Gylfie/UI/Gradients", "Gradient", "png");
+            if (path.Length != 0)
+            {
+                await File.WriteAllBytesAsync(path, bytes);
+                AssetDatabase.Refresh();
+            }
+
+            DestroyImmediate(tex);
+        }
+    }
+    [Serializable]
     public class Materialized : ITextureGenerator
     {
         public Material material;
@@ -53,8 +116,8 @@ public class TextureGeneratorWindow : EditorWindow
         [Min(1f)]
         public int height = 256;
 
-        //[PreviewTexture]
-        //public Texture2D texture;
+        [PreviewTexture]
+        public Texture2D texture;
 
         public void Export()
         {
@@ -79,28 +142,8 @@ public class TextureGeneratorWindow : EditorWindow
         }
     }
 
-    static string lastPath = "";
 
 
-    Editor editor;
-
-    [MenuItem(MenuPath.Main + "TextureGenerator")]
-    private static void Init()
-    {
-        var window = GetWindow<TextureGeneratorWindow>("Gradient Texture Generator");
-        window.editor = Editor.CreateEditor(window, null);
-        window.Show();
-    }
-
-    private void OnGUI()
-    {
-        editor.OnInspectorGUI();
-
-        if (GUILayout.Button("Export"))
-        {
-            generator.Export();
-        }
-    }
 
     public static void ExportAndDestroy(string filename, Texture2D texture)
     {

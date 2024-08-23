@@ -8,18 +8,18 @@
         public int value;
 
         /// <summary>Priority <see cref="UnityEditor.MenuItem.priority"/></summary>
-        public const int Min = -4200;
+        public const int Top = -4200;
         /// <summary>Priority <see cref="UnityEditor.MenuItem.priority"/></summary>
-        public const int Lower = -1111;
+        public const int Higher_ = -1111;
         /// <summary>Priority <see cref="UnityEditor.MenuItem.priority"/></summary>
-        public const int Low = -420;
+        public const int High_ = -420;
         /// <summary>Priority <see cref="UnityEditor.MenuItem.priority"/></summary>
         public const int Mid = 10;
         /// <summary>Priority <see cref="UnityEditor.MenuItem.priority"/></summary>
-        public const int High = 420;
+        public const int Low = 420;
         /// <summary>Priority <see cref="UnityEditor.MenuItem.priority"/></summary>
-        public const int Higher = 1111;
+        public const int Lower = 1111;
         /// <summary>Priority <see cref="UnityEditor.MenuItem.priority"/></summary>
-        public const int Max = 4200;
+        public const int Bottom = 4200;
     }
 }

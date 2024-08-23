@@ -31,7 +31,7 @@ namespace Neeto
         }
 
         // Opens this editor window
-        [MenuItem(MenuPath.Open + nameof(PrefabWindow), priority = MenuOrder.Min)]
+        [MenuItem(MenuPath.Open + nameof(PrefabWindow), priority = MenuOrder.Top)]
         public static PrefabWindow Open()
         {
             var window = GetWindow<PrefabWindow>(false, "Prefab Editor", true);
