@@ -33,10 +33,10 @@ public static class N
         SceneManager.activeSceneChanged += del;
     }
 
+   
 
 
-
-
+    
 
     #region TASKS
     // -- Tasks
@@ -338,22 +338,6 @@ public static class N
         v.y /= amount;
         v.z /= amount;
     }
-    public static Vector2 With(this Vector2 v, float? x = null, float? y = null)
-    {
-        var _x = x ?? v.x;
-        var _y = y ?? v.y;
-
-        return new Vector2(_x, _y);
-    }
-    public static T WithLog<T>(this T t, string msg)
-    {
-        if (t is Object o)
-            Debug.Log(msg, o);
-        else
-            Debug.Log($"{msg}: {t.ToStringOrNull()}");
-
-        return t;
-    }
     public static Vector2 WithX(this Vector2 vector, float x)
     {
         return new Vector2(x, vector.y);
@@ -582,7 +566,7 @@ public static class N
 
         return output;
     }
-
+    
     public static Vector2 GetPreferredSize(this TextMeshProUGUI tmp)
     {
         return new Vector2(tmp.renderedWidth, tmp.renderedHeight);
@@ -663,14 +647,14 @@ public static class N
     }
 
     // -- Colors
-
+    
 
     // -- Data
-
+    
 
 
     // -- Textures
-
+    
 }
 
 

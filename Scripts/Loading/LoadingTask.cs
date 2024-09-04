@@ -41,7 +41,7 @@ public class LoadScene : ILoadAsync
 
     public async UniTask LoadAsync()
     {
-        if (SceneX.IsSceneAvailable(scene))
+        if (SceneRef.IsSceneAvailable(scene))
         {
             Debug.Log($"Tried loading '{scene.name}' but it was already loaded");
             goto Activate;
@@ -86,7 +86,7 @@ public class UnloadScene : ILoadAsync
     public Neeto.SceneReference scene;
     public async UniTask LoadAsync()
     {
-        if (!SceneX.IsSceneAvailable(scene))
+        if (!SceneRef.IsSceneAvailable(scene))
         {
             return;
         }

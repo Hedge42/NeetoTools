@@ -259,16 +259,8 @@ namespace Neeto
         }
         #endregion
     }
-
-
     public static class PointExtensions
     {
-        public static void CopyTo(this Transform source, Transform target)
-        {
-            target.transform.position = source.position;
-            target.transform.rotation = source.rotation;
-        }
-
         public static Point GetWorldPoint(this Transform transform)
         {
             return new Point(transform.position, transform.rotation);
@@ -315,6 +307,7 @@ namespace Neeto
 
             return new Point(localPosition, localRotation);
         }
+
 
         public static Point LocalToWorld(Point local, Transform t)
         {

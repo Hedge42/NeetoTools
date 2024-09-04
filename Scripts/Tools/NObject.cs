@@ -350,6 +350,8 @@ namespace Neeto
         }
         public static bool IsNullOrEmpty<T>(this T[] array) => array == null || array.Length == 0;
 
+
+
         public static void SetValue<T1, T2>(this Dictionary<T1, T2> d, T1 key, T2 value)
         {
             if (d.ContainsKey(key))

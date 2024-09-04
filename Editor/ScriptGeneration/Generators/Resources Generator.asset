@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51faeb4f1e2fe2041813bfffc6d69080, type: 3}
+  m_Name: Resources Generator
+  m_EditorClassIdentifier: 
+  region: GENERATED
+  script: {fileID: 11500000, guid: 2b38b9ae57a69de40a5deab5dee1bf7c, type: 3}
+  generator:
+    rid: 9148982590701043714
+  references:
+    version: 2
+    RefIds:
+    - rid: 9148982590701043714
+      type: {class: ResourceGenerator, ns: Neeto, asm: Neeto.Editor}

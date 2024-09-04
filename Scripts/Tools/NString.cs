@@ -9,7 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Linq;
 
-public static partial class NString
+public static class NString
 {
     public static string AsTextAfter(this string source, string split)
     {

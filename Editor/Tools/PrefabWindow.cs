@@ -20,7 +20,7 @@ namespace Neeto
 
         public GameObject prefab;
 
-        bool showSelected = true;
+        //bool showSelected = true;
 
         Editor editor;
 
@@ -31,7 +31,7 @@ namespace Neeto
         }
 
         // Opens this editor window
-        [MenuItem(MenuPath.Open + nameof(PrefabWindow), priority = MenuOrder.Top)]
+        [MenuItem(MenuPath.Open + nameof(PrefabWindow), priority = Priority.Min)]
         public static PrefabWindow Open()
         {
             var window = GetWindow<PrefabWindow>(false, "Prefab Editor", true);

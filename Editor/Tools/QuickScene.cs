@@ -88,7 +88,7 @@ namespace Neeto
             return isLocked;
         }
 
-        [MenuItem(MenuPath.Open + nameof(QuickScene), priority = MenuOrder.Top)]
+        [MenuItem(MenuPath.Open + nameof(QuickScene), priority = Priority.Min)]
         public static void Open()
         {
             var window = GetWindow<QuickScene>();

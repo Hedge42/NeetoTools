@@ -139,7 +139,7 @@ namespace Neeto
                     var targetField = targetType.GetField(sourceField.Name);
                     targetField.SetValue(destTarget, sourceField.GetValue(sourceTarget));
                 }
-                catch (Exception e)
+                catch // (Exception e)
                 {
                     // target does not contain source field
                     //Debug.LogWarning($"Could not copy property {sourceField.Name}", (UnityEngine.Object)reference);

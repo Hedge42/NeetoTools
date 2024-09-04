@@ -30,8 +30,8 @@ public class CreateInstanceAttribute : PropertyAttribute { }
 [CustomPropertyDrawer(typeof(CreateInstanceAttribute))]
 public class CreateInstanceAttributeDrawer : PropertyButtonDrawerBase
 {
-    private Editor editor = null;
-    private bool changed;
+    //private Editor editor = null;
+    //private bool changed;
 
     public override GUIContent content => new GUIContent("+", "Create Internal Instance");
 
