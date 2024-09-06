@@ -1,0 +1,22 @@
+public enum Subclasses
+{
+	AttackState,
+	EmptyState,
+	EnemyState,
+	FollowState,
+	HitState,
+	ICharacterState,
+	NavigationSelectorState,
+	NavigationState,
+	PlayableCharacterState,
+	PlayerState,
+	WaitState,
+	AIState,
+	Async_AIState,
+	Patrol,
+	Chase,
+	Alert,
+	Scan,
+	RunAway,
+	HostileWait,
+}

@@ -12,7 +12,7 @@ using UnityEditor;
 
 namespace Neeto
 {
-    public static class SceneRef
+    public static class NScene
     {
         public static bool IsSceneAvailable(string sceneName)
         {

@@ -57,7 +57,7 @@ namespace Neeto
                 EditorGUI.PropertyField(position, assetProp, label);
 
                 // draw texture based on if scene is in build settings
-                var isBuildScene = SceneRef.IsSceneInBuildSettings(assetProp.objectReferenceValue as SceneAsset);
+                var isBuildScene = NScene.IsSceneInBuildSettings(assetProp.objectReferenceValue as SceneAsset);
                 var texture = isBuildScene ? NTexture.confirm : NTexture.cancel;
                 var colorMask = isBuildScene ? ColorWriteMask.Alpha | ColorWriteMask.Green : ColorWriteMask.Alpha | ColorWriteMask.Red;
                 position.x += position.width + 2f;
