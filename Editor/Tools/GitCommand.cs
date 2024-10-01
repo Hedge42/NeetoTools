@@ -88,7 +88,7 @@ public class GitCommand : ScriptableObject
 
             process.WaitForExit();
 
-            if (!string.IsNullOrEmpty(error))
+            if (process.ExitCode != 0)
                 throw new Exception($"Git command error: {error}");
 
             return output.Trim();

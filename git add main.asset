@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c1937a91928bd44aa3730802b9afb9e, type: 3}
   m_Name: git add main
   m_EditorClassIdentifier: 
-  commands: 'git add .
+  commands: 'git add . -q
 
-    git reset -- **/Extras/**'
+    git reset -q -- **/Extras/**
+
+    git commit -amq
+    "updates"
+
+    git push -fuq origin main'
   assetPath: Assets/NeetoTools/
