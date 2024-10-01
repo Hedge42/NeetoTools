@@ -20,5 +20,4 @@ MonoBehaviour:
   - {fileID: 5897886265953266890, guid: 2bafac87e7f4b9b418d9448d219b01ab, type: 3}
   - {fileID: 5897886265953266890, guid: f51ebe6a0ceec4240a699833d6309b23, type: 3}
   overrideToolbarWindow: 1
-  overrideHierarchyWindow: 1
-  overrideProjectWindow: 1
+  showQuickInspect: 1

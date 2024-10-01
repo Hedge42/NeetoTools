@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 using UnityEditorInternal;
 using System;
 using UnityEngine.AddressableAssets;
+using Neeto;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,9 +18,14 @@ public class NeetoSettings : ScriptableObject
 #if UNITY_EDITOR
     public AssemblyDefinitionAsset[] reflectionScope;
     public bool overrideToolbarWindow;
-    public bool overrideHierarchyWindow;
-    public bool overrideProjectWindow;
+    public bool showQuickInspect;
 #endif
+
+    [QuickAction]
+    public static void Open()
+    {
+        SettingsService.OpenProjectSettings($"Project/Neeto");
+    }
 
     public static NeetoSettings instance => _instance ??= LoadOrCreate();
 

@@ -16,60 +16,6 @@ namespace Neeto
     [CreateAssetMenu(menuName = MenuPath.Neeto + nameof(ScriptGenerator), order = Priority.Mid)]
     public class ScriptGenerator : ScriptableObject
     {
-        #region editor
-
-        static HashSet<string> guids;
-        static GUIContent content;
-        static ScriptGenerator()
-        {
-            EditorApplication.delayCall += () =>
-            {
-                guids = AssetDatabase.FindAssets($"t:{nameof(ScriptGenerator)}").ToHashSet();
-                content = new GUIContent(ResourceLibrary.Textures_cursor.Load());
-            };
-
-            EditorApplication.projectWindowItemOnGUI += OnProjectWindowGUI;
-        }
-        static void OnProjectWindowGUI(string guid, Rect rect)
-        {
-            if (guids.Contains(guid))
-            {
-                rect = rect.Add(xMax: -20);
-                rect.xMin = rect.xMax - 20;
-                if (GUI.Button(rect, content))
-                {
-                    var asset = AssetDatabase.LoadAssetAtPath<ScriptGenerator>(AssetDatabase.GUIDToAssetPath(guid));
-                    asset.Export();
-                }
-            }
-        }
-
-        //#if UNITY_EDITOR
-        [CustomEditor(typeof(ScriptGenerator))]
-        public class ScriptGeneratorEditor : Editor
-        {
-            string preview;
-            new ScriptGenerator target => base.target as ScriptGenerator;
-            public override void OnInspectorGUI()
-            {
-                base.OnInspectorGUI();
-
-                if (GUILayout.Button("Export"))
-                {
-                    target.Export();
-                }
-                if (GUILayout.Button("Preview"))
-                {
-                    preview = ScriptGenerator.ReplaceRegion(target.script.text, target.region, target.generator.Script());
-                }
-
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.TextArea(preview);
-                EditorGUI.EndDisabledGroup();
-            }
-        }
-        #endregion
-
         [Tooltip("Text after #region")]
         public string region = "GENERATED";
         public TextAsset script;
@@ -77,6 +23,8 @@ namespace Neeto
         [SerializeReference, Polymorphic]
         public IScriptGenerator generator;
         Editor editor;
+
+        [QuickAction]
         public void Export()
         {
             var preview = ScriptGenerator.ReplaceRegion(script.text, region, generator.Script());

@@ -6,7 +6,6 @@ using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 using Debug = UnityEngine.Debug;
 using System.Reflection;
-using static Codice.CM.Common.CmCallContext;
 
 #if UNITY_EDITOR
 using UnityEditor;

@@ -34,10 +34,10 @@ namespace Neeto
 
             // Check if the variable name is a reserved keyword.
             // If it is, append an underscore.
-            if (CodeDomProvider.CreateProvider("C#").IsValidIdentifier(name) == false)
-            {
-                name += "_";
-            }
+            //if (CodeDomProvider.CreateProvider("C#").IsValidIdentifier(name) == false)
+            //{
+            //    name += "_";
+            //}
 
             return name;
         }

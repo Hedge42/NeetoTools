@@ -40,10 +40,13 @@ namespace Neeto
             {
                 var scene = EditorSceneManager.GetActiveScene();
                 var view = SceneView.lastActiveSceneView;
-                var orientation = new Point(view.pivot, view.rotation);
-                var json = JsonUtility.ToJson(orientation);
-                EditorPrefs.SetString(scene.path, json);
-                Debug.Log($"Saved sceneView '{scene.name}': {orientation}");
+                if (view)
+                {
+                    var orientation = new Point(view.pivot, view.rotation);
+                    var json = JsonUtility.ToJson(orientation);
+                    EditorPrefs.SetString(scene.path, json);
+                    Debug.Log($"Saved sceneView '{scene.name}': {orientation}");
+                }
             };
             EditorSceneManager.activeSceneChangedInEditMode += (_, _) =>
             {
@@ -53,10 +56,13 @@ namespace Neeto
                     var json = EditorPrefs.GetString(scene.path);
                     var orientation = JsonUtility.FromJson<Point>(json);
                     var view = SceneView.lastActiveSceneView;
-                    view.rotation = orientation.rotation;
-                    view.pivot = orientation.position;
-                    SceneView.lastActiveSceneView.Repaint();
-                    Debug.Log($"Loaded sceneView '{scene.name}': {orientation}");
+                    if (view)
+                    {
+                        view.rotation = orientation.rotation;
+                        view.pivot = orientation.position;
+                        SceneView.lastActiveSceneView.Repaint();
+                        Debug.Log($"Loaded sceneView '{scene.name}': {orientation}");
+                    }
                 }
             };
         }

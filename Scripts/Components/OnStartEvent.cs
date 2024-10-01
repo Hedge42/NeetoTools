@@ -12,6 +12,7 @@ namespace Neeto
     {
         public UnityEvent onStart;
 
+        [QuickAction]
         private void Start()
         {
             onStart.Invoke();
