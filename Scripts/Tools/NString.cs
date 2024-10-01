@@ -11,6 +11,30 @@ using System.Linq;
 
 public static class NString
 {
+    public static string WithHTML(this string str, Color? color = null, bool bold = false, bool italic = false, uint? size = null)
+    {
+        if (string.IsNullOrEmpty(str))
+            return str;
+
+        if (color.HasValue)
+        {
+            Color c = color.Value;
+            string hexColor = ColorUtility.ToHtmlStringRGBA(c);
+            str = $"<color=#{hexColor}>{str}</color>";
+        }
+
+        if (size != null)
+            str = $"<size={size}>{str}</size>";
+
+        if (bold)
+            str = $"<b>{str}</b>";
+
+        if (italic)
+            str = $"<i>{str}</i>";
+
+        return str;
+    }
+
     public static string AsTextAfter(this string source, string split)
     {
         if (source.Contains(split))

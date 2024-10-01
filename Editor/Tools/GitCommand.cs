@@ -33,7 +33,7 @@ public class GitCommand : ScriptableObject
         }
     }
 
-    [TextArea(2, 10)]
+    [TextArea(2, 50)]
     public string commands;
 
     [Tooltip("Defaults to project root")]
@@ -51,17 +51,35 @@ public class GitCommand : ScriptableObject
             if (string.IsNullOrWhiteSpace(cmd))
                 continue;
 
-
             var result = await RunAsync(cmd, dir);
 
-            if (result != null)
-                Debug.Log($"<color=green>✔  </color>{cmd}\n\n<size=10>{result}</size>", this);
+            var output = result.output.WithHTML(size: 9, color: Color.white.WithV(.7f));
+
+            //if (result != null)
+            if (result.exitCode == 0)
+                Debug.Log($"{"✔  ".WithHTML(color: Color.green)}{cmd}\n{output}", this);
             else
-                Debug.LogError($"<color=red>✘  </color>{cmd}", this);
+            {
+                var error = result.error.WithHTML(size: 9, color: Color.white.WithV(.7f));
+                Debug.LogError($"{"✘  ".WithHTML(color: Color.red)}{cmd}\n{output}\n{error}", this);
+                return;
+            }
         }
     }
 
-    public static async Task<string> RunAsync(string command, string workingDirectory = null)
+    struct ProcessResult
+    {
+        public int exitCode;
+        public string output;
+        public string error;
+        public ProcessResult(int exitCode, string output, string error)
+        {
+            this.exitCode = exitCode;
+            this.output = output;
+            this.error = error;
+        }
+    }
+    static async Task<ProcessResult> RunAsync(string command, string workingDirectory = null)
     {
         workingDirectory = workingDirectory ?? Application.dataPath + "/../";
 
@@ -88,14 +106,11 @@ public class GitCommand : ScriptableObject
 
             process.WaitForExit();
 
-            if (process.ExitCode != 0)
-                throw new Exception($"Git command error: {error}");
-
-            return output.Trim();
+            return new ProcessResult(process.ExitCode, output.Trim(), error.Trim());
         }
         catch (Exception ex)
         {
-            return null;
+            return default;
         }
     }
     private static string GetShellExecutable()
