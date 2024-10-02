@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7c1937a91928bd44aa3730802b9afb9e, type: 3}
-  m_Name: git add extras
+  m_Name: _ git tests 1
   m_EditorClassIdentifier: 
-  commands: git add .
+  commands: 
   assetPath: Assets/NeetoTools/

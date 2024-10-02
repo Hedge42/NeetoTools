@@ -24,13 +24,15 @@ MonoBehaviour:
 
     git reset --soft HEAD
 
-    git add  **/Extras/**
+    git add .
 
     git
-    commit -m  "updates"
+    reset --  **/Extras/**
 
-    git push -f origin main
+    git commit -m  "updates"
 
-    git symbolic-ref HEAD
-    refs/heads/extras'
+    git push -f origin
+    main
+
+    git symbolic-ref HEAD refs/heads/extras'
   assetPath: Assets/NeetoTools/
