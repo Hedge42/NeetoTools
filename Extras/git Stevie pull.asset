@@ -10,29 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7c1937a91928bd44aa3730802b9afb9e, type: 3}
-  m_Name: git update with extras
+  m_Name: git Stevie pull
   m_EditorClassIdentifier: 
-  commands: 'git add  .
+  commands: 'git add .
 
-    git commit -m  "updates"
+    git commit -m "pre-pull"
 
-    git push -f origin extras
+    git push origin Stevie
+    -f
 
 
-    git
-    symbolic-ref HEAD refs/heads/main
+    git reset --hard origin/dev
 
-    git reset --soft HEAD
-
-    git add .
+    git checkout origin/Stevie -- Assets/Interwoven/_user/Stevie**
 
     git
-    reset --  **/Extras/**
+    add .
 
-    git commit -m  "updates"
+    git commit -m "pull updates"
 
-    git push -f origin
-    main
-
-    git symbolic-ref HEAD refs/heads/extras'
+    git push origin Stevie -f'
   assetPath: Assets/NeetoTools/

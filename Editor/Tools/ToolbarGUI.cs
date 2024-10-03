@@ -17,44 +17,16 @@ namespace Neeto
         }
         static ToolbarGUI()
         {
-            // draw maximize window button
-            ToolbarExtender.LeftToolbarGUI.Add(() =>
-            {
-                if (!enabled)
-                    return;
-
-                GUILayout.FlexibleSpace();
-
-                EditorGUI.BeginDisabledGroup(Application.isPlaying);
-                if (GUILayout.Button(new GUIContent(NTexture.expand, "Play maximized"), EditorStyles.toolbarButton, GUILayout.Width(ToolbarExtender.buttonWidth)))
-                {
-                    // play full screen
-                    var gameView = GetGameView();
-                    gameView?.Maximize(true);
-                    EditorApplication.EnterPlaymode();
-                    EditorApplication.quitting += () => Debug.Log("ye");
-                    Program.onQuit += () => GetGameView()?.Maximize(false);
-                }
-                EditorGUI.EndDisabledGroup();
-
-            });
-
-            // un-maximize on exit play mode
-            EditorApplication.playModeStateChanged += playState =>
-            {
-                if (playState == PlayModeStateChange.ExitingPlayMode)
-                {
-                    GetGameView().Maximize(false);
-                }
-            };
-
             // draw timescale control
             ToolbarExtender.RightToolbarGUI.Add(() =>
             {
                 if (!enabled)
                     return;
 
-                if (GUILayout.Button(new GUIContent(NTexture.time, "Time scale"), EditorStyles.toolbarButton, GUILayout.Width(20f)))
+                var content = EditorGUIUtility.IconContent("d_UnityEditor.AnimationWindow@2x");
+                content.tooltip = "Reset Timescale";
+
+                if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.Width(20f)))
                     Time.timeScale = 1f;
                 EditorGUI.BeginDisabledGroup(true);
                 GUILayout.Box(Time.timeScale.ToString("f2"), EditorStyles.toolbarButton, GUILayout.Width(35f));

@@ -10,7 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7c1937a91928bd44aa3730802b9afb9e, type: 3}
-  m_Name: git status
+  m_Name: git Stevie push
   m_EditorClassIdentifier: 
-  commands: git status
+  commands: 'git add .
+
+    git commit -m "updates"
+
+    git push origin Stevie -f'
   assetPath: Assets/NeetoTools/
