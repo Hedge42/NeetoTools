@@ -152,7 +152,7 @@ namespace Neeto
             }
         }
         public static Ray mouseViewRay => HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-        public static LayerMask clickLayers => LayerLibrary.Terrain | LayerLibrary.Interactable | LayerLibrary.Level;
+        public static LayerMask clickLayers => LayerLibrary.PhysicsLayers.Terrain | LayerLibrary.PhysicsLayers.Interactable | LayerLibrary.PhysicsLayers.Level;
         public static bool MouseCast(out RaycastHit hit)
         {
             return Physics.Raycast(mouseViewRay, out hit, 100f, (int)clickLayers, QueryTriggerInteraction.Ignore);

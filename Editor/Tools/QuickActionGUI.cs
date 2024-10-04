@@ -171,7 +171,7 @@ namespace Neeto
             {
                 if (type.IsPublic && !type.IsAbstract && !type.IsSubclassOf(typeof(Editor)) && !type.IsSubclassOf(typeof(EditorWindow)))
                 {
-                    Add(map, $"{type.Name}.cs", $"Create new {type.Name}", () => CreateScriptableObjectPanel(type));
+                    Add(map, $"{type.Name}.cs", $"new {type.Name}", () => CreateScriptableObjectPanel(type));
                 }
             }
 
@@ -183,7 +183,8 @@ namespace Neeto
 
                 var attribute = method.GetCustomAttribute<QuickActionAttribute>();
                 var type = method.DeclaringType;
-                Add(map, attribute.file ?? $"{type.Name}.cs", $"{type.Name}.{method.Name}()", () => method.Invoke(null, null));
+                var label = attribute.label ?? method.Name;
+                Add(map, attribute.file ?? $"{type.Name}.cs", $"{label}", () => method.Invoke(null, null));
             }
 
             // run on main thread

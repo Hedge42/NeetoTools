@@ -1,48 +1,35 @@
-using System.Linq;
+using System;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.ResourceProviders;
-using System.Collections.Generic;
+using System.Linq;
 
 namespace Neeto
 {
-    [InitializeOnLoad]
-    [CreateAssetMenu(menuName = MenuPath.Neeto + nameof(ScriptGenerator), order = Priority.Mid)]
-    public class ScriptGenerator : ScriptableObject
+    public static class ScriptGenerator
     {
-        [Tooltip("Text after #region")]
-        public string region = "GENERATED";
-        public TextAsset script;
-
-        [SerializeReference, Polymorphic]
-        public IScriptGenerator generator;
-        Editor editor;
-
-        [QuickAction]
-        public void Export()
-        {
-            var preview = ScriptGenerator.ReplaceRegion(script.text, region, generator.Script());
-            SetText(script, preview);
-        }
-
-        static void OverwriteRegion(TextAsset script, string region, string content)
+        public static void OverwriteRegion(TextAsset script, string region, string content)
         {
             string startRegion = $"#region {region}";
-            string endRegion = "#endregion";
+            string endRegion = $"#endregion {region}";
             string scriptText = script.text;
+
+            if (!script.text.Contains(startRegion))
+            {
+                Debug.Log($"'{script.name}' does not contain region '{region}'", script);
+                return;
+            }
+
 
             int startRegionIndex = scriptText.IndexOf(startRegion);
             int endRegionIndex = scriptText.IndexOf(endRegion, startRegionIndex);
 
             if (startRegionIndex == -1 || endRegionIndex == -1)
             {
-                Debug.LogError($"Region {region} not found in script.");
+                Debug.LogError($"Region {region} not found in script '{script.name}'", script);
                 return;
             }
 
@@ -139,36 +126,11 @@ namespace Neeto
             string unixNormalized = NormalizeUnixLineEndings(input);
             return unixNormalized.Replace("\n", "\r\n");
         }
-        public static StringBuilder WithRegion(StringBuilder script, string regionName, string newContent)
+        public static MonoScript FindScript(Type type)
         {
-            string startRegion = $"#region {regionName}";
-            string endRegion = "#endregion";
-            string scriptText = script.ToString();
-
-            int startRegionIndex = scriptText.IndexOf(startRegion);
-            int endRegionIndex = scriptText.IndexOf(endRegion, startRegionIndex);
-
-            if (startRegionIndex == -1 || endRegionIndex == -1)
-            {
-                Debug.LogError($"Region {regionName} not found in script.");
-                return script;
-            }
-
-            // Calculate the indices for the actual content between the region tags
-            int contentStartIndex = scriptText.IndexOf('\n', startRegionIndex) + 1;
-            int contentEndIndex = endRegionIndex;
-
-            if (contentStartIndex < 0 || contentEndIndex < 0 || contentEndIndex < contentStartIndex)
-            {
-                Debug.LogError("Invalid region format in script.");
-                return script;
-            }
-
-            StringBuilder sb = new StringBuilder();
-            sb.Append(scriptText.Substring(0, contentStartIndex));
-            sb.Append(newContent);
-            sb.Append(scriptText.Substring(contentEndIndex));
-            return sb;
+            return AssetDatabase.FindAssets("t:MonoScript", new[] { "Assets" })
+                .Select(guid => AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(guid)))
+                .FirstOrDefault(script => script.GetClass() != null && script.GetClass().Equals(type));
         }
     }
 }
