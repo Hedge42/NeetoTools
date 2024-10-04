@@ -39,27 +39,27 @@ namespace Neeto
         {
             EditorApplication.delayCall += () =>
             {
-                inspect = ResourceLibrary.Textures_magnifying_glass.Load();
-                save = ResourceLibrary.Textures_save.Load();
-                click = ResourceLibrary.Textures_click.Load();
-                folder_full = ResourceLibrary.Textures_folder_full.Load();
-                folder = ResourceLibrary.Textures_folder.Load();
-                info = ResourceLibrary.Textures_info.Load();
-                confirm = ResourceLibrary.Textures_confirmed.Load();
-                cancel = ResourceLibrary.Textures_cancel.Load();
-                expand = ResourceLibrary.Textures_expand.Load();
-                contract = ResourceLibrary.Textures_contract.Load();
-                undo = ResourceLibrary.Textures_backward_time.Load();
-                time = ResourceLibrary.Textures_stopwatch.Load();
-                locked = ResourceLibrary.Textures_padlock.Load();
-                unlocked = ResourceLibrary.Textures_padlock_open.Load();//.Multiply(Color.white.WithA(.5f));
-                nuke = ResourceLibrary.Textures_mushroom_cloud.Load();
-                settings_cog = ResourceLibrary.Textures_cog.Load();
-                settings_knobs = ResourceLibrary.Textures_settings_knobs.Load();
-                git = ResourceLibrary.Textures_github_logo.Load();
-                steam = ResourceLibrary.Textures_steam_icon.Load();
-                shadow = Color.black.With(a: .123f).AsTexturePixel(); // wtf is a setting
-                highlight = Color.white.With(a: .069f).AsTexturePixel();
+                //inspect = ResourceLibrary.Textures_magnifying_glass.Load();
+                //save = ResourceLibrary.Textures_save.Load();
+                //click = ResourceLibrary.Textures_click.Load();
+                //folder_full = ResourceLibrary.Textures_folder_full.Load();
+                //folder = ResourceLibrary.Textures_folder.Load();
+                //info = ResourceLibrary.Textures_info.Load();
+                //confirm = ResourceLibrary.Textures_confirmed.Load();
+                //cancel = ResourceLibrary.Textures_cancel.Load();
+                //expand = ResourceLibrary.Textures_expand.Load();
+                //contract = ResourceLibrary.Textures_contract.Load();
+                //undo = ResourceLibrary.Textures_backward_time.Load();
+                //time = ResourceLibrary.Textures_stopwatch.Load();
+                //locked = ResourceLibrary.Textures_padlock.Load();
+                //unlocked = ResourceLibrary.Textures_padlock_open.Load();//.Multiply(Color.white.WithA(.5f));
+                //nuke = ResourceLibrary.Textures_mushroom_cloud.Load();
+                //settings_cog = ResourceLibrary.Textures_cog.Load();
+                //settings_knobs = ResourceLibrary.Textures_settings_knobs.Load();
+                //git = ResourceLibrary.Textures_github_logo.Load();
+                //steam = ResourceLibrary.Textures_steam_icon.Load();
+                //shadow = Color.black.With(a: .123f).AsTexturePixel(); // wtf is a setting
+                //highlight = Color.white.With(a: .069f).AsTexturePixel();
             };
         }
 #endif

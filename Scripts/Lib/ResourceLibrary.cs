@@ -1,11 +1,76 @@
 using UnityEngine;
 using System;
 using Object = UnityEngine.Object;
+using System.Text;
+using UnityEditor;
+using System.IO;
+using System.Linq;
+using Unity.Collections;
 
 namespace Neeto
 {
     public static class ResourceLibrary
     {
+#if UNITY_EDITOR
+        [QuickAction]
+        public static void Generate()
+        {
+            var sb = new StringBuilder();
+
+            // find all resource asset paths
+            var resourcePaths = AssetDatabase.FindAssets("t:Object", new[] { "Assets" })
+                .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
+                .Where(path => path.Contains("/Resources/"));// && Directory.Exists(Path.Combine(MPath.project, path)));
+
+            Debug.Log(resourcePaths.Count());
+
+            var refs = typeof(ResourceLibrary).Assembly.GetReferencedAssemblies().Select(a => a.ToString());
+
+            foreach (var assetPath in resourcePaths)
+            {
+                // get path relative to resource folder
+                var resourcePath = assetPath.AsTextAfter("/Resources/");
+                var ext = Path.GetExtension(resourcePath);
+                if (ext.IsEmpty())
+                    continue; // don't include folders
+
+                var variableName = ScriptGenerator.Codify(resourcePath);
+
+                try
+                {
+                    var obj = AssetDatabase.LoadAssetAtPath(assetPath, typeof(Object));
+
+                    if (!refs.Contains(obj.GetType().Assembly.FullName))
+                    {
+                        continue;
+                    }
+
+                    var type = obj.GetType();
+                    if (type.Equals(typeof(MonoScript)))
+                        type = typeof(TextAsset);
+
+                    var line = $"public static readonly Resource<{type.FullName}> {variableName} = new (\"{resourcePath}\");";
+                    sb.AppendLine(line);
+                }
+                catch
+                {
+                    Debug.LogError($"Error loading resource at path '{assetPath}'");
+                }
+            }
+
+            var script = AssetDatabase.FindAssets("t:MonoScript", new[] { "Assets" })
+                .Select(guid => AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(guid)))
+                .FirstOrDefault(script => script.GetClass() != null && script.GetClass().Equals(typeof(ResourceLibrary)));
+
+            ScriptGenerator.OverwriteRegion(script, "GENERATED", sb.ToString());
+        }
+#endif
+
+        public static string AssetPathToResourcePath(string assetPath)
+        {
+            return assetPath.AsTextAfter("/Resources/");
+        }
+
         [Serializable]
         public struct Resource<T> where T : Object
         {
@@ -23,69 +88,18 @@ namespace Neeto
         }
 
         #region GENERATED
-public static readonly Resource<NeetoSettings> NeetoSettings = new ("NeetoSettings");
-public static readonly Resource<UnityEngine.Texture2D> Textures_backward_time = new ("Textures/backward_time");
-public static readonly Resource<UnityEngine.Texture2D> Textures_binoculars = new ("Textures/binoculars");
-public static readonly Resource<UnityEngine.Texture2D> Textures_button_finger = new ("Textures/button-finger");
-public static readonly Resource<UnityEngine.Texture2D> Textures_cancel = new ("Textures/cancel");
-public static readonly Resource<UnityEngine.Texture2D> Textures_chat_bubble = new ("Textures/chat_bubble");
-public static readonly Resource<UnityEngine.Texture2D> Textures_check_mark = new ("Textures/check_mark");
-public static readonly Resource<UnityEngine.Texture2D> Textures_click = new ("Textures/click");
-public static readonly Resource<UnityEngine.Texture2D> Textures_cog = new ("Textures/cog");
-public static readonly Resource<UnityEngine.Texture2D> Textures_confirmed = new ("Textures/confirmed");
-public static readonly Resource<UnityEngine.Texture2D> Textures_console_controller = new ("Textures/console-controller");
-public static readonly Resource<UnityEngine.Texture2D> Textures_contract = new ("Textures/contract");
-public static readonly Resource<UnityEngine.Texture2D> Textures_cursor = new ("Textures/cursor");
-public static readonly Resource<UnityEngine.Texture2D> Textures_cycle = new ("Textures/cycle");
-public static readonly Resource<UnityEngine.Texture2D> Textures_dial_padlock = new ("Textures/dial-padlock");
-public static readonly Resource<UnityEngine.Texture2D> Textures_enter = new ("Textures/enter");
-public static readonly Resource<UnityEngine.Texture2D> Textures_exit = new ("Textures/exit");
-public static readonly Resource<UnityEngine.Texture2D> Textures_expand = new ("Textures/expand");
-public static readonly Resource<UnityEngine.Texture2D> Textures_expander = new ("Textures/expander");
-public static readonly Resource<UnityEngine.Texture2D> Textures_folder = new ("Textures/folder");
-public static readonly Resource<UnityEngine.Texture2D> Textures_folder_full = new ("Textures/folder_full");
-public static readonly Resource<UnityEngine.Texture2D> Textures_game_console = new ("Textures/game-console");
-public static readonly Resource<UnityEngine.Texture2D> Textures_gamepad = new ("Textures/gamepad");
-public static readonly Resource<UnityEngine.Texture2D> Textures_github_logo = new ("Textures/github-logo");
-public static readonly Resource<UnityEngine.Texture2D> Textures_halt = new ("Textures/halt");
-public static readonly Resource<UnityEngine.Texture2D> Textures_hamburger_menu = new ("Textures/hamburger-menu");
-public static readonly Resource<UnityEngine.Texture2D> Textures_hazard_sign = new ("Textures/hazard_sign");
-public static readonly Resource<UnityEngine.Texture2D> Textures_health_cross = new ("Textures/health_cross");
-public static readonly Resource<UnityEngine.Texture2D> Textures_heart = new ("Textures/heart");
-public static readonly Resource<UnityEngine.Texture2D> Textures_heart_bottle = new ("Textures/heart_bottle");
-public static readonly Resource<UnityEngine.Texture2D> Textures_help = new ("Textures/help");
-public static readonly Resource<UnityEngine.Texture2D> Textures_high_shot = new ("Textures/high_shot");
-public static readonly Resource<UnityEngine.Texture2D> Textures_infinity = new ("Textures/infinity");
-public static readonly Resource<UnityEngine.Texture2D> Textures_info = new ("Textures/info");
-public static readonly Resource<UnityEngine.Texture2D> Textures_interdiction = new ("Textures/interdiction");
-public static readonly Resource<UnityEngine.Texture2D> Textures_joystick = new ("Textures/joystick");
-public static readonly Resource<UnityEngine.Texture2D> Textures_keyboard = new ("Textures/keyboard");
-public static readonly Resource<UnityEngine.Texture2D> Textures_magnifying_glass = new ("Textures/magnifying_glass");
-public static readonly Resource<UnityEngine.Texture2D> Textures_mouse = new ("Textures/mouse");
-public static readonly Resource<UnityEngine.Texture2D> Textures_move = new ("Textures/move");
-public static readonly Resource<UnityEngine.Texture2D> Textures_mushroom_cloud = new ("Textures/mushroom-cloud");
-public static readonly Resource<UnityEngine.Texture2D> Textures_open_book = new ("Textures/open-book");
-public static readonly Resource<UnityEngine.Texture2D> Textures_padlock_open = new ("Textures/padlock-open");
-public static readonly Resource<UnityEngine.Texture2D> Textures_padlock = new ("Textures/padlock");
-public static readonly Resource<UnityEngine.Texture2D> Textures_paint_brush = new ("Textures/paint-brush");
-public static readonly Resource<UnityEngine.Texture2D> Textures_pc = new ("Textures/pc");
-public static readonly Resource<UnityEngine.Texture2D> Textures_pin = new ("Textures/pin");
-public static readonly Resource<UnityEngine.Texture2D> Textures_plain_padlock = new ("Textures/plain-padlock");
-public static readonly Resource<UnityEngine.Texture2D> Textures_player_previous = new ("Textures/player_previous");
-public static readonly Resource<UnityEngine.Texture2D> Textures_position_marker = new ("Textures/position_marker");
-public static readonly Resource<UnityEngine.Texture2D> Textures_power_button = new ("Textures/power-button");
-public static readonly Resource<UnityEngine.Texture2D> Textures_recycle = new ("Textures/recycle");
-public static readonly Resource<UnityEngine.Texture2D> Textures_refresh = new ("Textures/refresh");
-public static readonly Resource<UnityEngine.Texture2D> Textures_retro_controller = new ("Textures/retro-controller");
-public static readonly Resource<UnityEngine.Texture2D> Textures_return_arrow = new ("Textures/return_arrow");
-public static readonly Resource<UnityEngine.Texture2D> Textures_riposte = new ("Textures/riposte");
-public static readonly Resource<UnityEngine.Texture2D> Textures_save = new ("Textures/save");
-public static readonly Resource<UnityEngine.Texture2D> Textures_settings_knobs = new ("Textures/settings-knobs");
-public static readonly Resource<UnityEngine.Texture2D> Textures_signal = new ("Textures/signal");
-public static readonly Resource<UnityEngine.Texture2D> Textures_steam_icon = new ("Textures/steam-icon");
-public static readonly Resource<UnityEngine.Texture2D> Textures_stopwatch = new ("Textures/stopwatch");
-public static readonly Resource<UnityEngine.Texture2D> Textures_transform = new ("Textures/transform");
-public static readonly Resource<UnityEngine.Texture2D> Textures_vr_headset = new ("Textures/vr-headset");
+	public const string Untagged = "Untagged";
+	public const string Respawn = "Respawn";
+	public const string Finish = "Finish";
+	public const string EditorOnly = "EditorOnly";
+	public const string MainCamera = "MainCamera";
+	public const string Player = "Player";
+	public const string GameController = "GameController";
+	public const string Rig = "Rig";
+	public const string Weapon = "Weapon";
+	public const string Fire = "Fire";
+	public const string Gameplay = "Gameplay";
+	public const string Cutscene = "Cutscene";
 #endregion
     }
 }

@@ -10,7 +10,8 @@ namespace Neeto
     public sealed class QuickActionAttribute : Attribute
     {
         public string file { get; private set; }
-        public QuickActionAttribute(string file = null)
+        public string label { get; private set; }
+        public QuickActionAttribute(string file = null, string label = null)
         {
             if (file != null && !file.EndsWith(".cs"))
                 file += ".cs";

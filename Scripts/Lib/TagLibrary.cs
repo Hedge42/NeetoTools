@@ -1,7 +1,21 @@
-﻿namespace Neeto
+﻿using System.Text;
+
+namespace Neeto
 {
     public static class TagLibrary
     {
+        [QuickAction]
+        public static void Generate()
+        {
+            var sb = new StringBuilder();
+            foreach (var tag in UnityEditorInternal.InternalEditorUtility.tags)
+            {
+                sb.AppendLine($"\tpublic const string {ScriptGenerator.Codify(tag)} = \"{tag}\";");
+            }
+            var script = ScriptGenerator.FindScript(typeof(TagLibrary));
+            ScriptGenerator.OverwriteRegion(script, "GENERATED", sb.ToString());
+        }
+
         #region GENERATED
         public const string Untagged = "Untagged";
         public const string Respawn = "Respawn";
