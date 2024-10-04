@@ -119,6 +119,8 @@ namespace Neeto
                     // look for static [QuickAction] after reflection
                     if (asset is MonoScript script) // run from script file populated by reflection
                     {
+                        Debug.Log(script.GetClass().FullName);
+
                         foreach (var item in projectMap[$"{script.name}.cs"])
                         {
                             items.Add(item);

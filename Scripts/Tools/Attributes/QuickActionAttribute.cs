@@ -20,12 +20,12 @@ namespace Neeto
 
 #if UNITY_EDITOR
         const string COPY_GUID = "Assets/Copy GUID";
-        [MenuItem(COPY_GUID, validate = true, priority = 19, secondaryPriority = 1000)]
+        [MenuItem(COPY_GUID, validate = true, priority = 19)]
         static bool CanCopyGUID()
         {
             return Selection.activeObject;
         }
-        [MenuItem(COPY_GUID, validate = false, priority = 19, secondaryPriority = 1000)]
+        [MenuItem(COPY_GUID, validate = false, priority = 19)]
         static void CopyGUID()
         {
             var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Selection.activeObject));

@@ -25,12 +25,14 @@ public static partial class EditorCommands
     }
 
     [MenuItem(MenuPath.Open + "Occlusion Window")]
+    [QuickAction]
     static void OpenOcclusion()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.OcclusionCullingWindow,UnityEditor"));
     }
 
     [MenuItem(MenuPath.Open + "Player Settings", priority = Neeto.MenuOrder.Low)]
+    [QuickAction]
     static void OpenPlayerSettings()
     {
         SettingsService.OpenProjectSettings("Project/Player");

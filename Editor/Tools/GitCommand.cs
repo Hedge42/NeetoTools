@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Debug = UnityEngine.Debug;
+using static PlasticPipe.PlasticProtocol.Messages.NegotiationCommand;
+using System.Net.WebSockets;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -15,6 +17,10 @@ using UnityEditor;
 public class GitCommand : ScriptableObject
 {
 #if UNITY_EDITOR
+    static string ProjectPath => Path.GetDirectoryName(Application.dataPath);
+    static string SelectionPath => Path.Combine(ProjectPath, AssetDatabase.GetAssetPath(Selection.activeObject));
+
+
     [CustomEditor(typeof(GitCommand))]
     class GitCommandEditor : Editor
     {
@@ -67,6 +73,80 @@ public class GitCommand : ScriptableObject
         }
     }
 
+    public static void OpenBash(string dir)
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = @"C:\Program Files\Git\git-bash.exe",
+            WorkingDirectory = dir,
+            UseShellExecute = false
+        });
+    }
+    static async Task<ProcessResult> RunBash(string dir, string command)
+    {
+        //command = command.Substring(4, command.Length - 4);
+        var process = Process.Start(new ProcessStartInfo
+        {
+            FileName = @"C:\Program Files\Git\bin\bash",
+            Arguments = $"git status",
+            WorkingDirectory = dir,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = true,
+        });
+
+        Debug.Log($"Running `{command}`...");
+
+        //process.Start();
+
+        //var output = await process.StandardOutput.ReadToEndAsync();
+        //var error = await process.StandardError.ReadToEndAsync();
+        //var output = await process.StandardOutput.ReadToEndAsync();
+
+        //process.WaitForExit();
+
+        var output = await process.StandardOutput.ReadToEndAsync();
+        var error = await process.StandardError.ReadToEndAsync();
+
+        process.WaitForExit();
+
+        //Debug.Log($"exited with code {process.ExitCode}");
+        //Debug.Log(output);
+        //Debug.Log(error);
+        //process.Close();
+        //Debug.Log(error);
+
+        return new ProcessResult(process.ExitCode, output, error);
+    }
+
+    [QuickAction]
+    public static async void GitStatus()
+    {
+        var result = await RunBash(ProjectPath, "git status");
+
+        Debug.Log(result.output);
+        //RunBash(ProjectPath, "git status");
+    }
+
+    [QuickAction]
+    public static void OpenProjectInBash()
+    {
+        OpenBash(Path.GetDirectoryName(Application.dataPath));
+    }
+
+    [MenuItem("Assets/git/bash here", priority = 20, validate = false)]
+    public static void BashHere()
+    {
+        OpenBash(SelectionPath);
+    }
+    [MenuItem("Assets/git/bash here", priority = 20, validate = true)]
+    public static bool _BashHere()
+    {
+        return Directory.Exists(SelectionPath);
+    }
+
     struct ProcessResult
     {
         public int exitCode;
@@ -79,9 +159,9 @@ public class GitCommand : ScriptableObject
             this.error = error;
         }
     }
-    static async Task<ProcessResult> RunAsync(string command, string workingDirectory = null)
+    static async Task<ProcessResult> RunAsync(string command, string workingDirectory = null, uint timeout = 10000) // 10 secs
     {
-        workingDirectory = workingDirectory ?? Application.dataPath + "/../";
+        workingDirectory = workingDirectory ?? ProjectPath;
 
         try
         {
@@ -104,7 +184,7 @@ public class GitCommand : ScriptableObject
             string output = await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
 
-            process.WaitForExit();
+            process.WaitForExit((int)timeout);
 
             return new ProcessResult(process.ExitCode, output.Trim(), error.Trim());
         }
