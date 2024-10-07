@@ -2,12 +2,9 @@
 using Neeto;
 using System.IO;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Debug = UnityEngine.Debug;
-using static PlasticPipe.PlasticProtocol.Messages.NegotiationCommand;
-using System.Net.WebSockets;
 
 #if UNITY_EDITOR
 using UnityEditor;

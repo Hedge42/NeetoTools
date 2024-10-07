@@ -1,8 +1,8 @@
 ﻿#if UNITY_EDITOR
-using Cysharp.Threading.Tasks;
 using Neeto;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -11,6 +11,15 @@ using UnityEngine.AI;
 
 public static partial class EditorCommands
 {
+    [QuickAction]
+    [MenuItem(MenuPath.Open + "Package manifest", priority = Neeto.MenuOrder.Bottom)]
+    static void OpenPackageManifest()
+    {
+        EditorApplication.delayCall += () =>
+        {
+            EditorUtility.OpenWithDefaultApp(Path.Combine(Path.GetDirectoryName(Application.dataPath), "Packages", "manifest.json"));
+        };
+    }
 
     [MenuItem(MenuPath.Open + "Build Settings", priority = Neeto.MenuOrder.Low)]
     static void OpenBuildSettings()

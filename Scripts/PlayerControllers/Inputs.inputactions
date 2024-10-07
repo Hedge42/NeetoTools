@@ -1,19 +1,10 @@
 {
-    "name": "ThirdPersonInput",
+    "name": "Inputs",
     "maps": [
         {
-            "name": "Move3D",
+            "name": "ThirdPerson",
             "id": "39d2bfbf-6ec6-421c-b0a2-9dee74aa7362",
             "actions": [
-                {
-                    "name": "Move3D",
-                    "type": "Value",
-                    "id": "f4e80275-3917-48bf-9da0-72b06b8522e8",
-                    "expectedControlType": "Vector3",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
                 {
                     "name": "MoveStick",
                     "type": "Value",
@@ -22,24 +13,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
-                },
-                {
-                    "name": "Rise",
-                    "type": "Value",
-                    "id": "13e5caa1-210f-4651-bd43-5b25a22b4fbc",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Fall",
-                    "type": "Button",
-                    "id": "438fe120-ceab-450c-a04a-ea3e71786e5b",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "Hold",
-                    "initialStateCheck": false
                 },
                 {
                     "name": "DoubleTap",
@@ -61,83 +34,6 @@
                 }
             ],
             "bindings": [
-                {
-                    "name": "WASDCtrlShift",
-                    "id": "10435768-5042-4e75-a4b4-93a3ebf1203a",
-                    "path": "3DVector",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move3D",
-                    "isComposite": true,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "up",
-                    "id": "4de31f54-2ff4-4862-a82a-2fb4b896403c",
-                    "path": "<Keyboard>/space",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move3D",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "down",
-                    "id": "84c54b92-d193-44a0-8a4a-63413e497e9b",
-                    "path": "<Keyboard>/ctrl",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move3D",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "left",
-                    "id": "4817b648-00e5-46ec-b6a8-eb33c482c8f9",
-                    "path": "<Keyboard>/a",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move3D",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "right",
-                    "id": "aefcd37f-7644-449c-8c24-edf12cff5c11",
-                    "path": "<Keyboard>/d",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move3D",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "forward",
-                    "id": "719ab19e-52b2-4eca-94a6-83baa5fe1f46",
-                    "path": "<Keyboard>/w",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move3D",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "backward",
-                    "id": "39fce196-c05b-4c6d-9682-cd69f08693b4",
-                    "path": "<Keyboard>/s",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Move3D",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
                 {
                     "name": "",
                     "id": "ea2f2d78-a989-4a48-a0e6-fb751c49ca70",
@@ -206,56 +102,12 @@
                 },
                 {
                     "name": "",
-                    "id": "09c54954-a3af-4c56-affb-8080c163bd45",
-                    "path": "<Keyboard>/e",
-                    "interactions": "Hold",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Rise",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "6bf9325e-6612-48db-8ba6-255e6d7a0917",
-                    "path": "<Keyboard>/space",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "ThirdPerson",
-                    "action": "Rise",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "3c6e78ab-c7ff-4477-87a8-dbc0f4b31446",
                     "path": "",
                     "interactions": "",
                     "processors": "",
                     "groups": "ThirdPerson",
                     "action": "DoubleTap",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b0b84671-dd1a-4e5e-ae7f-ff32c4bd5425",
-                    "path": "<Keyboard>/q",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Fall",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "c08a63b5-9f69-463e-9d83-48488fa6f6c5",
-                    "path": "<Keyboard>/ctrl",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "ThirdPerson",
-                    "action": "Fall",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -273,6 +125,193 @@
                 {
                     "name": "",
                     "id": "cf468d16-ad62-4bd5-a4da-acbf6069801d",
+                    "path": "<Mouse>/delta",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Look",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Flying",
+            "id": "ca7aff95-2869-424f-9b99-6917d638bac8",
+            "actions": [
+                {
+                    "name": "Look",
+                    "type": "Value",
+                    "id": "164f9e19-6fa6-4372-895c-89ed8b2c518e",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Move3D",
+                    "type": "Value",
+                    "id": "c7f11b43-7b3f-4d61-b4c8-a1368fbfbf88",
+                    "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Rise",
+                    "type": "Value",
+                    "id": "63dccc8f-218a-49b2-9654-65fe61938691",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Fall",
+                    "type": "Button",
+                    "id": "205a0013-dfe6-4b07-bd04-d6b314f7804c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Hold",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "WASDCtrlShift",
+                    "id": "44ea9002-e1de-4a82-933c-f581465b59b0",
+                    "path": "3DVector",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move3D",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "up",
+                    "id": "ef7f91c1-4479-4860-b69e-e60f0489e60c",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move3D",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "down",
+                    "id": "274614b9-9d35-4564-9f12-3720e9e1d8be",
+                    "path": "<Keyboard>/ctrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move3D",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "left",
+                    "id": "623bec24-229e-406c-afd2-d4296c7db37f",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move3D",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "right",
+                    "id": "1767e868-a4ad-493f-9cb2-74f7842b541b",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move3D",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "forward",
+                    "id": "b3f13860-91c9-40a2-82d3-b1646a540c12",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move3D",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "backward",
+                    "id": "bb4671be-6f24-4571-a584-aecc6e720ff7",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move3D",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "b38e1e1f-7bac-48a2-8aa0-f73f806aaef9",
+                    "path": "<Keyboard>/e",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Rise",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c8a48f17-97f9-4604-9008-7fddc94deb05",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "ThirdPerson",
+                    "action": "Rise",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6f1d564c-c7c2-419f-a60d-8eccde023573",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fall",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "56f163d7-2df6-4e32-b914-350c18829e21",
+                    "path": "<Keyboard>/ctrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "ThirdPerson",
+                    "action": "Fall",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f85f0f94-099a-434c-bc58-dd47cffda917",
+                    "path": "<Gamepad>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "ThirdPerson",
+                    "action": "Look",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c6234690-9dc4-44dc-b377-257575a76c8e",
                     "path": "<Mouse>/delta",
                     "interactions": "",
                     "processors": "",
