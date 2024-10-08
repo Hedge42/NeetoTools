@@ -1,0 +1,248 @@
+/* Health Bar Styles */
+.health-bar-container {
+    background-color: #555555;
+    border-radius: 10px;
+    height: 25px;
+    width: 300px;
+    border: 2px solid #444444;
+    overflow: hidden;
+    position: relative;
+}
+
+.health-bar-fill {
+    background-color: #d32f2f; /* Health Color */
+    height: 100%;
+    width: 100%; /* Will be controlled by health percentage in runtime */
+    border-radius: 8px;
+    transition: width 0.2s ease-out;
+}
+
+.health-bar-background {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(0,0,0,0.2) 25%, transparent 25%, transparent 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2) 75%, transparent 75%, transparent);
+    background-size: 10px 10px;
+}
+
+/* Counter Styles */
+.counter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #2c2c2c;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #444444;
+}
+
+.counter-label {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.counter-value {
+    color: #00ff7f; /* Accent for values */
+    font-size: 22px;
+}
+
+/* Timer Styles */
+.timer-container {
+    background-color: #3d3d3d;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 2px solid #444444;
+}
+
+.timer-text {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Notification Styles */
+.notification {
+    background-color: #007acc;
+    color: #ffffff;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border-left: 5px solid #00ff7f;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    animation: fadeInOut 4s ease-in-out;
+}
+
+.notification.warning {
+    background-color: #f9a825;
+    border-left-color: #ffeb3b;
+}
+
+.notification.error {
+    background-color: #d32f2f;
+    border-left-color: #ff1744;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10%, 90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Dialogue Box Styles */
+.dialogue-box {
+    background-color: #222222;
+    color: #ffffff;
+    padding: 20px;
+    margin: 15px;
+    border-radius: 10px;
+    border: 3px solid #007acc;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+}
+
+.dialogue-box .character-name {
+    font-weight: bold;
+    font-size: 20px;
+    color: #00ff7f;
+    margin-bottom: 10px;
+}
+
+.dialogue-box .dialogue-text {
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+/* Notification Styles for Popups */
+.popup-notification {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #444444;
+    max-width: 350px;
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+    animation: slideInOut 5s ease-in-out;
+}
+
+@keyframes slideInOut {
+    0% { transform: translate(-50%, -200%); opacity: 0; }
+    15%, 85% { transform: translate(-50%, 0); opacity: 1; }
+    100% { transform: translate(-50%, -200%); opacity: 0; }
+}
+
+/* Scoreboard Styles */
+.scoreboard-container {
+    background-color: #3d3d3d;
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #555555;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 300px;
+}
+
+.scoreboard-title {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.scoreboard-item {
+    color: #00ff7f;
+    font-size: 18px;
+    margin: 5px 0;
+}
+
+/* Progress Bar Styles */
+.progress-bar-container {
+    width: 100%;
+    background-color: #444444;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+
+.progress-bar {
+    height: 20px;
+    width: 0%; /* This will be adjusted dynamically */
+    background-color: #007acc;
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Inventory Slot Styles */
+.inventory-slot {
+    width: 60px;
+    height: 60px;
+    background-color: #555555;
+    border: 2px solid #444444;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.inventory-slot img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 5px;
+}
+
+.inventory-slot .quantity {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background-color: #000000aa;
+    color: #ffffff;
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+/* Tooltip Styles */
+.tooltip {
+    position: absolute;
+    background-color: #222222;
+    color: #ffffff;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #007acc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    font-size: 14px;
+    width: max-content;
+}
+
+/* Dialogue Options Styles */
+.dialogue-options {
+    background-color: #3d3d3d;
+    border: 2px solid #444444;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dialogue-options .option-button {
+    background-color: #007acc;
+    color: #ffffff;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dialogue-options .option-button:hover {
+    background-color: #1a73e8;
+}

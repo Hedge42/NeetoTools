@@ -2,14 +2,24 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Scripting;
 using UnityEngine.UIElements;
 
 namespace Neeto
 {
+    
+
     public class MainMenu : MonoBehaviour
     {
         public UIDocument doc;
+        public VisualElement root => doc.rootVisualElement;
+
+       
+        
+
+        [SerializeReference, Polymorphic]
+        public UIElement[] elements;
 
         public string titleText;
 
@@ -28,6 +38,9 @@ namespace Neeto
 
         private void Awake()
         {
+            foreach (var e in elements)
+                e.Q(root);
+
             this.Title = doc.rootVisualElement.Q<Label>(title);
             this.Play = doc.rootVisualElement.Q<Button>(play);
             this.Settings = doc.rootVisualElement.Q<Button>(settings);
@@ -39,7 +52,7 @@ namespace Neeto
             Settings.clicked += OnSettings;
             Quit.clicked += OnQuit;
 
-            
+
         }
 
         private void OnEnable()
