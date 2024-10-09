@@ -44,5 +44,6 @@ namespace Neeto
         public string text;
         protected override void OnSetElement() => Element.text = text;
     }
-    [Serializable] public class SliderElement : UIElement { }
+    [Serializable] public class SliderElement : UIElement<Slider> { }
+    [Serializable] public class ProgressBarElement : UIElement<ProgressBar> { }
 }
