@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/FGS/UI/USS/FGS_MainMenu.uss?fileID=7433441132597879392&amp;guid=6c14b8735152da34698aec8bbfedb9d3&amp;type=3#FGS_MainMenu" />
+    <ui:VisualElement name="Panel" class="background" style="flex-grow: 1; width: 59%; align-self: center; height: auto; justify-content: flex-start; align-items: stretch; flex-direction: column; top: 47px; background-image: url(&quot;project://database/Assets/FGS/UI/FGS_Poster_Plain.png?fileID=2800000&amp;guid=04187d462be43cb4e97d70c14f642c02&amp;type=3#FGS_Poster_Plain&quot;); -unity-background-scale-mode: scale-and-crop;">
+        <ui:Label tabindex="-1" text="Anime Fart Girl Simulator" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Title" class="title" style="white-space: normal; -unity-text-align: upper-center; color: rgb(224, 222, 176);" />
+        <ui:Button text="Play" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Play" />
+        <ui:Button text="Settings" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Settings" class="menu-button" />
+        <ui:Button text="Quit" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Quit" class="menu-button" />
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-grow: 1;" />
+</ui:UXML>
