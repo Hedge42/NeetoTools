@@ -149,11 +149,17 @@ namespace Neeto
             validationMap = new();
             foreach (var method in TypeCache.GetMethodsWithAttribute<MenuItem>())
             {
+                if (!method.ReturnType.Equals(typeof(bool)))
+                    continue;
+
                 foreach (var attribute in method.GetCustomAttributes<MenuItem>(false))
                 {
                     // Only collect methods marked with 'validate = true'
                     if (attribute != null && attribute.validate)
-                        validationMap.Add(attribute.menuItem, () => (bool)method.Invoke(null, null));
+                    {
+                        var c = method.GetParameters().Count();
+                        validationMap.Add(attribute.menuItem, () => (bool)method.Invoke(null, new object[c]));
+                    }
                 }
             }
 
