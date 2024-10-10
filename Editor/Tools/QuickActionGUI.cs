@@ -25,7 +25,7 @@ namespace Neeto
         class QuickActionMap : Dictionary<string, List<DropdownItem<Action>>> { }
 
         const int SIZE = 16;
-        static bool enabled => NeetoSettings.instance.showQuickInspect;
+        static bool enabled => NeetoSettings.instance.experimentalEditorFeatures;
         static QuickActionMap projectMap;
         static Dictionary<int, List<DropdownItem<Action>>> hierarchyMap = new();
         static GUIContent content; // magnifying-glass icon with "inspect" tooltip
@@ -83,6 +83,7 @@ namespace Neeto
 
             var path = AssetDatabase.GUIDToAssetPath(guid);
             var ext = Path.GetExtension(path);
+            bool showInspect = false;
             switch (ext)
             {
                 case ".prefab":
@@ -93,6 +94,7 @@ namespace Neeto
                 case ".lighting":
                 case ".mat":
                 case ".md":
+                    showInspect = true;
                     break;
                 case ".cs":
                     if (projectMap != null && projectMap.ContainsKey(Path.GetFileName(path)))
@@ -103,7 +105,12 @@ namespace Neeto
                     return;
             }
 
-            if (GUI.Button(rect.With(xMin: rect.xMax - SIZE, height: SIZE), content, EditorStyles.iconButton))
+            rect = rect.With(xMin: rect.xMax - SIZE, height: SIZE);
+            //if (showInspect)
+            //{
+            //}
+
+            if (GUI.Button(rect, content, EditorStyles.iconButton))
             {
                 EditorApplication.delayCall += () =>
                 {
@@ -119,8 +126,6 @@ namespace Neeto
                     // look for static [QuickAction] after reflection
                     if (asset is MonoScript script) // run from script file populated by reflection
                     {
-                        Debug.Log(script.GetClass().FullName);
-
                         foreach (var item in projectMap[$"{script.name}.cs"])
                         {
                             items.Add(item);
@@ -161,10 +166,10 @@ namespace Neeto
 
             var map = new QuickActionMap();
             // Find all EditorWindow types
-            foreach (var type in TypeCache.GetTypesDerivedFrom<EditorWindow>())
-            {
-                Add(map, $"{type.Name}.cs", $"Open {type.Name}", () => EditorWindow.GetWindow(type, false));
-            }
+            //foreach (var type in TypeCache.GetTypesDerivedFrom<EditorWindow>())
+            //{
+            //    Add(map, $"{type.Name}.cs", $"Open {type.Name}", () => EditorWindow.GetWindow(type, false));
+            //}
 
             // Find all ScriptableObject types (excluding Editor subclasses)
             foreach (var type in TypeCache.GetTypesDerivedFrom<ScriptableObject>())
@@ -218,7 +223,7 @@ namespace Neeto
             var type = obj.GetType();
             return type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
                        .Where(method => method.GetCustomAttribute<QuickActionAttribute>() != null)
-                       .Select(method => new DropdownItem<Action>(() => method.Invoke(method.IsStatic ? null : obj, null), $"{type.Name}.{method.Name}()"))
+                       .Select(method => new DropdownItem<Action>(() => method.Invoke(method.IsStatic ? null : obj, null), $"{method.Name}"))
                        .ToList();
         }
         static List<DropdownItem<Action>> GetGameObjectActions(GameObject gameObject)
@@ -268,30 +273,6 @@ namespace Neeto
             }
 
             return items;
-        }
-        static void CreateScriptableObject(Type type)
-        {
-            // Find the script asset associated with this ScriptableObject type
-            var script = MonoScript.FromScriptableObject(ScriptableObject.CreateInstance(type));
-            var scriptPath = AssetDatabase.GetAssetPath(script);
-            var defaultDirectory = System.IO.Path.GetDirectoryName(scriptPath);
-
-            // Create a new instance
-            var instance = ScriptableObject.CreateInstance(type);
-
-            // Determine the save location
-            var path = defaultDirectory;
-            var fileName = type.Name + ".asset";
-            var assetPath = AssetDatabase.GenerateUniqueAssetPath(System.IO.Path.Combine(path, fileName));
-
-            // Create the asset in the specified path
-            AssetDatabase.CreateAsset(instance, assetPath);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(assetPath);
-
-            Debug.Log($"ScriptableObject '{fileName}' created at: {assetPath}", asset);
         }
         static void CreateScriptableObjectPanel(Type type)
         {

@@ -3,17 +3,18 @@ using UnityEngine;
 using UnityToolbarExtender;
 using Debug = UnityEngine.Debug;
 
-using Settings = NeetoSettings;
 
 namespace Neeto
 {
+    using Settings = NeetoSettings;
     [InitializeOnLoad]
+    [DefaultExecutionOrder(-10)]
     public static class ToolbarGUI
     {
         static bool enabled
         {
-            get => Settings.instance.overrideToolbarWindow;
-            set => Settings.instance.overrideToolbarWindow = value;
+            get => Settings.instance.experimentalEditorFeatures;
+            set => Settings.instance.experimentalEditorFeatures = value;
         }
         static ToolbarGUI()
         {

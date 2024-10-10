@@ -19,5 +19,8 @@ MonoBehaviour:
   - {fileID: 5897886265953266890, guid: 15fc0a57446b3144c949da3e2b9737a9, type: 3}
   - {fileID: 5897886265953266890, guid: 2bafac87e7f4b9b418d9448d219b01ab, type: 3}
   - {fileID: 5897886265953266890, guid: f51ebe6a0ceec4240a699833d6309b23, type: 3}
-  overrideToolbarWindow: 1
-  showQuickInspect: 1
+  experimentalEditorFeatures: 1
+  contextBlacklist:
+  - Assets/Update UXML Schema
+  - Assets/View in Import Activity Window
+  - Assets/Open C# Project
