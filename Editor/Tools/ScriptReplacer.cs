@@ -10,7 +10,7 @@ public class ScriptReplacer : EditorWindow
     Editor editor;
     bool init;
 
-    [MenuItem(MenuPath.Open + nameof(ScriptReplacer))]
+    [MenuItem(MENU.Open + nameof(ScriptReplacer))]
     public static void ShowWindow()
     {
         GetWindow<ScriptReplacer>(nameof(ScriptReplacer));

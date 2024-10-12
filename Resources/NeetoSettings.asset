@@ -12,6 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02db0c0b7a836d148bfe9daa5c326d3a, type: 3}
   m_Name: NeetoSettings
   m_EditorClassIdentifier: 
+  snappingLayers:
+    serializedVersion: 2
+    m_Bits: 64
   reflectionScope:
   - {fileID: 5897886265953266890, guid: 5e352cd6a96fd314c8a10f1340a365f8, type: 3}
   - {fileID: 5897886265953266890, guid: 9e24947de15b9834991c9d8411ea37cf, type: 3}

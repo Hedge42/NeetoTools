@@ -19,19 +19,15 @@ namespace Neeto
 
         static void OnHierarchyWindowItemGUI(int instanceID, Rect selectionRect)
         {
-            // Detect right-click in the Hierarchy window with a GameObject selected
+            // hold control to toggle
+            if (NeetoSettings.instance.experimentalEditorFeatures == Event.current.control)
+                return;
+
+            // was this object right-clicked?
             if (Event.current.type == EventType.ContextClick && selectionRect.Contains(Event.current.mousePosition))
             {
-                // Prevent default context menu from showing
                 Event.current.Use();
-
-                // Get the selected GameObject
-                GameObject selectedObject = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
-                if (selectedObject != null)
-                {
-                    // Show the dropdown for GameObject context menu
-                    ShowDropdown(selectedObject);
-                }
+                ShowDropdown((GameObject)EditorUtility.InstanceIDToObject(instanceID));
             }
         }
 

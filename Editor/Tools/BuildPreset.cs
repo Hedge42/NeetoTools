@@ -13,7 +13,7 @@ using UnityEditor;
 
 namespace Neeto
 {
-    [CreateAssetMenu(menuName = MenuPath.Neeto + nameof(BuildPreset), order = MenuOrder.High_)]
+    [CreateAssetMenu(menuName = MENU.Neeto + nameof(Neeto.BuildPreset), order = MENU.High)]
     public class BuildPreset : ScriptableObject
     {
         #region Editor

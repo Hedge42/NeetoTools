@@ -16,7 +16,7 @@ using UnityEditor;
 
 namespace Neeto
 {
-    [CreateAssetMenu(menuName = MenuPath.Neeto + nameof(ScriptableLoadingTask))]
+    [CreateAssetMenu(menuName = MENU.Neeto + nameof(ScriptableLoadingTask))]
     public class ScriptableLoadingTask : ScriptableObject
     {
         public LoadingTask task;

@@ -17,6 +17,9 @@ namespace Neeto
     public class NeetoSettings : ScriptableObject
     {
         #region runtime
+
+        public LayerMask snappingLayers;
+
         static NeetoSettings _instance;
         public static NeetoSettings instance => _instance ??= LoadOrCreate();
         public static NeetoSettings LoadOrCreate()
@@ -32,7 +35,10 @@ namespace Neeto
             }
             return settings;
         }
+
+
         #endregion
+
 
         #region editor
 #if UNITY_EDITOR

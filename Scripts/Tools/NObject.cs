@@ -92,8 +92,7 @@ namespace Neeto
         }
         public static T GetOrAddComponent<T>(this GameObject g) where T : Component
         {
-            var c = g.GetComponent<T>();
-            return c ? c : g.AddComponent<T>();
+            return g?.GetComponent<T>() ?? g?.AddComponent<T>();
         }
         public static Component GetOrAddComponent(this GameObject g, Type type)
         {

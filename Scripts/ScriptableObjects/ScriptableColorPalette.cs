@@ -8,7 +8,7 @@ using Neeto;
 using UnityEditor;
 #endif
 
-[CreateAssetMenu(menuName = MenuPath.Neeto + nameof(ScriptableColorPalette))]
+[CreateAssetMenu(menuName = MENU.Neeto + nameof(ScriptableColorPalette))]
 public class ScriptableColorPalette : ScriptableObject
 {
     [SerializeReference, Polymorphic] public IColor[] colors;

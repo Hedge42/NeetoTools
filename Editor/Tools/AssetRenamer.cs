@@ -29,7 +29,7 @@ namespace Neeto
         Vector2 scroll;
         Texture2D bg;
 
-        [MenuItem(MenuPath.Open + nameof(AssetRenamer), priority = MenuOrder.Bottom)]
+        [UnityEditor.MenuItem(MENU.Open + nameof(Neeto.AssetRenamer), priority = MENU.Bottom)]
         public static void Open()
         {
             EditorWindow.GetWindow<AssetRenamer>();
@@ -89,7 +89,7 @@ namespace Neeto
             "Variant"
         };
 
-        [MenuItem(MenuPath.Open + "Fix Asset Names")]
+        [MenuItem(MENU.Open + "Fix Asset Names")]
         public static void Fix()
         {
             var selectedAssets = Selection.GetFiltered<UnityEngine.Object>(SelectionMode.Assets);

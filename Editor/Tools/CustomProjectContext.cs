@@ -20,16 +20,14 @@ namespace Neeto
 
         static void OnProjectWindowItemGUI(string guid, Rect selectionRect)
         {
-            // Detect right-click in the Project Window
+            // hold control to toggle
             if (NeetoSettings.instance.experimentalEditorFeatures == Event.current.control)
                 return;
 
+            // was the rect right-clicked?
             if (Event.current.type == EventType.ContextClick && selectionRect.Contains(Event.current.mousePosition))
             {
-                // Prevent default context menu from showing
                 Event.current.Use();
-
-                // Show the dropdown
                 ShowDropdown(guid);
             }
         }

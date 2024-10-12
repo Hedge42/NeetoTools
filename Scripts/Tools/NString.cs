@@ -120,6 +120,17 @@ public static class NString
         return false;
     }
     public static bool HasContents(this string _) => _.Trim().Length > 0;
+    public static string WithExtension(this string path, string next)
+    {
+        // ensure desired extension starts with a .
+        next = next.WithBeginning(".");
+        var prev = Path.GetExtension(path).WithBeginning(".");
+        return path.Substring(0, path.Length - prev.Length) + next;
+    }
+    public static string WithBeginning(this string _, string str)
+    {
+        return _.StartsWith(str) ? _ : str + _;
+    }
     public static bool TryGetTextBetweenChars(this string input, char startChar, char endChar, out string output)
     {
         output = "";
