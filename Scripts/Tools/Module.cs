@@ -53,20 +53,4 @@ namespace Neeto
                              .ToArray();
         }
     }
-
-    [Serializable]
-    public class ModuleReference
-    {
-        public Module module;
-
-#if UNITY_EDITOR
-        [GUIChanged(nameof(OnAssetChanged), true)]
-        public UnityEditorInternal.AssemblyDefinitionAsset asset;
-#endif
-
-        void OnAssetChanged()
-        {
-            Debug.Log(module.name = asset.NameOrNull());
-        }
-    }
 }

@@ -152,7 +152,7 @@ namespace Neeto
             }
         }
         public static Ray mouseViewRay => HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-        public static LayerMask clickLayers => LayerLibrary.PhysicsLayers.Terrain | LayerLibrary.PhysicsLayers.Interactable | LayerLibrary.PhysicsLayers.Level;
+        public static LayerMask clickLayers => NeetoSettings.instance.snappingLayers;
         public static bool MouseCast(out RaycastHit hit)
         {
             return Physics.Raycast(mouseViewRay, out hit, 100f, (int)clickLayers, QueryTriggerInteraction.Ignore);
@@ -221,7 +221,7 @@ namespace Neeto
         }
         public static bool NavCast(out Vector3 position)
         {
-            var result = Physics.Raycast(mouseViewRay, out var hit, 100, LayerLibrary.Environment, QueryTriggerInteraction.Ignore);
+            var result = Physics.Raycast(mouseViewRay, out var hit, 100, NeetoSettings.instance.snappingLayers, QueryTriggerInteraction.Ignore);
             position = hit.point;
 
             if (result)

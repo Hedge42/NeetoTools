@@ -113,9 +113,13 @@ namespace Neeto
                     // Create the asset creation action
                     Action createAssetAction = () =>
                     {
-                        ScriptableObject asset = ScriptableObject.CreateInstance(type);
-                        string path = AssetDatabase.GenerateUniqueAssetPath($"Assets/{menuName}.asset");
-                        AssetDatabase.CreateAsset(asset, path);
+                        var asset = ScriptableObject.CreateInstance(type);
+                        var assetPath = Selection.activeObject ? AssetDatabase.GetAssetPath(Selection.activeObject) : $"Assets/";
+                        var systemPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), assetPath);
+                        if (!Directory.Exists(systemPath)) // is file?
+                            assetPath = Path.GetDirectoryName(assetPath);
+                        assetPath = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(assetPath, $"{type.Name}.asset"));
+                        AssetDatabase.CreateAsset(asset, assetPath);
                         AssetDatabase.SaveAssets();
                         AssetDatabase.Refresh();
                         EditorUtility.FocusProjectWindow();

@@ -124,7 +124,7 @@ namespace Neeto
             }
             else if (type.Equals(typeof(LayerMask)))
             {
-                selected.intValue = EditorGUI.MaskField(position, selected.intValue, LayerLibrary.GetLayerNames());
+                selected.intValue = EditorGUI.MaskField(position, selected.intValue, LayerHelper.GetPhysicsLayerNames());
             }
             else if (argType == Argument.ArgType.Reference)
             {
