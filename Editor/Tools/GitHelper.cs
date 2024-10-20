@@ -57,6 +57,7 @@ namespace Neeto
                             var list = new List<DropdownItem<Action>>
                                 {
                                 new DropdownItem<Action>(()=> OpenBash(), "Open Project in Bash"),
+                                new DropdownItem<Action>(()=> QuickSync(), "Quick Sync"),
                                 new DropdownItem<Action>(()=> Run($"git add . && git commit -am \"{DateTime.Now:MMM dd, yyyy @ h: mmtt}\""), "Quick Commit"),
                                 new DropdownItem<Action>(()=> Run("git log --oneline"), "Quick Log"),
                                 new DropdownItem<Action>(()=> Run("git status -s"), "Quick Status"),
@@ -108,10 +109,28 @@ namespace Neeto
             };
         }
 
+        static void QuickSync()
+        {
+            Run("git fetch origin\n" +
+                "git add .\n" +
+                "git commit -am \"updates\"\n" +
+                "git push origin HEAD -f\n" +
+                "git rebase -S -Xtheirs --continue origin/main\n" +
+                "git checkout origin/HEAD -- $(find . -type d -name \"$(git rev-parse --abbrev-ref HEAD)\" -exec find {} -type f \\;)\n" +
+                "git add .\n" +
+                "git commit -am \"rebase main\"\n" +
+                "git push origin HEAD -f");
+        }
+
         static async void Run(string cmd)
         {
-            var result = await RunAsync(cmd);
-            Debug.Log(cmd + "\n" + result.output.WithHTML(size: 10, color: Color.white.WithV(.7f)));
+            var cmds = cmd.Split('\n');
+
+            foreach (var _ in cmds)
+            {
+                var result = await RunAsync(cmd);
+                Debug.Log(cmd + "\n" + result.output.WithHTML(size: 10, color: Color.white.WithV(.7f)));
+            }
         }
         static async Task<ProcessResult> RunAsync(string command, string workingDirectory = null, uint timeout = 10000) // 10 secs
         {
