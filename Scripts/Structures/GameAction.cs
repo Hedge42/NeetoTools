@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
-using UnityEditor;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using System.Text;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Neeto
 {
@@ -144,7 +147,7 @@ namespace Neeto
             if this is an instance method, make the caller a potential argument
              */
 
-            var list = NReflect.GetParameterTypes(method).ToList();
+            var list = ReflectionHelper.GetParameterTypes(method).ToList();
             if (!method.IsStatic)
                 list.Insert(0, method.DeclaringType); // add the calling type as a potential argument
                                                       //list.AddRange(MReflect.GetParameterTypes(method));
@@ -174,7 +177,7 @@ namespace Neeto
 
         // derived
         private MethodInfo _info;
-        public MethodInfo info => _info ??= NReflect.ToMethod(signature);
+        public MethodInfo info => _info ??= ReflectionHelper.ToMethod(signature);
 
 
         private bool valid;
@@ -294,7 +297,7 @@ namespace Neeto
         public object target => isReferenceTarget ? referenceTarget : objectTarget;
 
         PropertyInfo _info;
-        public PropertyInfo info => _info ??= NReflect.ToProperty(signature);
+        public PropertyInfo info => _info ??= ReflectionHelper.ToProperty(signature);
 
         public abstract object objectValue { get; }
     }
@@ -465,13 +468,13 @@ namespace Neeto
 
             var typeParts = typeAndMethodParts.Take(typeAndMethodParts.Length - 1);
             var typeName = string.Join('.', typeParts);
-            var type = NReflect.GetType(typeName);
+            var type = ReflectionHelper.GetType(typeName);
             var paramsFull = typeAndMethod[1].TrimEnd(')');
 
             // Split would create an empty string where it wasn't needed...
             if (!string.IsNullOrWhiteSpace(paramsFull))
             {
-                var paramTypes = paramsFull.Split(',').Select(n => NReflect.GetType(n)).ToArray();
+                var paramTypes = paramsFull.Split(',').Select(n => ReflectionHelper.GetType(n)).ToArray();
                 return type.GetMethod(methodName, paramTypes);
             }
             else
@@ -484,10 +487,389 @@ namespace Neeto
         {
             return new GameAction
             {
-                signature = NReflect.ToSignature(method)
+                signature = ReflectionHelper.ToSignature(method)
             };
         }
+
+#if UNITY_EDITOR
+        [QuickAction] static void Test() => EditorWindow.GetWindow<TestWindow>();
+#endif
     }
+
+#if UNITY_EDITOR
+    [CustomPropertyDrawer(typeof(GameMethod), true)]
+    public class GameActionDrawer : PropertyDrawer
+    {
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            EditorGUI.BeginProperty(position, label, property);
+
+            NGUI.IndentBoxGUI(position);
+
+            var dropdownRect = InvokeButtonGUI(property, position.With(height: NGUI.lineHeight));
+
+            if (HandleDropdownGUI(dropdownRect, property, label))
+            {
+                position.y += NGUI.fullLineHeight;
+                HandleArgumentsGUI(position.With(height: NGUI.lineHeight), property);
+            }
+
+            NGUI.EndShadow();
+
+            EditorGUI.EndProperty();
+        }
+
+        object target;
+        private Rect InvokeButtonGUI(SerializedProperty property, Rect position)
+        {
+            target ??= ReflectionHelper.FindReflectionTarget(property, fieldInfo);
+
+            if (target is GameAction action)
+            {
+                position = position.WithRightButton(out var buttonPosition);
+                if (GUI.Button(buttonPosition, "?"))
+                {
+                    var method = GetMethod(property);
+                    Debug.Log($"{property.propertyPath}.{target.TypeNameOrNull()}.{method.NameOrNull()}", property.serializedObject.targetObject);
+                    if (method != null)
+                    {
+                        action.Invoke();
+                    }
+                }
+            }
+
+            return position;
+        }
+
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            var args = property.FindPropertyRelative(nameof(GameMethod.arguments));
+            var count = args.arraySize;
+            var height = NGUI.fullLineHeight;
+
+            if (property.isExpanded && count > 0)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    var prop = ArgumentDrawer.GetSelectedProperty(args.GetArrayElementAtIndex(i));
+
+                    if (prop != null)
+                        height += EditorGUI.GetPropertyHeight(prop);
+                }
+            }
+
+            return height;
+        }
+
+        public static MethodInfo GetMethod(SerializedProperty property)
+        {
+            var sig = property.FindPropertyRelative(nameof(GameAction.signature));
+            var result = ReflectionHelper.ToMethod(sig.stringValue, out var method);
+
+            if (!result)
+            {
+                if (sig != null && !sig.stringValue.IsEmpty())
+                {
+                    ReflectionHelper.ToMethod(sig.stringValue);
+                    Debug.LogError($"Invalid method. Does this code still exist? {sig.stringValue}", property.serializedObject.targetObject);
+                }
+            }
+
+            return method;
+        }
+        public bool HandleDropdownGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            var method = GetMethod(property);
+            var content = new GUIContent(GameActionHelper.GetLabelName(method));
+
+            position.ToLabelAndField(out var lbRect, out var ddRect);
+
+            var isExpandable = method != null && Arguments(property).arraySize > 0;
+
+            if (isExpandable)
+                property.isExpanded = EditorGUI.Foldout(lbRect.With(height: NGUI.lineHeight), property.isExpanded, label, true);
+            else
+                EditorGUI.PrefixLabel(lbRect, label);
+
+            if (EditorGUI.DropdownButton(ddRect.With(height: NGUI.lineHeight), content, FocusType.Passive))
+            {
+                GameActionHelper.MethodDropdown(fieldInfo, GetMethod(property), _ => Switch(_, property, fieldInfo));
+            }
+            return isExpandable && property.isExpanded;
+        }
+
+        public void HandleArgumentsGUI(Rect position, SerializedProperty property)
+        {
+            var size = Arguments(property).arraySize;
+            var argumentTypes = GameAction.GetMethodArgumentTypesAndNames(GetMethod(property));
+
+            if (argumentTypes.Count != size)
+            {
+                Debug.Log($"wtf ({Signature(property).stringValue}:{argumentTypes.JoinString()})");
+            }
+
+            EditorGUI.indentLevel++;
+            for (int i = 0; i < size /*&& i < tan.Count*/; i++)
+            {
+                var label = $"{argumentTypes[i].name}({argumentTypes[i].type.Name})";
+                var arg = Arguments(property, i);
+                var prop = ArgumentDrawer.GetSelectedProperty(arg);
+                var isDynamic = ArgumentDrawer.IsDynamic(property, i);
+
+                position = ArgumentDrawer.PropertyGUI(position, prop, fieldInfo, argumentTypes[i].type, isDynamic, label);
+                //position.y += height;
+            }
+            EditorGUI.indentLevel--;
+        }
+
+        public static SerializedProperty Arguments(SerializedProperty property)
+        {
+            return property.FindPropertyRelative(nameof(GameMethod.arguments));
+        }
+        public static SerializedProperty Arguments(SerializedProperty property, int i)
+        {
+            return property.FindPropertyRelative(nameof(GameMethod.arguments))
+                .GetArrayElementAtIndex(i);
+        }
+        public static SerializedProperty Signature(SerializedProperty property)
+        {
+            return property.FindPropertyRelative(nameof(GameMethod.signature));
+        }
+
+        private static void Switch(MethodInfo _method, SerializedProperty property, FieldInfo info)
+        {
+            var sig = Signature(property);
+            var args = Arguments(property);
+
+            // TODO try-catch?
+            if (_method != null)
+            {
+                sig.stringValue = ReflectionHelper.ToSignature(_method);// GetSignature(_);
+
+
+                var methodTypes = GameAction.GetMethodArgumentTypes(_method);
+                var dynamicTypes = GetFieldTypeArguments(info).ToList();
+                UpdateDynamics(property, methodTypes, dynamicTypes);
+
+                args.arraySize = methodTypes.Count;
+                for (int a = 0; a < methodTypes.Count; a++)
+                {
+                    var arg = args.GetArrayElementAtIndex(a);
+                    var argType = ArgumentDrawer.UpdateArgType(arg, methodTypes[a]);
+
+                    if (argType == Argument.ArgType.Reference)
+                    {
+                        var referenceProperty = arg.FindPropertyRelative(nameof(Argument.argReference));
+                        var typeProperty = arg.FindPropertyRelative(nameof(Argument.referenceType));
+
+                        var assignableTypes = ReflectionHelper.GetAssignableReferenceTypes(methodTypes[a]);
+                        if (assignableTypes.Count() == 1)
+                            referenceProperty.managedReferenceValue = Activator.CreateInstance(assignableTypes.ElementAt(0));
+                        else
+                            referenceProperty.managedReferenceValue = null;
+
+                        typeProperty.stringValue = methodTypes[a].FullName;
+                    }
+                }
+            }
+            else
+            {
+                sig.stringValue = "";
+                args.arraySize = 0;
+            }
+
+            //property.serializedObject.Update();
+            property.serializedObject.ApplyModifiedProperties();
+            EditorUtility.SetDirty(property.serializedObject.targetObject);
+        }
+
+        private static void UpdateDynamics(SerializedProperty property, List<Type> methodTypes, IEnumerable<Type> argumentTypes)
+        {
+            methodTypes = new List<Type>(methodTypes);
+            var dynamicsProp = property.FindPropertyRelative(nameof(GameMethod.dynamics));
+            dynamicsProp.arraySize = argumentTypes.Count();
+            int i = 0;
+            foreach (SerializedProperty p in dynamicsProp)
+            {
+                var index = methodTypes.IndexOf(methodTypes.First(t => argumentTypes.ElementAt(i).Equals(t)));
+                methodTypes.RemoveAt(index);
+                p.intValue = index + i;
+                i++;
+            }
+        }
+
+        public static IEnumerable<Type> GetFieldTypeArguments(FieldInfo fieldInfo)
+        {
+            /*
+             return an array representing the potential argument types
+             for GameAction<bool,float>, return [bool,float]
+             */
+            var argumentTypes = fieldInfo.FieldType.GetGenericArguments().ToList();
+
+            /*
+             the return type of a func is not a potential argument
+             */
+            if (typeof(GameFuncBase).IsAssignableFrom(fieldInfo.FieldType))
+                argumentTypes.RemoveAt(0);
+
+            return argumentTypes;
+        }
+
+    }
+
+
+    [CustomPropertyDrawer(typeof(GamePropBase), true)]
+    public class GamePropDrawer : PropertyDrawer
+    {
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            EditorGUI.BeginProperty(position, label, property);
+
+            NGUI.IndentBoxGUI(position);
+
+            var dropdownRect = position.With(height: NGUI.lineHeight).WithRightButton(out var buttonPosition);
+            var info = GetProperty(property);
+
+
+
+            EditorGUI.BeginDisabledGroup(info == null);
+            if (GUI.Button(buttonPosition, "?"))
+            {
+
+                var target = ReflectionHelper.FindReflectionTarget(property, fieldInfo) as GamePropBase;
+                Debug.Log((target.propertyInfo as PropertyInfo).GetValue(target.target));
+            }
+            EditorGUI.EndDisabledGroup();
+
+            if (HandleDropdownGUI(dropdownRect, property, label))
+            {
+                position.y += NGUI.fullLineHeight;
+
+                HandleTargetGUI(position, property);
+                //HandleArgumentsGUI(position.With(h: MEdit.lineHeight), property);
+            }
+
+
+            NGUI.EndShadow();
+
+            EditorGUI.EndProperty();
+        }
+
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.referenceTarget));
+            var height = NGUI.fullLineHeight;
+
+            if (property.isExpanded)
+            {
+                return height + EditorGUI.GetPropertyHeight(targetProperty);
+            }
+
+            return height;
+        }
+
+        public static PropertyInfo GetProperty(SerializedProperty property)
+        {
+            var sig = property.FindPropertyRelative(nameof(GameAction.signature));
+            var result = ReflectionHelper.ToProperty(sig.stringValue, out var Property);
+
+            if (!result)
+            {
+                if (sig != null && !sig.stringValue.IsEmpty())
+                {
+                    ReflectionHelper.ToProperty(sig.stringValue);
+                    Debug.LogError($"Invalid Property. Does this code still exist? {sig.stringValue}", property.serializedObject.targetObject);
+                }
+            }
+
+            return Property;
+        }
+        public bool HandleDropdownGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            var info = GetProperty(property);
+            var content = new GUIContent(GameActionHelper.GetLabelName(info));
+
+            position.ToLabelAndField(out var lbRect, out var ddRect);
+
+            var isExpandable = info != null && !info.GetMethod.IsStatic;// && Arguments(property).arraySize > 0;
+
+            if (isExpandable)
+                property.isExpanded = EditorGUI.Foldout(lbRect.With(height: NGUI.lineHeight), property.isExpanded, label, true);
+            else
+                EditorGUI.PrefixLabel(lbRect, label);
+
+            if (EditorGUI.DropdownButton(ddRect.With(height: NGUI.lineHeight), content, FocusType.Passive))
+            {
+                GameActionHelper.PropertyDropdown(fieldInfo, GetProperty(property), _ => Switch(_, property, fieldInfo));
+            }
+            return isExpandable && property.isExpanded;
+        }
+        public void HandleTargetGUI(Rect position, SerializedProperty property)
+        {
+            EditorGUI.indentLevel++;
+            //var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.referenceTarget));
+            var info = GetProperty(property);
+
+            if (typeof(Object).IsAssignableFrom(info.DeclaringType))
+            {
+                var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.objectTarget));
+                targetProperty.objectReferenceValue = EditorGUI.ObjectField(position.With(height: NGUI.lineHeight), "target", targetProperty.objectReferenceValue, info.DeclaringType, true);
+            }
+            else
+            {
+                var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.referenceTarget));
+                PolymorphicDrawer.DrawGUI(position, targetProperty, new GUIContent("target"), info.DeclaringType, true);
+            }
+            EditorGUI.indentLevel--;
+        }
+
+        public static SerializedProperty Signature(SerializedProperty property)
+        {
+            return property.FindPropertyRelative(nameof(GameCallback.signature));
+        }
+
+
+        private static void Switch(PropertyInfo info, SerializedProperty property, FieldInfo field)
+        {
+            var sig = Signature(property);
+            var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.referenceTarget));
+            var objectProperty = property.FindPropertyRelative(nameof(GamePropBase.objectTarget));
+            var isReferenceProperty = property.FindPropertyRelative(nameof(GamePropBase.isReferenceTarget));
+            targetProperty.managedReferenceValue = null;
+            objectProperty.objectReferenceValue = null;
+            isReferenceProperty.boolValue = false;
+
+            var infoProp = property.FindPropertyRelative(nameof(GamePropBase.propertyInfo));
+            //Debug.Log(infoProp.managedReferenceValue);
+            infoProp.managedReferenceValue = info;
+
+            // TODO try-catch?
+            if (info != null && info.GetMethod != null)
+            {
+                sig.stringValue = ReflectionHelper.ToSignature(info);// GetSignature(_);
+
+                if (!info.GetMethod.IsStatic)
+                {
+                    if (isReferenceProperty.boolValue = !typeof(Object).IsAssignableFrom(info.DeclaringType) && info.DeclaringType.IsClass && !info.DeclaringType.IsAbstract)
+                    {
+                        targetProperty.managedReferenceValue = Activator.CreateInstance(info.DeclaringType);
+                        objectProperty.objectReferenceValue = null;
+                        isReferenceProperty.boolValue = true;
+                    }
+                }
+            }
+            else
+            {
+                sig.stringValue = "";
+                targetProperty.managedReferenceValue = null;
+            }
+
+            //property.serializedObject.Update();
+            property.serializedObject.ApplyModifiedProperties();
+            EditorUtility.SetDirty(property.serializedObject.targetObject);
+        }
+    }
+#endif
 
 
     /// <summary> Instance method of type T or 1 dynamic arg </summary>
@@ -626,8 +1008,10 @@ namespace Neeto
     }
 
 
-    public static class GameActionExtensions
+    public static class GameActionHelper
     {
+        public const string NONE = "(none)";
+
         public static void Invoke(this GameAction[] actions)
         {
             for (int i = 0; i < actions.Length; i++)
@@ -636,5 +1020,292 @@ namespace Neeto
                 actions[i].Invoke();
             }
         }
+
+        public static string GetDisplayPath(MethodInfo info)
+        {
+            if (info == null)
+                return NONE;
+
+            StringBuilder option = new StringBuilder();
+
+            // Append type name
+            var tt = info.DeclaringType;
+            option.Append($"{info.ModuleName()}/{ReflectionHelper.GetDeclaringString(info.DeclaringType)}.");
+            option.Append(info.Name).Append(' ');
+            if (info.IsStatic)
+                option.Append('*');
+
+            // Append parameter types
+            var paramTypes = info.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}");
+            option.Append('(').Append(string.Join(",", paramTypes)).Append(')');
+
+            if (info.ReturnType != null)
+            {
+                option.Append($" => {info.ReturnType.Name}");
+            }
+
+            return option.ToString();
+        }
+        public static string GetDisplayPath(EventInfo info)
+        {
+            if (info == null)
+                return NONE;
+
+            StringBuilder option = new StringBuilder();
+
+            // Append type name
+            var tt = info.DeclaringType;
+            option.Append($"{info.ModuleName()}/{ReflectionHelper.GetDeclaringString(info.DeclaringType)}.");
+            option.Append(info.Name).Append(' ');
+            if (info.AddMethod.IsStatic)
+                option.Append('*');
+
+            option.Append($"({info.EventHandlerType})");
+
+            return option.ToString();
+        }
+        public static bool TryGetDisplayPath(PropertyInfo info, out string path)
+        {
+            return !(path = GetDisplayPath(info)).Equals(NONE);
+        }
+        public static string GetDisplayPath(PropertyInfo propertyInfo)
+        {
+            if (propertyInfo == null || propertyInfo.GetMethod == null)
+                return NONE;
+
+
+            StringBuilder option = new StringBuilder();
+
+            // Append type name
+            option.Append($"{propertyInfo.ModuleName()}/{ReflectionHelper.GetDeclaringString(propertyInfo.DeclaringType)}.{propertyInfo.Name} ");
+            if (propertyInfo.GetMethod.IsStatic)
+                option.Append('*');
+
+            //option.Append("{ get; set; }");
+            option.Append($" => {propertyInfo.PropertyType.Name}");
+
+            return option.ToString();
+        }
+
+        public static void PropertyDropdown(FieldInfo field, PropertyInfo selected, Action<PropertyInfo> onSelect)
+        {
+            //var flags = GameAction.FLAGS_P;
+
+            //if (field.FieldType.TryGetAttribute<BindingFlagsAttribute>(out var f))
+            //    flags &= f.flags;
+
+            //if (field.TryGetAttribute<BindingFlagsAttribute>(out var f_attr))
+            //    flags |= f_attr.flags;
+
+
+            var flags = BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Instance;
+
+            var mods = Module.ALL;
+
+            var returnType = field.FieldType.GetGenericArguments()[0];
+
+            var properties = ReflectionHelper.GetProperties(mods, flags)
+                // needs get method for other logic & generics not supported
+                .Where(prop => prop.GetMethod != null && prop.CanRead && !prop.DeclaringType.ContainsGenericParameters && (prop.GetMethod.IsStatic || prop.DeclaringType.IsSerializable) && returnType.IsAssignableFrom(prop.PropertyType))
+                .Select(prop => (prop, GetDisplayPath(prop)))
+                .Where((prop, path) => !path.Equals(NONE))
+                .ToArray();
+
+            if (properties.Length == 0)
+            {
+                Debug.LogError("No methods found!");
+                return;
+            }
+
+            DropdownHelper.Show(onSelect, true, true, GetDisplayPath(selected), properties);
+        }
+        public static void EventDropdown(FieldInfo field, EventInfo selected, Action<EventInfo> onSelect)
+        {
+            var flags = BindingFlags.Default;
+
+            if (field.FieldType.TryGetAttribute<BindingFlagsAttribute>(out var f))
+                flags |= f.flags;
+
+            if (field.TryGetAttribute<BindingFlagsAttribute>(out var f_attr))
+                flags |= f_attr.flags;
+
+
+            var mods = Module.ALL;
+
+            var events = ReflectionHelper.GetEvents(mods, flags);
+
+            if (events.Count() == 0)
+            {
+                Debug.LogError("No methods found!");
+                return;
+            }
+
+            var generics = field.FieldType.GetGenericArguments();
+            var eventType = generics.Length == 0 ? typeof(void) : generics[0];
+
+            events = events.Where(p => p.EventHandlerType.Equals(eventType));
+
+            foreach (var _ in events)
+            {
+                Debug.Log($"{_.Name} {_.EventHandlerType}");
+            }
+
+            //.Where(m => m.GetParameterTypesWithTarget());
+            var items = events.Select(evnt => (evnt, GameActionHelper.GetDisplayPath(evnt))).ToArray();
+
+            DropdownHelper.Show(onSelect, true, true, GameActionHelper.GetDisplayPath(selected), items);
+        }
+        public static void MethodDropdown(FieldInfo field, MethodInfo selected, Action<MethodInfo> onSelect)
+        {
+            var flags = GameAction.FLAGS_M;
+
+            if (field.FieldType.TryGetAttribute<BindingFlagsAttribute>(out var f))
+                flags &= f.flags;
+
+            if (field.TryGetAttribute<BindingFlagsAttribute>(out var f_attr))
+                flags |= f_attr.flags;
+
+
+            var mods = Module.ALL;
+            var methods = ReflectionHelper.GetMethods(mods, flags)
+                .Where(m => !m.ContainsGenericParameters && (m.IsStatic || m.ReflectedType.IsSerializable) && !m.DeclaringType.ContainsGenericParameters 
+                && !m.GetParameters().Any(p => p.ParameterType.IsGenericType || p.IsOut || p.IsRetval || p.IsLcid || p.IsIn || !p.ParameterType.IsSerializable || p.ParameterType.IsByRef || p.ParameterType.IsArray || typeof(Delegate).IsAssignableFrom(p.ParameterType)));
+
+            if (methods.Count() == 0)
+            {
+                Debug.LogError("No methods found!");
+                return;
+            }
+
+            var gs = field.FieldType.GetGenericArguments().ToList();
+
+            if (typeof(GameAction).Equals(field.FieldType))
+            {
+                methods = methods.Where(m => m.ReturnType.Equals(typeof(void)));
+            }
+
+            // GameFunc requires first generic argument to be the return type
+            else if (typeof(GameFuncBase).IsAssignableFrom(field.FieldType))
+            {
+                var returnType = gs[0];
+                methods = methods.Where(m => returnType.IsAssignableFrom(m.ReturnType));
+                gs.RemoveAt(0);
+            }
+            if (gs.Count > 0)
+            {
+                methods = methods.Where(m => m.ContainsTargetableParameter(gs.ToArray()));
+            }
+            var items = methods.Select(method => (method, GetDisplayPath(method)))
+                .Where(_ => !_.Item2.Contains("&"))
+                .ToArray();
+
+            DropdownHelper.Show(onSelect, true, true, GetDisplayPath(selected), items);
+        }
+
+        public static string GetSearchName(MethodInfo info)
+        {
+            return $"{info.DeclaringType.Name}.{info.Name}";
+        }
+        public static string GetLabelName(MethodInfo methodInfo)
+        {
+            if (methodInfo == null)
+            {
+                return GameActionHelper.NONE;
+            }
+
+            StringBuilder option = new StringBuilder();
+            var tt = methodInfo.DeclaringType;
+            option.Append(methodInfo.ReflectedType.Name).Append('.');
+            option.Append(methodInfo.Name).Append(' ');
+            if (methodInfo.IsStatic)
+                option.Append('*');
+
+            // Append parameter types
+            var paramTypes = methodInfo.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}");
+            option.Append('(').Append(string.Join(",", paramTypes)).Append(')');
+
+            if (methodInfo.ReturnType != null)
+            {
+                option.Append($" => {methodInfo.ReturnType.Name}");
+            }
+
+            return option.ToString();
+        }
+        public static string GetLabelName(PropertyInfo info)
+        {
+            if (info == null && info.GetMethod != null)
+            {
+                return GameActionHelper.NONE;
+            }
+
+            StringBuilder option = new StringBuilder();
+            var tt = info.DeclaringType;
+            option.Append(info.ReflectedType.Name + ".");
+            option.Append(info.Name + " ");
+            if (info.GetMethod.IsStatic)
+                option.Append('*');
+
+            if (info.SetMethod != null && info.SetMethod.IsPublic)
+                option.Append(@"{ get; set; }");
+            else
+                option.Append(@" { get; } ");
+
+            // Append parameter types
+            if (info.PropertyType != null)
+            {
+                option.Append($" => {info.PropertyType.Name}");
+            }
+
+            return option.ToString();
+        }
+
+        public static bool HasPropertyDrawer(this Type targetType)
+        {
+            drawerTypes ??= GetAllTypesWithPropertyDrawer();
+
+            return drawerTypes.ContainsKey(targetType);
+        }
+
+
+        static Dictionary<Type, Type> drawerTypes;
+        public static Dictionary<Type, Type> GetAllTypesWithPropertyDrawer()
+        {
+            var result = new Dictionary<Type, Type>();
+            var typeField = typeof(CustomPropertyDrawer).GetField("m_Type", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            foreach (var drawerType in TypeCache.GetTypesDerivedFrom<PropertyDrawer>())
+            {
+                var attributes = drawerType.GetCustomAttributes(typeof(CustomPropertyDrawer), true)
+                                           .Cast<CustomPropertyDrawer>();
+
+                foreach (var attr in attributes)
+                {
+                    var targetType = (Type)typeField.GetValue(attr);
+                    if (!result.ContainsKey(targetType))
+                        result.Add(targetType, drawerType);
+                }
+            }
+
+            return result;
+        }
     }
+
+#if UNITY_EDITOR
+    class TestWindow : EditorWindow
+    {
+
+
+        public GameAction action;
+        public GameFunc<bool> func;
+        public GameProp<bool> prop;
+
+        Editor editor;
+
+        void OnGUI()
+        {
+            Editor.CreateCachedEditor(this, null, ref editor);
+            editor.OnInspectorGUI();
+        }
+    }
+#endif
 }

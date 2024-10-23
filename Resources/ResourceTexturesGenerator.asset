@@ -15,11 +15,11 @@ MonoBehaviour:
   region: GENERATED
   script: {fileID: 11500000, guid: 8b8db48f9f133484382ae03f636025ac, type: 3}
   generator:
-    rid: 53863247306031104
+    rid: 53863404791660546
   references:
     version: 2
     RefIds:
-    - rid: 53863247306031104
+    - rid: 53863404791660546
       type: {class: ResourceGenerator, ns: Neeto, asm: Neeto.Runtime}
       data:
-        typeList: Texture
+        typeList: 

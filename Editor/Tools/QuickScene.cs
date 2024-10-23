@@ -23,7 +23,10 @@ namespace Neeto
             set => EditorPrefs.SetBool(isLocked_key, value);
         }
 
-        Texture2D unlocked;
+        
+        
+        
+
         private void OnGUI()
         {
             // header
@@ -32,7 +35,7 @@ namespace Neeto
             editor.OnInspectorGUI();
 
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button(new GUIContent("Open Build Settings", NTexture.save), EditorStyles.miniButton, GUILayout.Height(20f), GUILayout.MinWidth(20f)))
+            if (GUILayout.Button(NGUI.settings.With(text: "Open Build Settings"), EditorStyles.miniButton, GUILayout.MinWidth(20f)))
             {
                 EditorWindow.GetWindow(System.Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
                 EditorApplication.ExecuteMenuItem("File/Build Settings...");
@@ -56,7 +59,7 @@ namespace Neeto
                 GUILayout.BeginHorizontal();
 
                 // load button
-                if (GUILayout.Button("←", GUILayout.Width(25f)))
+                if (GUILayout.Button(NGUI.sceneOut, GUILayout.Width(25f)))
                 {
                     if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                         EditorSceneManager.OpenScene(scene.path, OpenSceneMode.Single);
@@ -68,7 +71,6 @@ namespace Neeto
 
                 EditorGUILayout.ObjectField(asset, typeof(SceneAsset), false);
 
-                scene.enabled = EditorGUILayout.Toggle(scene.enabled, GUILayout.Width(20));
                 EditorGUI.EndDisabledGroup();
 
                 GUILayout.EndHorizontal();
@@ -81,9 +83,9 @@ namespace Neeto
         }
         static bool LockButtonLayout(bool isLocked)
         {
-            var content = new GUIContent(isLocked ? NTexture.locked : NTexture.unlocked);
+            var content = isLocked ? NGUI.hidden : NGUI.visible;
 
-            if (GUILayout.Button(content, NGUI.iconButton, GUILayout.Width(20), GUILayout.Height(NGUI.lineHeight)))
+            if (GUILayout.Button(content, EditorStyles.iconButton, GUILayout.Width(20)))
                 isLocked = !isLocked;
             return isLocked;
         }

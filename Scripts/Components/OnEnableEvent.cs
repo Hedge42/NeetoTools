@@ -15,7 +15,7 @@ namespace Neeto
             onEnable?.Invoke();
         }
     }
-    public static partial class NObject
+    public static class OnEnableHelper
     {
         public static void OnEnableAddListener(this GameObject gameObject, Action action)
         {

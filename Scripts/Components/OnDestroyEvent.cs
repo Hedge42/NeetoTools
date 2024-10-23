@@ -16,7 +16,7 @@ namespace Neeto
             onDestroy?.Invoke();
         }
     }
-    public static partial class NObject
+    public static class OnDestroyHelper
     {
         public static void OnDestroyAddListener(this GameObject gameObject, Action action)
         {

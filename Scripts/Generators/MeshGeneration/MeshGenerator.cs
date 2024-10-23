@@ -44,7 +44,7 @@ namespace Neeto
             // open save file dialogue
             var path = EditorUtility.SaveFilePanel("Save generated mesh", PATH, mesh.name, "mesh");
 
-            path = NString.SystemToAssetPath(path);
+            path = StringHelper.SystemToAssetPath(path);
 
             if (!string.IsNullOrEmpty(path))
             {

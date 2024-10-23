@@ -78,7 +78,7 @@ namespace Neeto
         {
             LoadingScreen.isLoading = false;
 
-            await N.LerpAsyncUnscaled(1f, 0f, 1f, _ => instance.background.alpha = _)
+            await TaskHelper.LerpAsyncUnscaled(1f, 0f, 1f, _ => instance.background.alpha = _)
                             .AttachExternalCancellation(MCancel.global);
 
 

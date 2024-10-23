@@ -288,7 +288,7 @@ namespace Neeto
 
             Build(new BuildPlayerOptions()
             {
-                scenes = NScene.buildScenePaths.ToArray(),
+                scenes = SceneHelper.buildScenePaths.ToArray(),
                 locationPathName = path,
                 target = EditorUserBuildSettings.activeBuildTarget,
                 options = options
@@ -301,7 +301,7 @@ namespace Neeto
 
             Build(new BuildPlayerOptions()
             {
-                scenes = NScene.buildScenePaths.ToArray(),
+                scenes = SceneHelper.buildScenePaths.ToArray(),
                 locationPathName = path,
                 target = EditorUserBuildSettings.activeBuildTarget,
                 options = options

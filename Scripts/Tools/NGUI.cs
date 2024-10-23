@@ -18,16 +18,31 @@ namespace Neeto
 {
     public static partial class NGUI
     {
+        public static Texture2D shadow = Color.black.With(a: .123f).AsTexturePixel();
+        public static Texture2D highlight = Color.white.With(a: .069f).AsTexturePixel();
         #region EDITOR
 #if UNITY_EDITOR
         public static float fullLineHeight => EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
         public static float lineHeight => EditorGUIUtility.singleLineHeight;
 
+        public static GUIContent locked => EditorGUIUtility.IconContent("Locked@2x");
+        public static GUIContent unlocked => EditorGUIUtility.IconContent("Unlocked@2x");
+        public static GUIContent settings => EditorGUIUtility.IconContent("d_SettingsIcon@2x");
+        public static GUIContent select => EditorGUIUtility.IconContent("d_scenepicking_pickable_hover@2x");
+        public static GUIContent refresh => EditorGUIUtility.IconContent("d_Refresh@2x");
+        public static GUIContent star => EditorGUIUtility.IconContent("d_Favorite On Icon");
+        public static GUIContent sceneOut => EditorGUIUtility.IconContent("SceneLoadOut");
+        public static GUIContent sceneIn => EditorGUIUtility.IconContent("SceneLoadIn");
+        public static GUIContent hidden => EditorGUIUtility.IconContent("scenevis_hidden@2x");
+        public static GUIContent visible => EditorGUIUtility.IconContent("d_animationvisibilitytoggleon@2x");
+
+
+
 
         [InitializeOnLoadMethod]
         static void Load()
         {
-            N.DelayCall(() =>
+            TaskHelper.DelayCall(() =>
             {
             });
         }
@@ -130,7 +145,7 @@ namespace Neeto
         }
         public static void IndentBoxGUI(Rect position)
         {
-            var texture = EditorGUI.indentLevel % 2 == 0 ? NTexture.shadow : NTexture.highlight;
+            var texture = EditorGUI.indentLevel % 2 == 0 ? NGUI.shadow : NGUI.highlight;
             if (texture != null)
                 GUI.DrawTexture(EditorGUI.IndentedRect(position), texture);
         }
@@ -529,6 +544,19 @@ namespace Neeto
                 textColor = _textColor ?? src.textColor,
             };
         }
+
+        public static GUIContent With(this GUIContent content, string text = null, Texture image = null, string tooltip = null)
+        {
+            content = new GUIContent(content);
+            if (text != null)
+                content.text = text;
+            if (image != null)
+                content.image = image;
+            if (tooltip != null)
+                content.tooltip = tooltip;
+            return content;
+        }
+
 
         // rect extensions
         public static Rect WithSize(this Rect rect, Vector2 size)
