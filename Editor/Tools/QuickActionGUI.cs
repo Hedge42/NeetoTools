@@ -58,7 +58,7 @@ namespace Neeto
             else if (content == null || sceneIDs == null || sceneIDs.Contains(instanceID)) // ignore scene headers
                 return;
 
-            else if (GUI.Button(rect.With(xMin: rect.xMax - SIZE, height: SIZE), content, EditorStyles.iconButton))
+            else if (GUI.Button(rect.With(xMin: rect.xMax - SIZE, h: SIZE), content, EditorStyles.iconButton))
             {
                 if (!hierarchyMap.TryGetValue(instanceID, out var items))
                 {
@@ -105,7 +105,7 @@ namespace Neeto
                     return;
             }
 
-            rect = rect.With(xMin: rect.xMax - SIZE, height: SIZE);
+            rect = rect.With(xMin: rect.xMax - SIZE, h: SIZE);
             //if (showInspect)
             //{
             //}

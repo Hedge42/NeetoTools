@@ -17,14 +17,14 @@ namespace Neeto
     [ExecuteInEditMode]
     public class LoadingSpriteIcon : MonoBehaviour
     {
-        public new SpriteRenderer renderer;
+        public SpriteRenderer Renderer;
         [Min(0f)]
         public float fadeDuration;
 
         public float alpha
         {
-            get => renderer.color.a;
-            set => renderer.color = renderer.color.WithA(value);
+            get => Renderer.color.a;
+            set => Renderer.color = Renderer.color.WithA(value);
         }
         NTask state;
 

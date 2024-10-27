@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.AI;
-using UnityEditor.SceneManagement;
 using System;
 using UnityEngine.Events;
 
@@ -52,9 +51,9 @@ namespace Neeto
         {
             buildSceneAssets = GetBuildSceneAssets();
 
-            EditorSceneManager.sceneClosing += (_, _) =>
+            UnityEditor.SceneManagement.EditorSceneManager.sceneClosing += (_, _) =>
             {
-                var scene = EditorSceneManager.GetActiveScene();
+                var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
                 var view = SceneView.lastActiveSceneView;
                 if (view)
                 {
@@ -64,9 +63,9 @@ namespace Neeto
                     Debug.Log($"Saved sceneView '{scene.name}': {orientation}");
                 }
             };
-            EditorSceneManager.activeSceneChangedInEditMode += (_, _) =>
+            UnityEditor.SceneManagement.EditorSceneManager.activeSceneChangedInEditMode += (_, _) =>
             {
-                var scene = EditorSceneManager.GetActiveScene();
+                var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
                 if (EditorPrefs.HasKey(scene.path))
                 {
                     var json = EditorPrefs.GetString(scene.path);

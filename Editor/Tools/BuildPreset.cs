@@ -103,7 +103,7 @@ namespace Neeto
         {
             public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
             {
-                position = position.With(height: NGUI.lineHeight);
+                position = position.With(h: NGUI.LineHeight);
 
                 EditorGUI.BeginProperty(position, label, property);
 
@@ -111,7 +111,7 @@ namespace Neeto
                 target ??= new();
 
                 position = EditorGUI.PrefixLabel(position, label);
-                target.enabled = EditorGUI.Toggle(position.With(width: 18), target.enabled);
+                target.enabled = EditorGUI.Toggle(position.With(w: 18), target.enabled);
                 target.def = EditorGUI.TextField(position.Add(xMin: 20), target.def);
                 property.managedReferenceValue = target;
 
@@ -120,7 +120,7 @@ namespace Neeto
             }
             public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
             {
-                return NGUI.fullLineHeight;
+                return NGUI.FullLineHeight;
             }
         }
         #endregion

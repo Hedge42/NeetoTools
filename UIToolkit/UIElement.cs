@@ -36,7 +36,7 @@ namespace Neeto
     public class ButtonActionElement : UIElement<Button>
     {
         public GameAction action;
-        protected override void OnSetElement() => Element.clicked += action.Invoke;
+        protected override void OnSetElement() => throw new NotImplementedException(); //Element.clicked += action.Invoke;
     }
     [Serializable]
     public class TextElement : UIElement<Label>

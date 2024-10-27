@@ -68,7 +68,10 @@ namespace Neeto
             var isFunc = typeof(GameFuncBase).IsAssignableFrom(info.FieldType);
             var flags = isFunc ? FLAGS_F : FLAGS_M;
 
-            var methods = Module.ALL.GetTypes()
+            //var methods = Module.ALL.GetTypes()
+
+            var methods = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(asm => asm.GetTypes())
                 .Where(type => type.IsPublic && !type.IsEnum && !type.IsGenericType && !type.ContainsGenericParameters)
                 .SelectMany(type => type.GetMethods(flags))
                 .Where(m => !m.ContainsGenericParameters
@@ -99,7 +102,7 @@ namespace Neeto
             var isProp = typeof(GamePropBase).IsAssignableFrom(info.FieldType);
             var propType = info.FieldType.GetGenericArguments()[0];
 
-            var types = Module.ALL.GetTypes()
+            var types = ReflectionHelper.GetRuntimeTypes()
                 .Where(t => t.IsPublic && !t.IsEnum);
             var props = types.SelectMany(t => t.GetProperties(FLAGS_P))
                 .Where(p => p.PropertyType.Equals(propType));
@@ -110,7 +113,7 @@ namespace Neeto
         {
             var generics = info.FieldType.GetGenericArguments().ToList();
 
-            var types = Module.ALL.GetTypes()
+            var types = ReflectionHelper.GetRuntimeTypes()
                 .Where(t => t.IsPublic && !t.IsEnum);
 
             var attribute = info.GetCustomAttribute<PolymorphicAttribute>();
@@ -165,6 +168,347 @@ namespace Neeto
             return info.GetParameters().Select(_ => (_.Name, _.ParameterType)).ToList();
         }
     }
+
+    [System.Serializable]
+    public class Argument
+    {
+
+
+        [SerializeReference]
+        public object data;
+
+        public enum ArgType
+        {
+            Null,
+            Boolean,
+            String,
+            Float,
+            Double,
+            Int,
+            Vector2,
+            Vector3,
+            Vector4,
+            Color,
+            ObjectReference,
+            Enum,
+            Generic,
+            Reference,
+            Dynamic,
+        }
+        public Argument(Type type)
+        {
+            this.argType = EnumOf(type);
+        }
+
+
+        [HideInInspector] public bool argBoolean;
+        [HideInInspector] public string argString;
+        [HideInInspector] public float argFloat;
+        [HideInInspector] public double argDouble;
+        [HideInInspector] public int argInt;
+        [HideInInspector] public Vector2 argVector2;
+        [HideInInspector] public Vector3 argVector3;
+        [HideInInspector] public Vector4 argVector4;
+        [HideInInspector] public Color argColor;
+        [HideInInspector] public Object argObjectReference;
+        [HideInInspector] public int argEnum;
+        [HideInInspector] public string argGeneric;
+        [SerializeReference, Polymorphic] public object argReference;
+        [HideInInspector] public string referenceType;
+        [HideInInspector] public bool isDynamic;
+
+        public ArgType argType;
+
+
+        public object value
+        {
+            get
+            {
+                switch (argType)
+                {
+                    case ArgType.Boolean:
+                        return argBoolean;
+                    case ArgType.String:
+                        return argString;
+                    case ArgType.Float:
+                        return argFloat;
+                    case ArgType.Double:
+                        return argDouble;
+                    case ArgType.Int:
+                        return argInt;
+                    case ArgType.Vector2:
+                        return argVector2;
+                    case ArgType.Vector3:
+                        return argVector3;
+                    case ArgType.Vector4:
+                        return argVector4;
+                    case ArgType.Color:
+                        return argColor;
+                    case ArgType.ObjectReference:
+                        return argObjectReference;
+                    case ArgType.Enum:
+                        return argEnum;
+                    case ArgType.Reference:
+                        return argReference;
+                    //case ArgType.Generic:
+                    //return argGeneric;
+                    default:
+                        return null;
+                }
+            }
+        }
+
+        public static string GetFieldName(Type type)
+        {
+            switch (type.Name)
+            {
+                case nameof(Boolean):
+                    return nameof(argBoolean);
+                case nameof(String):
+                    return nameof(argString);
+                case nameof(Single):
+                    return nameof(argFloat);
+                case nameof(Double):
+                    return nameof(argDouble);
+                case nameof(LayerMask):
+                case nameof(Int32):
+                    return nameof(argInt);
+                case nameof(Vector2):
+                    return nameof(argVector2);
+                case nameof(Vector3):
+                    return nameof(argVector3);
+                case nameof(Vector4):
+                    return nameof(argVector4);
+                case nameof(Color):
+                    return nameof(argColor);
+                default:
+                    break;
+            }
+
+            if (typeof(Object).IsAssignableFrom(type))
+                return nameof(argObjectReference);
+            else if (type.IsEnum)
+                return nameof(argEnum);
+            else if (type.IsSerializable || type.IsInterface || type.IsAbstract)
+                return nameof(argReference);
+            else return "";
+        }
+
+        public static ArgType EnumOf(Type argType)
+        {
+            switch (argType.Name)
+            {
+                case nameof(Boolean):
+                    return ArgType.Boolean;
+                case nameof(String):
+                    return ArgType.String;
+                case nameof(Single):
+                    return ArgType.Float;
+                case nameof(Double):
+                    return ArgType.Double;
+                case nameof(LayerMask):
+                case nameof(Int32):
+                    return ArgType.Int;
+                case nameof(Vector2):
+                    return ArgType.Vector2;
+                case nameof(Vector3):
+                    return ArgType.Vector3;
+                case nameof(Vector4):
+                    return ArgType.Vector4;
+                case nameof(Color):
+                    return ArgType.Color;
+                default:
+                    break;
+            }
+
+            if (typeof(Object).IsAssignableFrom(argType))
+                return ArgType.ObjectReference;
+            else if (argType.IsEnum)
+                return ArgType.Enum;
+            else if (argType.IsSerializable || argType.IsInterface)
+                return ArgType.Reference;
+
+            return ArgType.Null;
+        }
+    }
+
+    #region EDITOR
+#if UNITY_EDITOR
+    [CustomPropertyDrawer(typeof(Argument))]
+    public class ArgumentDrawer : PropertyDrawer
+    {
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            try
+            {
+                property = GetSelectedProperty(property);
+
+                return EditorGUI.GetPropertyHeight(property) + EditorGUIUtility.standardVerticalSpacing;
+            }
+            catch
+            {
+                return NGUI.FullLineHeight;
+            }
+        }
+
+        public static bool IsDynamic(SerializedProperty property, int i)
+        {
+            var dyns = property.FindPropertyRelative(nameof(GameAction.dynamics));
+            foreach (SerializedProperty dy in dyns)
+            {
+                if (dy.intValue == i)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static Argument.ArgType UpdateArgType(SerializedProperty argumentProperty, Type paramType)
+        {
+            var enumProperty = argumentProperty.FindPropertyRelative(nameof(Argument.argType));
+
+            var value = Argument.EnumOf(paramType);
+            enumProperty.enumValueIndex = (int)value;
+
+            if (value == Argument.ArgType.Reference)
+            {
+                argumentProperty.FindPropertyRelative(nameof(Argument.referenceType))
+                    .stringValue = $"{paramType.AssemblyQualifiedName}";
+            }
+
+            return value;
+        }
+
+        public static Rect PropertyGUI(Rect position, SerializedProperty selected, FieldInfo info, Type type, bool isDynamic = false, string label = null)
+        {
+            if (selected == null)
+                return position;//.NextLine();
+
+            //var content = label != null ? new GUIContent(label) : new GUIContent(type.GetType().Name);
+            var argType = Argument.EnumOf(type);
+            var content = new GUIContent(label);
+            var rect = position;
+            var height = EditorGUI.GetPropertyHeight(selected);
+
+            //if (typeof(GameFuncBase).IsAssignableFrom(info.FieldType))
+
+            if (isDynamic || argType != Argument.ArgType.Reference)
+                position = EditorGUI.PrefixLabel(position.With(h: NGUI.LineHeight), content);
+
+            if (isDynamic)
+            {
+                EditorGUI.LabelField(position, "(dynamic)");
+                return position.NextLine();
+            }
+
+
+            if (argType == Argument.ArgType.Null || selected == null)// || !IsSupported(type))
+            {
+                EditorGUI.LabelField(position, $"not supported");
+                return position.NextLine();
+            }
+
+            if (type.IsSubclassOf(typeof(Object)))
+            {
+                var obj = selected.objectReferenceValue;
+                if (obj != null && !type.IsAssignableFrom(obj.GetType()))
+                {
+                    obj = null;
+                }
+
+                selected.objectReferenceValue = (Object)EditorGUI.ObjectField(position, obj, type, true);
+            }
+            else if (type.IsEnum)
+            {
+                var names = Enum.GetNames(type);
+                selected.intValue = EditorGUI.Popup(position, selected.intValue, names);
+            }
+            else if (type.Equals(typeof(LayerMask)))
+            {
+                selected.intValue = EditorGUI.MaskField(position, selected.intValue, LayerHelper.GetLayerNames());
+            }
+            else if (argType == Argument.ArgType.Reference)
+            {
+                //MEdit.IndentBoxGUI(position.With(h: EditorGUI.GetPropertyHeight(selected)));
+                var referenceTypeName = selected.Parent().FindPropertyRelative(nameof(Argument.referenceType)).stringValue;
+
+                var rt = Type.GetType(referenceTypeName);
+                PolymorphicDrawer.DrawGUI(position, selected, content, rt);
+                //MEdit.EndShadow();
+            }
+            else if (type.IsValueType || type == typeof(string))
+            {
+                EditorGUI.PropertyField(position, selected, GUIContent.none);
+            }
+
+            //return position.NextLine().With(h: EditorGUI.GetPropertyHeight(selected));
+            return rect.NextLine(height);
+        }
+
+        static object FieldGUI(Rect position, object value)
+        {
+            var type = value.GetType();
+            switch (type.Name)
+            {
+                case nameof(Boolean):
+                    return EditorGUI.Toggle(position, (bool)value);
+
+                case nameof(String):
+                    return EditorGUI.TextField(position, (string)value);
+
+                case nameof(Single):
+                    return EditorGUI.FloatField(position, (float)value);
+
+                case nameof(Double):
+                    return EditorGUI.DoubleField(position, (double)value);
+
+                case nameof(Int32):
+                    return EditorGUI.IntField(position, (int)value);
+
+                case nameof(Vector2):
+                    return EditorGUI.Vector2Field(position, "", (Vector2)value);
+
+                case nameof(Vector3):
+                    return EditorGUI.Vector3Field(position, "", (Vector3)value);
+
+                case nameof(Vector4):
+                    return EditorGUI.Vector4Field(position, "", (Vector4)value);
+
+                case nameof(Color):
+                    return EditorGUI.ColorField(position, (Color)value);
+
+                default:
+                    break;
+            }
+
+            if (type.IsSubclassOf(typeof(Object)))
+                return EditorGUI.ObjectField(position, (Object)value, type, true);
+            else if (type.IsEnum)
+            {
+                var options = Enum.GetNames(type);
+                var values = Enum.GetValues(type);
+                var index = (int)value;
+
+                return EditorGUI.Popup(position, index, options);
+            }
+            else if (type.IsSerializable || type.IsInterface)
+            {
+
+            }
+
+            return null;
+        }
+        public static SerializedProperty GetSelectedProperty(SerializedProperty property)
+        {
+            var enumProperty = property.FindPropertyRelative(nameof(Argument.argType));
+            var enumValue = (Argument.ArgType)enumProperty.enumValueIndex;
+            enumProperty.enumValueIndex = (int)enumValue;
+            return property.FindPropertyRelative("arg" + Enum.GetName(typeof(Argument.ArgType), enumValue));
+        }
+    }
+#endif
+    #endregion
 
     [Serializable]
     public abstract class GameMethod : GameCallback, ISerializationCallbackReceiver
@@ -502,21 +846,15 @@ namespace Neeto
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            EditorGUI.BeginProperty(position, label, property);
-
-            NGUI.IndentBoxGUI(position);
-
-            var dropdownRect = InvokeButtonGUI(property, position.With(height: NGUI.lineHeight));
-
-            if (HandleDropdownGUI(dropdownRect, property, label))
+            using (NGUI.Property(position, label, property))
             {
-                position.y += NGUI.fullLineHeight;
-                HandleArgumentsGUI(position.With(height: NGUI.lineHeight), property);
+                var dropdownRect = InvokeButtonGUI(property, position.With(h: NGUI.LineHeight));
+                if (HandleDropdownGUI(dropdownRect, property, label))
+                {
+                    position.y += NGUI.FullLineHeight;
+                    HandleArgumentsGUI(position.With(h: NGUI.LineHeight), property);
+                }
             }
-
-            NGUI.EndShadow();
-
-            EditorGUI.EndProperty();
         }
 
         object target;
@@ -524,9 +862,9 @@ namespace Neeto
         {
             target ??= ReflectionHelper.FindReflectionTarget(property, fieldInfo);
 
+            var buttonPosition = position.With(xMin: position.xMax - NGUI.ButtonWidth);
             if (target is GameAction action)
             {
-                position = position.WithRightButton(out var buttonPosition);
                 if (GUI.Button(buttonPosition, "?"))
                 {
                     var method = GetMethod(property);
@@ -538,14 +876,14 @@ namespace Neeto
                 }
             }
 
-            return position;
+            return position.With(xMax: buttonPosition.xMin);
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var args = property.FindPropertyRelative(nameof(GameMethod.arguments));
             var count = args.arraySize;
-            var height = NGUI.fullLineHeight;
+            var height = NGUI.FullLineHeight;
 
             if (property.isExpanded && count > 0)
             {
@@ -582,16 +920,17 @@ namespace Neeto
             var method = GetMethod(property);
             var content = new GUIContent(GameActionHelper.GetLabelName(method));
 
-            position.ToLabelAndField(out var lbRect, out var ddRect);
+            var lbRect = position.With(xMax: position.xMin + EditorGUIUtility.fieldWidth);
+            var ddRect = position.With(xMin: lbRect.xMax);
 
             var isExpandable = method != null && Arguments(property).arraySize > 0;
 
             if (isExpandable)
-                property.isExpanded = EditorGUI.Foldout(lbRect.With(height: NGUI.lineHeight), property.isExpanded, label, true);
+                property.isExpanded = EditorGUI.Foldout(lbRect.With(h: NGUI.LineHeight), property.isExpanded, label, true);
             else
                 EditorGUI.PrefixLabel(lbRect, label);
 
-            if (EditorGUI.DropdownButton(ddRect.With(height: NGUI.lineHeight), content, FocusType.Passive))
+            if (EditorGUI.DropdownButton(ddRect.With(h: NGUI.LineHeight), content, FocusType.Passive))
             {
                 GameActionHelper.MethodDropdown(fieldInfo, GetMethod(property), _ => Switch(_, property, fieldInfo));
             }
@@ -723,42 +1062,39 @@ namespace Neeto
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            EditorGUI.BeginProperty(position, label, property);
-
-            NGUI.IndentBoxGUI(position);
-
-            var dropdownRect = position.With(height: NGUI.lineHeight).WithRightButton(out var buttonPosition);
-            var info = GetProperty(property);
-
-
-
-            EditorGUI.BeginDisabledGroup(info == null);
-            if (GUI.Button(buttonPosition, "?"))
+            using (NGUI.Property(position, property, label))
             {
 
-                var target = ReflectionHelper.FindReflectionTarget(property, fieldInfo) as GamePropBase;
-                Debug.Log((target.propertyInfo as PropertyInfo).GetValue(target.target));
+                position = position.With(h: NGUI.LineHeight);
+                var buttonPosition = position.With(xMin: position.xMax - NGUI.ButtonWidth);
+                var dropdownRect = position.With(xMax: buttonPosition.xMin);
+                var info = GetProperty(property);
+
+
+
+                EditorGUI.BeginDisabledGroup(info == null);
+                if (GUI.Button(buttonPosition, "?"))
+                {
+
+                    var target = ReflectionHelper.FindReflectionTarget(property, fieldInfo) as GamePropBase;
+                    Debug.Log((target.propertyInfo as PropertyInfo).GetValue(target.target));
+                }
+                EditorGUI.EndDisabledGroup();
+
+                if (HandleDropdownGUI(dropdownRect, property, label))
+                {
+                    position.y += NGUI.FullLineHeight;
+
+                    HandleTargetGUI(position, property);
+                    //HandleArgumentsGUI(position.With(h: MEdit.LineHeight), property);
+                }
             }
-            EditorGUI.EndDisabledGroup();
-
-            if (HandleDropdownGUI(dropdownRect, property, label))
-            {
-                position.y += NGUI.fullLineHeight;
-
-                HandleTargetGUI(position, property);
-                //HandleArgumentsGUI(position.With(h: MEdit.lineHeight), property);
-            }
-
-
-            NGUI.EndShadow();
-
-            EditorGUI.EndProperty();
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.referenceTarget));
-            var height = NGUI.fullLineHeight;
+            var height = NGUI.FullLineHeight;
 
             if (property.isExpanded)
             {
@@ -789,16 +1125,18 @@ namespace Neeto
             var info = GetProperty(property);
             var content = new GUIContent(GameActionHelper.GetLabelName(info));
 
-            position.ToLabelAndField(out var lbRect, out var ddRect);
+            position = position.With(h: NGUI.LineHeight);
+            var labelRect = position.With(xMax: position.xMin + EditorGUIUtility.fieldWidth);
+            var dropdownRect = position.With(xMax: labelRect.xMin);
 
             var isExpandable = info != null && !info.GetMethod.IsStatic;// && Arguments(property).arraySize > 0;
 
             if (isExpandable)
-                property.isExpanded = EditorGUI.Foldout(lbRect.With(height: NGUI.lineHeight), property.isExpanded, label, true);
+                property.isExpanded = EditorGUI.Foldout(labelRect.With(h: NGUI.LineHeight), property.isExpanded, label, true);
             else
-                EditorGUI.PrefixLabel(lbRect, label);
+                EditorGUI.PrefixLabel(labelRect, label);
 
-            if (EditorGUI.DropdownButton(ddRect.With(height: NGUI.lineHeight), content, FocusType.Passive))
+            if (EditorGUI.DropdownButton(dropdownRect.With(h: NGUI.LineHeight), content, FocusType.Passive))
             {
                 GameActionHelper.PropertyDropdown(fieldInfo, GetProperty(property), _ => Switch(_, property, fieldInfo));
             }
@@ -813,12 +1151,12 @@ namespace Neeto
             if (typeof(Object).IsAssignableFrom(info.DeclaringType))
             {
                 var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.objectTarget));
-                targetProperty.objectReferenceValue = EditorGUI.ObjectField(position.With(height: NGUI.lineHeight), "target", targetProperty.objectReferenceValue, info.DeclaringType, true);
+                targetProperty.objectReferenceValue = EditorGUI.ObjectField(position.With(h: NGUI.LineHeight), "target", targetProperty.objectReferenceValue, info.DeclaringType, true);
             }
             else
             {
                 var targetProperty = property.FindPropertyRelative(nameof(GamePropBase.referenceTarget));
-                PolymorphicDrawer.DrawGUI(position, targetProperty, new GUIContent("target"), info.DeclaringType, true);
+                PolymorphicDrawer.DrawGUI(position, targetProperty, new GUIContent("target"), info.DeclaringType);
             }
             EditorGUI.indentLevel--;
         }
@@ -1012,6 +1350,8 @@ namespace Neeto
     {
         public const string NONE = "(none)";
 
+
+
         public static void Invoke(this GameAction[] actions)
         {
             for (int i = 0; i < actions.Length; i++)
@@ -1089,22 +1429,9 @@ namespace Neeto
 
         public static void PropertyDropdown(FieldInfo field, PropertyInfo selected, Action<PropertyInfo> onSelect)
         {
-            //var flags = GameAction.FLAGS_P;
-
-            //if (field.FieldType.TryGetAttribute<BindingFlagsAttribute>(out var f))
-            //    flags &= f.flags;
-
-            //if (field.TryGetAttribute<BindingFlagsAttribute>(out var f_attr))
-            //    flags |= f_attr.flags;
-
-
             var flags = BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Instance;
-
-            var mods = Module.ALL;
-
             var returnType = field.FieldType.GetGenericArguments()[0];
-
-            var properties = ReflectionHelper.GetProperties(mods, flags)
+            var properties = ReflectionHelper.GetRuntimeTypes().GetProperties(flags)
                 // needs get method for other logic & generics not supported
                 .Where(prop => prop.GetMethod != null && prop.CanRead && !prop.DeclaringType.ContainsGenericParameters && (prop.GetMethod.IsStatic || prop.DeclaringType.IsSerializable) && returnType.IsAssignableFrom(prop.PropertyType))
                 .Select(prop => (prop, GetDisplayPath(prop)))
@@ -1130,9 +1457,7 @@ namespace Neeto
                 flags |= f_attr.flags;
 
 
-            var mods = Module.ALL;
-
-            var events = ReflectionHelper.GetEvents(mods, flags);
+            var events = ReflectionHelper.GetRuntimeTypes().GetEvents(flags);
 
             if (events.Count() == 0)
             {
@@ -1166,9 +1491,8 @@ namespace Neeto
                 flags |= f_attr.flags;
 
 
-            var mods = Module.ALL;
-            var methods = ReflectionHelper.GetMethods(mods, flags)
-                .Where(m => !m.ContainsGenericParameters && (m.IsStatic || m.ReflectedType.IsSerializable) && !m.DeclaringType.ContainsGenericParameters 
+            var methods = ReflectionHelper.GetRuntimeTypes().GetMethods(flags)
+                .Where(m => !m.ContainsGenericParameters && (m.IsStatic || m.ReflectedType.IsSerializable) && !m.DeclaringType.ContainsGenericParameters
                 && !m.GetParameters().Any(p => p.ParameterType.IsGenericType || p.IsOut || p.IsRetval || p.IsLcid || p.IsIn || !p.ParameterType.IsSerializable || p.ParameterType.IsByRef || p.ParameterType.IsArray || typeof(Delegate).IsAssignableFrom(p.ParameterType)));
 
             if (methods.Count() == 0)
@@ -1259,35 +1583,10 @@ namespace Neeto
             return option.ToString();
         }
 
-        public static bool HasPropertyDrawer(this Type targetType)
-        {
-            drawerTypes ??= GetAllTypesWithPropertyDrawer();
-
-            return drawerTypes.ContainsKey(targetType);
-        }
 
 
-        static Dictionary<Type, Type> drawerTypes;
-        public static Dictionary<Type, Type> GetAllTypesWithPropertyDrawer()
-        {
-            var result = new Dictionary<Type, Type>();
-            var typeField = typeof(CustomPropertyDrawer).GetField("m_Type", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            foreach (var drawerType in TypeCache.GetTypesDerivedFrom<PropertyDrawer>())
-            {
-                var attributes = drawerType.GetCustomAttributes(typeof(CustomPropertyDrawer), true)
-                                           .Cast<CustomPropertyDrawer>();
 
-                foreach (var attr in attributes)
-                {
-                    var targetType = (Type)typeField.GetValue(attr);
-                    if (!result.ContainsKey(targetType))
-                        result.Add(targetType, drawerType);
-                }
-            }
-
-            return result;
-        }
     }
 
 #if UNITY_EDITOR

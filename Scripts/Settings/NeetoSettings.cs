@@ -17,14 +17,13 @@ namespace Neeto
     public class NeetoSettings : ScriptableObject
     {
         #region runtime
-
         public LayerMask snappingLayers;
 
         static NeetoSettings _instance;
         public static NeetoSettings instance => _instance ??= LoadOrCreate();
         public static NeetoSettings LoadOrCreate()
         {
-            var settings = Resources.Load<NeetoSettings>(assetName);
+            var settings = Resources.Load<NeetoSettings>(nameof(NeetoSettings));
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<NeetoSettings>();
@@ -35,17 +34,13 @@ namespace Neeto
             }
             return settings;
         }
-
-
         #endregion
 
 
         #region editor
 #if UNITY_EDITOR
-        public AssemblyDefinitionAsset[] reflectionScope;
         public bool experimentalEditorFeatures = true;
-        public const string assetPath = "Assets/_Neeto/Resources/" + assetName + ".asset";
-        public const string assetName = "NeetoSettings";
+        public const string assetPath = "Assets/_Neeto/Resources/" + nameof(NeetoSettings) + ".asset";
 
         [Note("Context menu items included in this list will be excluded from the custom context menu.")]
         public string[] contextBlacklist;

@@ -30,17 +30,10 @@ public class CreateInstanceAttribute : PropertyAttribute { }
 [CustomPropertyDrawer(typeof(CreateInstanceAttribute))]
 public class CreateInstanceAttributeDrawer : PropertyButtonDrawerBase
 {
-    //private Editor editor = null;
-    //private bool changed;
-
     public override GUIContent content => new GUIContent("+", "Create Internal Instance");
 
     public override void OnClick(SerializedProperty property)
     {
-        //var debug = property.displayName;
-        //var context = property.serializedObject.context;
-        //var objectReference = property.objectReferenceValue as ScriptableObject;
-
         Undo.RecordObject(property.serializedObject.targetObject, property.displayName);
 
         if (property.objectReferenceValue)
@@ -55,7 +48,6 @@ public class CreateInstanceAttributeDrawer : PropertyButtonDrawerBase
         if (property.objectReferenceValue)
             property.objectReferenceValue.name = $"({property.serializedObject.targetObject.name}) INSTANCE";
 
-        //property
         NGUI.ApplyAndMarkDirty(property);
 
         //// clone existing if it exists

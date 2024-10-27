@@ -53,12 +53,12 @@ namespace Neeto
 
                 // show scene name on hover
                 label.tooltip = $"{nameProp.stringValue} ({pathProp.stringValue})";
-                position.height = NGUI.lineHeight;
+                position.height = NGUI.LineHeight;
 
                 EditorGUI.BeginProperty(position, label, property);
 
                 // draw asset field
-                position.height = NGUI.lineHeight;
+                position.height = NGUI.LineHeight;
                 position.width -= 18f;
                 EditorGUI.PropertyField(position, assetProp, label);
 
@@ -76,7 +76,7 @@ namespace Neeto
             }
             public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
             {
-                return NGUI.fullLineHeight;
+                return NGUI.FullLineHeight;
             }
         }
 

@@ -12,7 +12,9 @@ using UnityEditor;
 
 namespace Neeto
 {
+#if UNITY_EDITOR
     [InitializeOnLoad]
+#endif
     [CreateAssetMenu(menuName = MENU.Neeto + nameof(ScriptGenerator), order = MENU.Mid)]
     public class ScriptGenerator : ScriptableObject
     {
@@ -30,7 +32,7 @@ namespace Neeto
                 }
             }
         }
-#endif
+
 
 
         [Tooltip("Text after #region")]
@@ -174,5 +176,6 @@ namespace Neeto
             // Check if the script assembly directly references the target assembly
             return source.GetReferencedAssemblies().Any(a => a.FullName == target.FullName);
         }
+#endif
     }
 }

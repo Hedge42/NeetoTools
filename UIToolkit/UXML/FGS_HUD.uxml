@@ -1,7 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/FGS/UI/USS/FGS_MainMenu.uss?fileID=7433441132597879392&amp;guid=6c14b8735152da34698aec8bbfedb9d3&amp;type=3#FGS_MainMenu" />
-    <ui:VisualElement name="container" style="flex-grow: 1;">
-        <ui:ProgressBar value="22" name="fart-meter" style="border-left-color: rgba(255, 64, 0, 0); border-right-color: rgba(255, 64, 0, 0); border-top-color: rgba(255, 64, 0, 0); border-bottom-color: rgba(255, 64, 0, 0);" />
-        <ui:ProgressBar value="22" name="noise-meter" style="border-left-color: rgba(255, 64, 0, 0); border-right-color: rgba(255, 64, 0, 0); border-top-color: rgba(255, 64, 0, 0); border-bottom-color: rgba(255, 64, 0, 0);" />
-    </ui:VisualElement>
-</ui:UXML>

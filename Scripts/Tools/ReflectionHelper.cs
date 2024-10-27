@@ -64,17 +64,30 @@ namespace Neeto
         {
             return null != (attribute = mem.GetCustomAttribute<T>(inherit));
         }
-        public static IEnumerable<MethodInfo> GetMethods(this Module pkg, BindingFlags flags = BindingFlags.Default)
+
+        public static IEnumerable<MethodInfo> GetMethods(this IEnumerable<Assembly> assemblies, BindingFlags flags = BindingFlags.Default)
         {
-            return pkg.GetTypes().SelectMany(t => t.GetMethods(flags));
+            return assemblies.SelectMany(asm => asm.GetTypes()).GetMethods(flags);
         }
-        public static IEnumerable<PropertyInfo> GetProperties(this Module pkg, BindingFlags flags = BindingFlags.Default)
+        public static IEnumerable<MethodInfo> GetMethods(this IEnumerable<Type> types, BindingFlags flags = BindingFlags.Default)
         {
-            return pkg.GetTypes().SelectMany(t => t.GetProperties(flags));
+            return types.SelectMany(t => t.GetMethods(flags));
         }
-        public static IEnumerable<EventInfo> GetEvents(this Module pkg, BindingFlags flags = BindingFlags.Default)
+        public static IEnumerable<PropertyInfo> GetProperties(this IEnumerable<Assembly> assemblies, BindingFlags flags = BindingFlags.Default)
         {
-            return pkg.GetTypes().SelectMany(type => type.GetEvents(flags));
+            return assemblies.SelectMany(asm => asm.GetTypes()).GetProperties(flags);
+        }
+        public static IEnumerable<PropertyInfo> GetProperties(this IEnumerable<Type> types, BindingFlags flags = BindingFlags.Default)
+        {
+            return types.SelectMany(t => t.GetProperties(flags));
+        }
+        public static IEnumerable<EventInfo> GetEvents(this IEnumerable<Assembly> assemblies, BindingFlags flags = BindingFlags.Default)
+        {
+            return assemblies.SelectMany(asm => asm.GetTypes()).GetEvents(flags);
+        }
+        public static IEnumerable<EventInfo> GetEvents(this IEnumerable<Type> types, BindingFlags flags = BindingFlags.Default)
+        {
+            return types.SelectMany(t => t.GetEvents(flags));
         }
 
         public static Type GetType(string typeName)
@@ -96,30 +109,18 @@ namespace Neeto
             return null;
         }
 
-        public static List<FieldInfoWithTypeArguments> GetFieldsInheritingFromBaseType<T>(this Type classType)
+        public static List<(FieldInfo, Type[])> GetFieldsInheritingFromBaseType<T>(this Type classType)
         {
-            var result = new List<FieldInfoWithTypeArguments>();
+            var result = new List<(FieldInfo, Type[])>();
             foreach (FieldInfo field in classType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
             {
                 if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition().IsSubclassOf(typeof(T)))
                 {
-                    var fieldWithTypeArguments = new FieldInfoWithTypeArguments
-                    {
-                        FieldInfo = field,
-                        GenericTypeArguments = field.FieldType.GetGenericArguments()
-                    };
-
-                    result.Add(fieldWithTypeArguments);
+                    result.Add((field, field.FieldType.GetGenericArguments()));
                 }
                 else if (typeof(T).IsAssignableFrom(field.FieldType))
                 {
-                    var fieldWithTypeArguments = new FieldInfoWithTypeArguments
-                    {
-                        FieldInfo = field,
-                        GenericTypeArguments = Type.EmptyTypes
-                    };
-
-                    result.Add(fieldWithTypeArguments);
+                    result.Add((field, Type.EmptyTypes));
                 }
             }
 
@@ -296,7 +297,7 @@ namespace Neeto
                 var typeAndName = signature.Split(" => ")[0].Split('/');
                 var typeName = typeAndName[0];
                 var propName = typeAndName[1];
-                var type = Module.ALL.GetType(typeName);
+                var type = ReflectionHelper.GetType(typeName);
                 info = type.GetProperty(propName, GameCallback.FLAGS_P);
                 return info != null;
             }
@@ -306,8 +307,6 @@ namespace Neeto
                 return false;
             }
         }
-
-
 
         public static Type[] GetParameterTypes(this MethodInfo m)
         {
@@ -348,13 +347,11 @@ namespace Neeto
         {
             return obj.GetType().GetField(BackingField(propertyName), BindingFlags.Instance | BindingFlags.NonPublic);
         }
-
-        public static T[] GetConstants<T>(Type declaringType)
+        public static IEnumerable<T> GetConstants<T>(Type declaringType)
         {
             return declaringType.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
                        .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(T))
-                       .Select(fi => (T)fi.GetRawConstantValue())
-                       .ToArray();
+                       .Select(fi => (T)fi.GetRawConstantValue());
         }
         public static T UnpackConstant<T>(Type declaringType, string name)
         {
@@ -381,7 +378,7 @@ namespace Neeto
         {
 
             if (info == null)
-                return new GUIContent(":(");
+                return new GUIContent("(none)");
 
             var content = new GUIContent($"{info.DeclaringType.Name}.{info.Name}");
 
@@ -409,44 +406,9 @@ namespace Neeto
             return result != null;
         }
 
-        public static IEnumerable<Type> GetAssignableReferenceTypes(Type fieldType, List<Func<Type, bool>> filters = null)
-        {
-            var appropriateTypes = new List<Type>();
-
-            try
-            {
-                if (fieldType != null)
-                {
-
-                    // Get and filter all appropriate types
-                    foreach (var type in TypeCache.GetTypesDerivedFrom(fieldType))
-                    {
-                        if (!IsActivatable(type))
-                            continue;
-
-                        // Filter types by provided filters if there is ones
-                        if (filters != null && filters.All(f => f == null || f.Invoke(type)) == false)
-                            continue;
-
-                        appropriateTypes.Add(type);
-                    }
-                }
-            }
-            catch
-            {
-                Debug.Log(fieldType);
-            }
-            finally
-            {
-                if (IsActivatable(fieldType))
-                    appropriateTypes.Insert(0, fieldType);
-            }
 
 
-            return appropriateTypes;
-        }
-
-        public static bool IsActivatable(Type type)
+        public static bool IsActivatable(this Type type)
         {
             if (type == null)
                 return false;
@@ -501,8 +463,57 @@ namespace Neeto
             return output;
         }
 
+        public static IEnumerable<Type> GetRuntimeTypes()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => !assembly.GetName().Name.ToLower().Contains("editor"))
+                .SelectMany(assembly => assembly.GetTypes())
+                .Where(type => !type.FullName.ToLower().Contains("editor"));
+        }
 
 #if UNITY_EDITOR
+        public static bool HasPropertyDrawer(this Type targetType)
+        {
+            drawerTypes ??= GetAllTypesWithPropertyDrawer();
+
+            return drawerTypes.ContainsKey(targetType);
+        }
+        public static IEnumerable<Type> GetAssignableReferenceTypes(Type fieldType, List<Func<Type, bool>> filters = null)
+        {
+            var appropriateTypes = new List<Type>();
+
+            try
+            {
+                if (fieldType != null)
+                {
+
+                    // Get and filter all appropriate types
+                    foreach (var type in TypeCache.GetTypesDerivedFrom(fieldType))
+                    {
+                        if (!type.IsActivatable())
+                            continue;
+
+                        // Filter types by provided filters if there is ones
+                        if (filters != null && filters.All(f => f == null || f.Invoke(type)) == false)
+                            continue;
+
+                        appropriateTypes.Add(type);
+                    }
+                }
+            }
+            catch
+            {
+                Debug.Log(fieldType);
+            }
+            finally
+            {
+                if (fieldType.IsActivatable())
+                    appropriateTypes.Insert(0, fieldType);
+            }
+
+
+            return appropriateTypes;
+        }
         public static object GetValue(object source, string name)
         {
             if (source == null)
@@ -649,30 +660,27 @@ namespace Neeto
             string parentPath = path.Substring(0, lastDot);
             return property.serializedObject.FindProperty(parentPath);
         }
-#endif
-    }
-
-#if UNITY_EDITOR
-    [InitializeOnLoad]
-#endif
-    public static class ReflectionCache
-    {
-        static Dictionary<string, MethodInfo> methods;
-        static ReflectionCache() => methods = new Dictionary<string, MethodInfo>();
-
-        public static MethodInfo GetMethod(string signature)
+        static Dictionary<Type, Type> drawerTypes;
+        public static Dictionary<Type, Type> GetAllTypesWithPropertyDrawer()
         {
-            MethodInfo method;
-            if (!methods.TryGetValue(signature, out method))
-                ReflectionHelper.ToMethod(signature, out method);
+            var result = new Dictionary<Type, Type>();
+            var typeField = typeof(CustomPropertyDrawer).GetField("m_Type", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            return method;
+            foreach (var drawerType in TypeCache.GetTypesDerivedFrom<PropertyDrawer>())
+            {
+                var attributes = drawerType.GetCustomAttributes(typeof(CustomPropertyDrawer), true)
+                                           .Cast<CustomPropertyDrawer>();
+
+                foreach (var attr in attributes)
+                {
+                    var targetType = (Type)typeField.GetValue(attr);
+                    if (!result.ContainsKey(targetType))
+                        result.Add(targetType, drawerType);
+                }
+            }
+
+            return result;
         }
-    }
-
-    public class FieldInfoWithTypeArguments
-    {
-        public FieldInfo FieldInfo { get; set; }
-        public Type[] GenericTypeArguments { get; set; }
+#endif
     }
 }

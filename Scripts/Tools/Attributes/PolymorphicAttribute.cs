@@ -32,50 +32,30 @@ public class PolymorphicDrawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        DrawGUI(position, property, label, GetReferenceType(property), true);
+        DrawGUI(position, property, label, property.GetManagedReferenceFieldType());
     }
-
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        return EditorGUI.GetPropertyHeight(property);
+        return property.GetHeight();
     }
-
-    /// Gets real type of managed reference
-    public static Type GetReferenceType(SerializedProperty property)
-    {
-        var strings = property.managedReferenceFieldTypename.Split(char.Parse(" "));
-        var type = Type.GetType($"{strings[1]}, {strings[0]}");
-
-        if (type == null)
-            Debug.LogError($"Can not get field type of managed reference : {property.managedReferenceFieldTypename}");
-
-        return type;
-    }
-
-    public static void DrawGUI(Rect position, SerializedProperty property, GUIContent label, Type returnType, bool shadow = false)
+    public static void DrawGUI(Rect position, SerializedProperty property, GUIContent label, Type returnType)
     {
         if (property.propertyType != SerializedPropertyType.ManagedReference)
         {
             Debug.LogError($"Property '{property.propertyPath}' is not marked as [SerializeReference]");
+            return;
         }
 
-        EditorGUI.BeginProperty(position, label, property);
+        using (NGUI.Property(position, property, label))
+        {
+            var line = position.With(h: NGUI.LineHeight);
+            var fieldRect = line.Add(xMin: NGUI.LabelWidth);
+            if (EditorGUI.DropdownButton(fieldRect, new GUIContent(property.managedReferenceValue.TypeNameOrNull()), FocusType.Passive))
+                ShowMenu(property, returnType);
 
-        //MEdit.BeginShadow(position.WithHeight(EditorGUI.GetPropertyHeight(property)));
-        if (shadow)
-            NGUI.IndentBoxGUI(position);
-
-        var linePosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-        //GUI.Box(linePosition, GUIContent.none); // draw below the label
-        if (EditorGUI.DropdownButton(position: position.Add(xMin: EditorGUIUtility.labelWidth).With(height: NGUI.lineHeight),
-                                     content: new GUIContent(property.managedReferenceValue.TypeNameOrNull()), FocusType.Passive))
-            ShowMenu(property, returnType);
-
-        ReferenceHelper.ContextMenu(property, linePosition);
-        EditorGUI.PropertyField(position, property, label, true);
-        if (shadow)
-            NGUI.EndShadow();
-        EditorGUI.EndProperty();
+            NGUI.ContextMenu(property, line);
+            EditorGUI.PropertyField(position, property, label, true);
+        }
     }
     public static void ShowMenu(SerializedProperty property, Type valueType)
     {
@@ -97,38 +77,12 @@ public class PolymorphicDrawer : PropertyDrawer
             if (type != null && !typeof(UnityEngine.Object).IsAssignableFrom(type))
                 targetValue = Activator.CreateInstance(type);
 
-            PolymorphicDrawer.CopyMatchingFields(targetValue, sourceValue, serializedObject.targetObject);
+            NGUI.CopyMatchingFields(targetValue, sourceValue);
             serializedObject.Update();
             property.managedReferenceValue = targetValue;
             serializedObject.ApplyModifiedProperties();
         };
     }
-    public static void CopyMatchingFields(object destTarget, object sourceTarget, object reference)
-    {
-        if (sourceTarget == null || destTarget == null)
-            return;
-
-        var targetType = destTarget.GetType();
-        var sourceType = sourceTarget.GetType();
-
-        var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField | BindingFlags.SetField | BindingFlags.FlattenHierarchy;
-
-        var sourceFields = sourceType.GetFields(flags);
-        foreach (var sourceField in sourceFields)
-        {
-            try
-            {
-                var targetField = targetType.GetField(sourceField.Name);
-                targetField.SetValue(destTarget, sourceField.GetValue(sourceTarget));
-            }
-            catch // (Exception e)
-            {
-                // target does not contain source field
-                //Debug.LogWarning($"Could not copy property {sourceField.Name}", (UnityEngine.Object)reference);
-            }
-        }
-    }
-
     public static string GetDisplayPath(Type t)
     {
         return $"{t.ModuleName()}/{t.GetDeclaringString()}{t.GetInheritingString()}";
