@@ -74,6 +74,7 @@ namespace Neeto
     [Serializable]
     public class KeyDownEvent : AsyncInput
     {
+        [SearchableEnum]
         public KeyCode key = KeyCode.Alpha1;
         public UnityEvent onKeyDown;
         protected override async UniTaskVoid EnableAsync(CancellationToken token)
@@ -89,6 +90,7 @@ namespace Neeto
     [Serializable]
     public class KeyEvent : AsyncInput
     {
+        [SearchableEnum]
         public KeyCode key = KeyCode.Alpha1;
         [Note("Default: send TRUE when key down, FALSE when key up\nInvert: reverse these values")]
         public bool invert;

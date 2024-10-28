@@ -12,7 +12,7 @@ using UnityEngine.AI;
 public static partial class EditorHelper
 {
     [QuickAction]
-    [MenuItem(MENU.Open + "Package manifest", priority = Neeto.MENU.Bottom)]
+    [MenuItem("Open/Package manifest", priority = Neeto.MENU.Bottom)]
     static void OpenPackageManifest()
     {
         EditorApplication.delayCall += () =>
@@ -21,85 +21,85 @@ public static partial class EditorHelper
         };
     }
 
-    [MenuItem(MENU.Open + "Build Settings", priority = Neeto.MENU.Low)]
+    [MenuItem("Open/Build Settings", priority = Neeto.MENU.Low)]
     static void OpenBuildSettings()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Navigation Window")]
+    [MenuItem("Open/Navigation Window")]
     static void OpenNavigation()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.NavMeshEditorWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Occlusion Window")]
+    [MenuItem("Open/Occlusion Window")]
     [QuickAction]
     static void OpenOcclusion()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.OcclusionCullingWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Player Settings", priority = Neeto.MENU.Low)]
+    [MenuItem("Open/Player Settings", priority = Neeto.MENU.Low)]
     [QuickAction]
     static void OpenPlayerSettings()
     {
         SettingsService.OpenProjectSettings("Project/Player");
     }
 
-    [MenuItem(MENU.Open + "Profiler Window")]
+    [MenuItem("Open/Profiler Window")]
     static void OpenProfiler()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.ProfilerWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Addressable Groups", priority = Neeto.MENU.Low)]
+    [MenuItem("Open/Addressable Groups", priority = Neeto.MENU.Low)]
     static void OpenAddressableGroups()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.AddressableAssets.GUI.AddressableAssetsWindow,Unity.Addressables.Editor"));
     }
 
-    [MenuItem(MENU.Open + "Lighting Settings", priority = Neeto.MENU.Low)]
+    [MenuItem("Open/Lighting Settings", priority = Neeto.MENU.Low)]
     static void OpenLightingSettings()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.LightingWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Graphics Settings", priority = Neeto.MENU.Low)]
+    [MenuItem("Open/Graphics Settings", priority = Neeto.MENU.Low)]
     static void OpenGraphicsSettings()
     {
         SettingsService.OpenProjectSettings("Project/Graphics");
     }
 
-    [MenuItem(MENU.Open + "Timeline")]
+    [MenuItem("Open/Timeline")]
     static void OpenTimeline()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.Timeline.TimelineWindow,Unity.Timeline.Editor"));
     }
 
-    [MenuItem(MENU.Open + "Package Manager")]
+    [MenuItem("Open/Package Manager")]
     static void OpenPackageManager()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.PackageManager.UI.PackageManagerWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Physics Settings", priority = Neeto.MENU.Low)]
+    [MenuItem("Open/Physics Settings", priority = Neeto.MENU.Low)]
     public static void OpenPhysicsSettings()
     {
         SettingsService.OpenProjectSettings("Project/Physics");
     }
-    [MenuItem(MENU.Open + "Neeto Settings", priority = Neeto.MENU.Low)]
+    [MenuItem("Open/Neeto Settings", priority = Neeto.MENU.Low)]
     public static void OpenNeetoSettings()
     {
         SettingsService.OpenProjectSettings("Project/Neeto");
     }
 
-    [MenuItem(MENU.Open + "Persistent Data Directory", priority = Neeto.MENU.Bottom)]
+    [MenuItem("Open/Persistent Data Directory", priority = Neeto.MENU.Bottom)]
     public static void OpenPersistentDataDirectory()
     {
         EditorUtility.OpenWithDefaultApp(Application.persistentDataPath);
     }
-    [MenuItem(MENU.Open + "Project Directory", priority = Neeto.MENU.Bottom)]
+    [MenuItem("Open/Project Directory", priority = Neeto.MENU.Bottom)]
     public static void OpenProjectDirectory()
     {
         EditorUtility.OpenWithDefaultApp(Path.GetDirectoryName(Application.dataPath));

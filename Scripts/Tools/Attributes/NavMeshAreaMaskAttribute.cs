@@ -20,7 +20,7 @@ namespace Neeto
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
-            var names = GameObjectUtility.GetNavMeshAreaNames();
+            var names = UnityEngine.AI.NavMesh.GetAreaNames();
             property = property.FindPropertyRelative("value");
             property.intValue = EditorGUI.MaskField(position, label, property.intValue, names);
             EditorGUI.EndProperty();

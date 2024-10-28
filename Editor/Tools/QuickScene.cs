@@ -12,6 +12,8 @@ namespace Neeto
 {
     public class QuickScene : EditorWindow
     {
+
+
         static GUIStyle style;
         Editor editor;
         Vector2 scroll;
@@ -23,9 +25,17 @@ namespace Neeto
             set => EditorPrefs.SetBool(isLocked_key, value);
         }
 
-        
-        
-        
+        [UnityEditor.MenuItem("Tools/" + nameof(Neeto.QuickScene), priority = MENU.Top)]
+        public static void Open()
+        {
+            var window = GetWindow<QuickScene>();
+            window.titleContent = new GUIContent("Quick-Load");
+            window.Show();
+        }
+
+
+
+
 
         private void OnGUI()
         {
@@ -90,13 +100,7 @@ namespace Neeto
             return isLocked;
         }
 
-        [UnityEditor.MenuItem(MENU.Open + nameof(Neeto.QuickScene), priority = MENU.Top)]
-        public static void Open()
-        {
-            var window = GetWindow<QuickScene>();
-            window.titleContent = new GUIContent("Quick-Load");
-            window.Show();
-        }
+        
     }
 }
 
