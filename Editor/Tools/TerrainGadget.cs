@@ -11,12 +11,12 @@ using UnityEditor;
 namespace Neeto
 {
 #if UNITY_EDITOR
-    public class TerrainTool : EditorWindow
+    public class TerrainGadget : EditorWindow
     {
-        [UnityEditor.MenuItem("Tools/" + nameof(Neeto.TerrainTool), priority = MENU.Top)]
-        public static TerrainTool Open()
+        [UnityEditor.MenuItem(MENU.Open + nameof(Neeto.TerrainGadget), priority = MENU.Top)]
+        public static TerrainGadget Open()
         {
-            var window = GetWindow<TerrainTool>(false, "Terrain Replacer", true);
+            var window = GetWindow<TerrainGadget>(false, "Terrain Replacer", true);
             window.Show();
             return window;
         }

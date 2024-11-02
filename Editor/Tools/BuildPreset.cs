@@ -112,7 +112,7 @@ namespace Neeto
 
                 position = EditorGUI.PrefixLabel(position, label);
                 target.enabled = EditorGUI.Toggle(position.With(w: 18), target.enabled);
-                target.def = EditorGUI.TextField(position.Add(xMin: 20), target.def);
+                target.def = EditorGUI.TextField(position.Move(xMin: 20), target.def);
                 property.managedReferenceValue = target;
 
                 EditorGUI.EndProperty();

@@ -479,7 +479,60 @@ namespace Neeto
 
             return rect;
         }
-        public static Rect Add(this Rect rect, Vector2? position = null, Vector2? size = null, float? x = null, float? y = null, float? width = null, float? height = null, float? xMin = null, float? xMax = null, float? yMin = null, float? yMax = null, Vector2? min = null, Vector2? max = null)
+        public static RectInt With(this RectInt rect, Vector2Int? pos = null, Vector2Int? size = null, int? x = null, int? y = null, int? w = null, int? h = null, int? xMin = null, int? xMax = null, int? yMin = null, int? yMax = null, Vector2Int? min = null, Vector2Int? max = null)
+        {
+            if (pos.HasValue)
+            {
+                rect.position = pos.Value;
+            }
+            if (size.HasValue)
+            {
+                rect.size = size.Value;
+            }
+            if (x.HasValue)
+            {
+                rect.x = x.Value;
+            }
+            if (y.HasValue)
+            {
+                rect.y = y.Value;
+            }
+            if (w.HasValue)
+            {
+                rect.width = w.Value;
+            }
+            if (h.HasValue)
+            {
+                rect.height = h.Value;
+            }
+            if (xMin.HasValue)
+            {
+                rect.xMin = xMin.Value;
+            }
+            if (xMax.HasValue)
+            {
+                rect.xMax = xMax.Value;
+            }
+            if (yMin.HasValue)
+            {
+                rect.yMin = yMin.Value;
+            }
+            if (yMax.HasValue)
+            {
+                rect.yMax = yMax.Value;
+            }
+            if (min.HasValue)
+            {
+                rect.min = min.Value;
+            }
+            if (max.HasValue)
+            {
+                rect.max = max.Value;
+            }
+
+            return rect;
+        }
+        public static Rect Move(this Rect rect, Vector2? position = null, Vector2? size = null, float? x = null, float? y = null, float? width = null, float? height = null, float? xMin = null, float? xMax = null, float? yMin = null, float? yMax = null, Vector2? min = null, Vector2? max = null)
         {
             if (y is float Y)
             {
@@ -493,6 +546,66 @@ namespace Neeto
 
                 var p = rect.position;
                 p.x += X;
+                rect.position = p;
+            }
+
+            if (position.HasValue)
+            {
+                rect.position += position.Value;
+            }
+            if (size.HasValue)
+            {
+                rect.size += size.Value;
+            }
+            if (width.HasValue)
+            {
+                rect.width += width.Value;
+            }
+            if (height.HasValue)
+            {
+                rect.height += height.Value;
+            }
+            if (xMin.HasValue)
+            {
+                rect.xMin += xMin.Value;
+            }
+            if (xMax.HasValue)
+            {
+                rect.xMax += xMax.Value;
+            }
+            if (yMin.HasValue)
+            {
+                rect.yMin += yMin.Value;
+            }
+            if (yMax.HasValue)
+            {
+                rect.yMax += yMax.Value;
+            }
+            if (min.HasValue)
+            {
+                rect.min += min.Value;
+            }
+            if (max.HasValue)
+            {
+                rect.max += max.Value;
+            }
+
+            return rect;
+        }
+        public static RectInt Move(this RectInt rect, Vector2Int? position = null, Vector2Int? size = null, int? x = null, int? y = null, int? width = null, int? height = null, int? xMin = null, int? xMax = null, int? yMin = null, int? yMax = null, Vector2Int? min = null, Vector2Int? max = null)
+        {
+            if (y.HasValue)
+            {
+
+                var p = rect.position;
+                p.y += (int)y;
+                rect.position = p;
+            }
+            if (x.HasValue)
+            {
+
+                var p = rect.position;
+                p.x += (int)x;
                 rect.position = p;
             }
 

@@ -34,9 +34,48 @@ namespace Neeto
         static string ObjectPath => Path.Combine(ProjectPath, AssetDatabase.GetAssetPath(Selection.activeObject));
         static bool isRunning;
 
-        [MenuItem("Tools/GitBash", priority = -9000)]
-        static void OpenBash() => OpenBash(null);
-        static void OpenBash(string dir)
+        [InitializeOnLoadMethod]
+        static async void AddToolbarIcon()
+        {
+            // ensure this goes on the far right
+            await Task.Yield();
+            await Task.Yield();
+
+            try
+            {
+                // run on main thred
+                EditorApplication.delayCall += () =>
+                {
+                    ToolbarExtender.RightToolbarGUI.Add(() =>
+                    {
+                        var content = isRunning
+                            ? EditorGUIUtility.IconContent("Loading@2x")
+                            : EditorGUIUtility.IconContent("Git@2x");
+
+                        if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.Width(25)))
+                        {
+                            var list = new List<DropdownItem<Action>>
+                                {
+                                new DropdownItem<Action>(()=> OpenBash(), "Open Project in Bash"),
+                                new DropdownItem<Action>(()=> QuickSync(), "Quick Sync"),
+                                new DropdownItem<Action>(()=> Run($"git add . && git commit -am \"{DateTime.Now:MMM dd, yyyy @ h: mmtt}\""), "Quick Commit"),
+                                new DropdownItem<Action>(()=> Run("git log --oneline"), "Quick Log"),
+                                new DropdownItem<Action>(()=> Run("git status -s"), "Quick Status"),
+                                new DropdownItem<Action>(()=> Run($"git add . && git commit -am \"{DateTime.Now:MMM dd, yyyy @ h: mmtt}\" && git push origin HEAD -f"), "Commit & Force Push"),
+                                new DropdownItem<Action>(()=> Run($"git fetch origin"), "Quick Fetch"),
+                                };
+                            new DropdownMenu<Action>(list, _ => _.Invoke()).ShowAsContext();
+                        }
+
+                        GUILayout.Space(5);
+
+                    });
+                };
+            }
+            catch { }
+        }
+
+        static void OpenBash(string dir = null)
         {
             dir ??= ProjectPath;
             Process.Start(new ProcessStartInfo

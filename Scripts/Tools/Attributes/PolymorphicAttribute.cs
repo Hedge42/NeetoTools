@@ -49,7 +49,7 @@ public class PolymorphicDrawer : PropertyDrawer
         using (NGUI.Property(position, property, label))
         {
             var line = position.With(h: NGUI.LineHeight);
-            var fieldRect = line.Add(xMin: NGUI.LabelWidth);
+            var fieldRect = line.Move(xMin: NGUI.LabelWidth);
             if (EditorGUI.DropdownButton(fieldRect, new GUIContent(property.managedReferenceValue.TypeNameOrNull()), FocusType.Passive))
                 ShowMenu(property, returnType);
 

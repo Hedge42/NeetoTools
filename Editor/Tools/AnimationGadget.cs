@@ -5,10 +5,10 @@ using UnityEditor;
 
 namespace Neeto
 {
-    class AnimationTool : EditorWindow
+    class AnimationGadget : EditorWindow
     {
-        [UnityEditor.MenuItem("Tools/" + nameof(AnimationTool), priority =MENU.Top)]
-        static void Open() => GetWindow<AnimationTool>();
+        [UnityEditor.MenuItem(MENU.Neeto + nameof(AnimationGadget))]
+        static void Open() => GetWindow<AnimationGadget>();
 
         Object[] importers;
         ModelImporterAnimationType selectedAnimationType = ModelImporterAnimationType.Human;

@@ -282,7 +282,7 @@ namespace Neeto
         {
             Quaternion rotation = Quaternion.Euler(rb.rotation.eulerAngles);
             Quaternion inverseRotation = Quaternion.Inverse(rotation);
-            Vector3 localVelocity = inverseRotation * rb.linearVelocity;
+            Vector3 localVelocity = inverseRotation * rb.velocity;
             return localVelocity;
         }
         public static void AddPosition(this Rigidbody rb, Vector3 delta)

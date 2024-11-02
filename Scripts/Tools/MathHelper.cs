@@ -195,7 +195,7 @@ namespace Neeto
         }
         public static bool IsGrounded(this CapsuleCollider collider)
         {
-            if (collider.attachedRigidbody.linearVelocity.y > .1f)
+            if (collider.attachedRigidbody.velocity.y > .1f)
             {
                 return false;
             }

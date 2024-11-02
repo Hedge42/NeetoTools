@@ -3,24 +3,27 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO.IsolatedStorage;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UIElements;
 
 namespace Neeto
 {
-    [ExecuteAlways]
     [DefaultExecutionOrder(-100)]
     [RequireComponent(typeof(UIDocument))]
     public class UIController : MonoBehaviour
     {
-        [GetComponent]
-        public UIDocument document;
+        [GetComponent] public UIDocument document;
+        [OnValueChanged(nameof(DisplayChanged))]
+        public DisplayStyle display = DisplayStyle.Flex;
         public VisualElement root => document.rootVisualElement;
 
-        [SerializeReference, Polymorphic]
+        [SerializeReference, Polymorphic, ReorderableList(ListStyle.Lined)]
         public UIElement[] elements;
 
-        bool started;
+        public UnityEvent onVisible;
+        public UnityEvent onHidden;
 
+        bool started;
         bool HasRoot
         {
             get
@@ -31,65 +34,59 @@ namespace Neeto
                 return root != null;
             }
         }
-        //#if UNITY_EDITOR
-        //        void OnValidate()
-        //        {
-        //            UnityEditor.EditorApplication.delayCall += () =>
-        //            {
-        //                SetVisibility(enabled);
-        //            };
-        //        }
-        //#endif
-        async void Awake()
+        bool isVisible
         {
-            await UniTask.Yield();
-
-            SetVisibility(enabled);
-        }
-        void OnEnable()
-        {
-            if (started)
-                Show();
-        }
-        void OnDisable()
-        {
-            Hide();
+            get => root.style.display == DisplayStyle.Flex;
+            set => root.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
         }
         void Start()
         {
-            started = true;
-            Show();
-            
-            if (Application.isPlaying)
+            foreach (var e in elements)
+                e.Q(root);
+        }
+        void Update()
+        {
+            if (root.style.display != display) // was changed externally?
             {
-                foreach (var e in elements)
-                {
-                    e.Q(root);
-                }
+                if (isVisible)
+                    Show(); // invoke events and update field
+                else
+                    Hide(); 
             }
         }
+
+        public void DisplayChanged() => UniTask.Post(() => SetDisplay(display));
+        public void SetDisplay(DisplayStyle display)
+        {
+            bool invoke = display != root.style.display;
+
+            root.style.display = this.display = display;
+
+            if (invoke)
+            {
+                if (isVisible)
+                    onVisible?.Invoke();
+                else
+                    onHidden?.Invoke();
+            }
+        }
+
 
         [QuickAction]
         [ContextMenu(nameof(Show))]
         public void Show()
         {
-            if (!HasRoot) return;
-
-            root.style.display = DisplayStyle.Flex;
-            enabled = true;
+            SetDisplay(DisplayStyle.Flex);
         }
         [QuickAction]
         [ContextMenu(nameof(Hide))]
         public void Hide()
         {
-            if (!HasRoot) return;
-
-            root.style.display = DisplayStyle.None;
-            enabled = false;
+            SetDisplay(DisplayStyle.None);
         }
         public void ToggleVisibility()
         {
-            if (!enabled)
+            if (!isVisible)
                 Show();
             else
                 Hide();

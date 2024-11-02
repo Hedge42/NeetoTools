@@ -10,8 +10,8 @@ namespace Neeto
 {
     public class InputReader : MonoBehaviour
     {
-        [SerializeReference, Polymorphic]
-        public List<IInputEvent> inputs;
+        [SerializeReference, Polymorphic, ReorderableList]
+        public List<IInputEvent> inputs = new() { new KeyDownEvent() };
 
         void OnEnable()
         {

@@ -37,8 +37,8 @@ public class CollapsableEventDrawer : PropertyDrawer
         else
         {
             var indent = (1 + EditorGUI.indentLevel) * 17f;
-            EditorGUI.DrawRect(position.Add(xMin: indent), Color.black * .3f);
-            EditorGUI.LabelField(position.Add(x: indent), label);
+            EditorGUI.DrawRect(position.Move(xMin: indent), Color.black * .3f);
+            EditorGUI.LabelField(position.Move(x: indent), label);
 
         }
     }
