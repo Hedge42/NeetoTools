@@ -60,6 +60,7 @@ namespace Neeto
             Element.RegisterValueChangedCallback(_ => changed?.Invoke(_.newValue));
         }
     }
+#if WWISE
     [Serializable]
     public class RtpcSlider : UIElement<Slider>
     {
@@ -85,6 +86,7 @@ namespace Neeto
             Element.RegisterValueChangedCallback(value => Value = value.newValue);
         }
     }
+#endif
     [Serializable]
     public class ResolutionDropdown : UIElement<DropdownField>
     {

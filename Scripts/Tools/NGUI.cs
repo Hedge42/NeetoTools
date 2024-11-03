@@ -19,8 +19,9 @@ namespace Neeto
 {
     public static partial class NGUI
     {
-        public static Texture2D shadow = Color.black.With(a: .123f).AsTexturePixel();
-        public static Texture2D highlight = Color.white.With(a: .069f).AsTexturePixel();
+        static Texture2D _shadow, _highlight;
+        public static Texture2D shadow => _shadow ??= Color.black.With(a: .123f).AsTexturePixel();
+        public static Texture2D highlight => _highlight ??= Color.white.With(a: .069f).AsTexturePixel();
         #region EDITOR
 #if UNITY_EDITOR
 
