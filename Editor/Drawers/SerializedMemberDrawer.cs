@@ -9,7 +9,10 @@ using UnityEngine;
 
 namespace Neeto
 {
-    class SerializedMemberDrawer : PropertyDrawer
+    /// <summary>
+    /// Only here for the QuickAction test
+    /// </summary>
+    class SerializedMemberDrawer
     {
         [QuickAction] static void Open() => EditorWindow.GetWindow<Tester>();
         class Tester : EditorWindow
@@ -17,6 +20,8 @@ namespace Neeto
             public SerializedProperty<bool> BoolProp;
             public SerializedEvent<bool> BoolEvent;
             public SerializedEvent VoidEvent;
+            public SerializedAction MyAction;
+            public SerializedAction<int> MyActionWithParam;
             Editor editor;
 
             void OnGUI()
@@ -42,8 +47,20 @@ namespace Neeto
                         VoidEvent.AddListener(() => { Debug.Log($"result: yay!"); });
                     }
                 }
+                if (GUILayout.Button("Invoke Actions..."))
+                {
+                    MyAction.Invoke();
+                    MyActionWithParam.Invoke(42);
+                }
             }
         }
+    }
+
+    public abstract class SerializedMemberDrawer<TMemberInfo> : PropertyDrawer where TMemberInfo : MemberInfo
+    {
+        static Dictionary<Type, MemberInfo[]> cache = new();
+
+        
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -57,6 +74,7 @@ namespace Neeto
                 return NGUI.FullLineHeight;
             }
         }
+
         public virtual string GetDisplayString(SerializedMember member)
         {
             if (member != null && member.GetMember() is MemberInfo info)
@@ -68,16 +86,11 @@ namespace Neeto
                 return "(none)";
             }
         }
+
         public virtual string GetDropdownString(MemberInfo info)
         {
             return info.ModuleName() + "/" + info.DeclaringType.FullName + "." + info.Name;
         }
-    }
-
-    [CustomPropertyDrawer(typeof(SerializedAction))]
-    class SerializedActionDrawer : SerializedMemberDrawer
-    {
-        static Dictionary<Type, MemberInfo[]> cache = new();
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -90,7 +103,7 @@ namespace Neeto
 
                 if (EditorGUI.DropdownButton(EditorGUI.PrefixLabel(position, label), new GUIContent(display), FocusType.Passive))
                 {
-                    var options = FindMembers().Cast<MethodInfo>()
+                    var options = FindMembers().Cast<TMemberInfo>()
                         .Select(info => (info, GetDropdownString(info)))
                         .ToArray();
 
@@ -128,276 +141,97 @@ namespace Neeto
             return cache[fieldInfo.FieldType] = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly => !assembly.FullName.ToLower().Contains("editor"))
                 .SelectMany(assembly => assembly.GetTypes())
-                .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
-                .Where(info => info.ReturnType == typeof(void)
-                    && info.GetParameters().Length == 0
-                    && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.IsStatic))
+                .SelectMany(type => GetMembers(type))
+                .Where(info => IsValidMember(info))
                 .ToArray();
+        }
+
+        protected abstract IEnumerable<TMemberInfo> GetMembers(Type type);
+        protected abstract bool IsValidMember(TMemberInfo memberInfo);
+    }
+
+    [CustomPropertyDrawer(typeof(SerializedAction))]
+    class SerializedActionDrawer : SerializedMemberDrawer<MethodInfo>
+    {
+        protected override IEnumerable<MethodInfo> GetMembers(Type type)
+        {
+            return type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
+        }
+
+        protected override bool IsValidMember(MethodInfo info)
+        {
+            return info.ReturnType == typeof(void)
+                && info.GetParameters().Length == 0
+                && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.IsStatic);
         }
     }
 
     [CustomPropertyDrawer(typeof(SerializedAction<>))]
-    class SerializedActionTDrawer : SerializedMemberDrawer
+    class SerializedActionTDrawer : SerializedMemberDrawer<MethodInfo>
     {
-        static Dictionary<Type, MemberInfo[]> cache = new();
-
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        protected override IEnumerable<MethodInfo> GetMembers(Type type)
         {
-            using (NGUI.Property(position, property, label))
-            {
-                var value = property.GetProperValue(fieldInfo) as SerializedMember;
-                position = position.With(h: NGUI.LineHeight);
-
-                var display = GetDisplayString(value);
-
-                if (EditorGUI.DropdownButton(EditorGUI.PrefixLabel(position, label), new GUIContent(display), FocusType.Passive))
-                {
-                    var parameterType = fieldInfo.FieldType.GetGenericArguments()[0];
-
-                    var options = FindMembers(parameterType).Cast<MethodInfo>()
-                        .Select(info => (info, GetDropdownString(info)))
-                        .ToArray();
-
-                    DropdownHelper.Show(info =>
-                    {
-                        Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                        value.target = null;
-                        if (info == null)
-                        {
-                            value.DeclaringType = value.MemberName = "";
-                        }
-                        else
-                        {
-                            value.DeclaringType = info.DeclaringType.AssemblyQualifiedName;
-                            value.MemberName = info.Name;
-                        }
-                        EditorUtility.SetDirty(property.serializedObject.targetObject);
-                    }, true, true, display, options);
-                }
-                else if (value.NeedsTarget())
-                {
-                    EditorGUI.indentLevel++;
-                    Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                    value.target = EditorGUI.ObjectField(position.Move(y: NGUI.FullLineHeight), "target", value.target, value.GetMember().DeclaringType, true);
-                    EditorGUI.indentLevel--;
-                }
-            }
+            return type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
         }
 
-        public MemberInfo[] FindMembers(Type parameterType)
+        protected override bool IsValidMember(MethodInfo info)
         {
-            if (cache.ContainsKey(fieldInfo.FieldType))
-                return cache[fieldInfo.FieldType].ToArray();
+            var parameterType = fieldInfo.FieldType.GetGenericArguments()[0];
 
-            return cache[fieldInfo.FieldType] = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(assembly => !assembly.FullName.ToLower().Contains("editor"))
-                .SelectMany(assembly => assembly.GetTypes())
-                .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
-                .Where(info => info.ReturnType == typeof(void)
-                    && info.GetParameters().Length == 1
-                    && info.GetParameters()[0].ParameterType == parameterType
-                    && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.IsStatic))
-                .ToArray();
+            return info.ReturnType == typeof(void)
+                && info.GetParameters().Length == 1
+                && info.GetParameters()[0].ParameterType == parameterType
+                && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.IsStatic);
         }
     }
 
     [CustomPropertyDrawer(typeof(SerializedProperty<>))]
-    class SerializedPropertyDrawer : SerializedMemberDrawer
+    class SerializedPropertyDrawer : SerializedMemberDrawer<PropertyInfo>
     {
-        static Dictionary<Type, MemberInfo[]> cache = new();
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        protected override IEnumerable<PropertyInfo> GetMembers(Type type)
         {
-            using (NGUI.Property(position, property, label))
-            {
-                var value = property.GetProperValue(fieldInfo) as SerializedMember;
-                position = position.With(h: NGUI.LineHeight);
-
-                var display = GetDisplayString(value);
-
-                if (EditorGUI.DropdownButton(EditorGUI.PrefixLabel(position, label), new GUIContent(display), FocusType.Passive))
-                {
-                    var propertyType = fieldInfo.FieldType.GetGenericArguments()[0];
-
-                    var options = FindMembers().Cast<PropertyInfo>()
-                        .Where(info => propertyType.IsAssignableFrom(info.PropertyType))
-                        .Select(info => (info, GetDropdownString(info)))
-                        .ToArray();
-
-                    DropdownHelper.Show(info =>
-                    {
-                        Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                        value.target = null;
-                        if (info == null)
-                        {
-                            value.DeclaringType = value.MemberName = "";
-                        }
-                        else
-                        {
-                            value.DeclaringType = info.DeclaringType.AssemblyQualifiedName;
-                            value.MemberName = info.Name;
-                        }
-                        EditorUtility.SetDirty(property.serializedObject.targetObject);
-                    }, true, true, display, options);
-                }
-                else if (value.NeedsTarget())
-                {
-                    EditorGUI.indentLevel++;
-                    Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                    value.target = EditorGUI.ObjectField(position.Move(y: NGUI.FullLineHeight), "target", value.target, value.GetMember().DeclaringType, true);
-                    EditorGUI.indentLevel--;
-                }
-            }
+            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
         }
 
-
-        public MemberInfo[] FindMembers()
+        protected override bool IsValidMember(PropertyInfo info)
         {
-            if (cache.ContainsKey(fieldInfo.FieldType))
-                return cache[fieldInfo.FieldType].ToArray();
+            var propertyType = fieldInfo.FieldType.GetGenericArguments()[0];
 
-            return cache[fieldInfo.FieldType] = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(assembly => !assembly.FullName.ToLower().Contains("editor")) // no editor assemblies
-                .SelectMany(assembly => assembly.GetTypes())
-                .SelectMany(type => type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)) // public only
-                .Where(info => typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.IsStatic()) // either static or target is Unity Object
-                .ToArray();
+            return propertyType.IsAssignableFrom(info.PropertyType)
+                && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.IsStatic());
         }
     }
 
     [CustomPropertyDrawer(typeof(SerializedEvent))]
-    class SerializedEventDrawer : SerializedMemberDrawer
+    class SerializedEventDrawer : SerializedMemberDrawer<EventInfo>
     {
-        static Dictionary<Type, MemberInfo[]> cache = new();
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        protected override IEnumerable<EventInfo> GetMembers(Type type)
         {
-            using (NGUI.Property(position, property, label))
-            {
-                var value = property.GetProperValue(fieldInfo) as SerializedMember;
-                position = position.With(h: NGUI.LineHeight);
-
-                var display = GetDisplayString(value);
-
-                if (EditorGUI.DropdownButton(EditorGUI.PrefixLabel(position, label), new GUIContent(display), FocusType.Passive))
-                {
-                    var options = FindMembers().Cast<EventInfo>()
-                        .Select(info => (info, GetDropdownString(info)))
-                        .ToArray();
-
-                    DropdownHelper.Show(info =>
-                    {
-                        Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                        value.target = null;
-                        if (info == null)
-                        {
-                            value.DeclaringType = value.MemberName = "";
-                        }
-                        else
-                        {
-                            value.DeclaringType = info.DeclaringType.AssemblyQualifiedName;
-                            value.MemberName = info.Name;
-                        }
-                        EditorUtility.SetDirty(property.serializedObject.targetObject);
-                    }, true, true, display, options);
-                }
-                else if (value.NeedsTarget())
-                {
-                    EditorGUI.indentLevel++;
-                    Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                    property.FindPropertyRelative(nameof(SerializedMember.target)).objectReferenceValue
-                        = EditorGUI.ObjectField(position.Move(y: NGUI.FullLineHeight), "target", value.target, value.GetMember().DeclaringType, true);
-                    EditorGUI.indentLevel--;
-                }
-            }
+            return type.GetEvents(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
         }
-        /*
-         * find void EventInfos
-         */
-        public MemberInfo[] FindMembers()
-        {
-            if (cache.ContainsKey(fieldInfo.FieldType))
-                return cache[fieldInfo.FieldType].ToArray();
 
-            return cache[fieldInfo.FieldType] = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(assembly => !assembly.FullName.ToLower().Contains("editor")) // no editor assemblies
-                .SelectMany(assembly => assembly.GetTypes())
-                .SelectMany(type => type.GetEvents(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)) // public only
-                .Where(info => info.EventHandlerType.Equals(typeof(Action)) && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.AddMethod.IsStatic)) // either static or target is Unity Object
-                .ToArray();
+        protected override bool IsValidMember(EventInfo info)
+        {
+            return info.EventHandlerType == typeof(Action)
+                && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.AddMethod.IsStatic);
         }
     }
 
     [CustomPropertyDrawer(typeof(SerializedEvent<>))]
-    class SerializedEventTDrawer : SerializedMemberDrawer
+    class SerializedEventTDrawer : SerializedMemberDrawer<EventInfo>
     {
-        static Dictionary<Type, MemberInfo[]> cache = new();
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        protected override IEnumerable<EventInfo> GetMembers(Type type)
         {
-            using (NGUI.Property(position, property, label))
-            {
-                var value = property.GetProperValue(fieldInfo) as SerializedMember;
-                position = position.With(h: NGUI.LineHeight);
-
-                var display = GetDisplayString(value);
-
-                if (EditorGUI.DropdownButton(EditorGUI.PrefixLabel(position, label), new GUIContent(display), FocusType.Passive))
-                {
-                    var propertyType = fieldInfo.FieldType.GetGenericArguments()[0];
-
-                    var options = FindMembers().Cast<EventInfo>()
-                        .Select(info => (info, GetDropdownString(info)))
-                        .ToArray();
-
-                    DropdownHelper.Show(info =>
-                    {
-                        Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                        value.target = null;
-                        if (info == null)
-                        {
-                            value.DeclaringType = value.MemberName = "";
-                        }
-                        else
-                        {
-                            value.DeclaringType = info.DeclaringType.AssemblyQualifiedName;
-                            value.MemberName = info.Name;
-                        }
-                        EditorUtility.SetDirty(property.serializedObject.targetObject);
-                    }, true, true, display, options);
-                }
-                else if (value.NeedsTarget())
-                {
-                    EditorGUI.indentLevel++;
-                    Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                    value.target = EditorGUI.ObjectField(position.Move(y: NGUI.FullLineHeight), "target", value.target, value.GetMember().DeclaringType, true);
-                    EditorGUI.indentLevel--;
-                }
-            }
+            return type.GetEvents(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
         }
 
-
-        Type eventType;
-        bool MatchesField(EventInfo info)
+        protected override bool IsValidMember(EventInfo info)
         {
-            /*
-             SerializedEvent<float>
-                requires
-             event Action<float>
-             */
-            return info.EventHandlerType.Equals(eventType ??= typeof(Action<>).MakeGenericType(fieldInfo.FieldType.GetGenericArguments()[0]));
+            var parameterType = fieldInfo.FieldType.GetGenericArguments()[0];
+            var eventType = typeof(Action<>).MakeGenericType(parameterType);
+
+            return info.EventHandlerType == eventType
+                && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.AddMethod.IsStatic);
         }
-
-        public MemberInfo[] FindMembers()
-        {
-            if (cache.ContainsKey(fieldInfo.FieldType))
-                return cache[fieldInfo.FieldType].ToArray();
-
-            return cache[fieldInfo.FieldType] = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(assembly => !assembly.FullName.ToLower().Contains("editor")) // no editor assemblies
-                .SelectMany(assembly => assembly.GetTypes())
-                .SelectMany(type => type.GetEvents(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)) // public only
-                .Where(info => MatchesField(info)
-                    && (typeof(UnityEngine.Object).IsAssignableFrom(info.ReflectedType) || info.AddMethod.IsStatic)) // either static or target is Unity Object
-                .ToArray();
-        }
-
     }
 }

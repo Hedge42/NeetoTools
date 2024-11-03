@@ -18,7 +18,116 @@ namespace Neeto
         public virtual bool NeedsTarget() => GetMember() is MemberInfo info && !info.IsStatic();
     }
 
+    /// <summary>
+    /// Allows selecting a method (Action) in the inspector and invoking it.
+    /// </summary>
+    [Serializable]
+    public class SerializedAction : SerializedMember
+    {
+        private Action _methodDelegate;
+        private MethodInfo _methodInfo;
 
+        public override bool NeedsTarget()
+        {
+            return GetMember() is MethodInfo info && !info.IsStatic;
+        }
+
+        public void Invoke()
+        {
+            (_methodDelegate ??= InitializeDelegate())?.Invoke();
+        }
+
+        public override MemberInfo GetMember()
+        {
+            try
+            {
+                return Type.GetType(DeclaringType)?.GetMethod(MemberName);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private Action InitializeDelegate()
+        {
+            try
+            {
+                _methodInfo ??= GetMember() as MethodInfo;
+                if (_methodInfo == null)
+                {
+                    Debug.LogError($"Failed to get MethodInfo from '{DeclaringType}.{MemberName}'");
+                    return null;
+                }
+
+                var targetInstance = Expression.Constant(target);
+                var methodCall = Expression.Call(targetInstance, _methodInfo);
+                var methodExpression = Expression.Lambda<Action>(methodCall);
+                return methodExpression.Compile();
+            }
+            catch
+            {
+                Debug.LogError($"Something went wrong in '{DeclaringType}.{MemberName}'");
+                return null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Allows selecting a method (Action<T>) in the inspector and invoking it with a parameter.
+    /// </summary>
+    [Serializable]
+    public class SerializedAction<T> : SerializedMember
+    {
+        private Action<T> _methodDelegate;
+        private MethodInfo _methodInfo;
+
+        public override bool NeedsTarget()
+        {
+            return GetMember() is MethodInfo info && !info.IsStatic;
+        }
+
+        public void Invoke(T arg)
+        {
+            (_methodDelegate ??= InitializeDelegate())?.Invoke(arg);
+        }
+
+        public override MemberInfo GetMember()
+        {
+            try
+            {
+                return Type.GetType(DeclaringType)?.GetMethod(MemberName);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private Action<T> InitializeDelegate()
+        {
+            try
+            {
+                _methodInfo ??= GetMember() as MethodInfo;
+                if (_methodInfo == null)
+                {
+                    Debug.LogError($"Failed to get MethodInfo from '{DeclaringType}.{MemberName}'");
+                    return null;
+                }
+
+                var targetInstance = Expression.Constant(target);
+                var parameter = Expression.Parameter(typeof(T), "arg");
+                var methodCall = Expression.Call(targetInstance, _methodInfo, parameter);
+                var methodExpression = Expression.Lambda<Action<T>>(methodCall, parameter);
+                return methodExpression.Compile();
+            }
+            catch
+            {
+                Debug.LogError($"Something went wrong in '{DeclaringType}.{MemberName}'");
+                return null;
+            }
+        }
+    }
 
     /// <summary>
     /// Like a UnityEvent, but useful for getting values.
