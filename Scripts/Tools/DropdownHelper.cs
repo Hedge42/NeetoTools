@@ -53,5 +53,24 @@ namespace Neeto
             var showAsContextMethod = menuType.GetMethod("ShowAsContext", BindingFlags.Instance | BindingFlags.Public);
             showAsContextMethod.Invoke(dropdownMenu, new object[] { 0 });
         }
+        public static void Show<T>(Action<T> callback, bool sortItems, bool showNoneElement, T selected, params T[] items)
+        {
+            var itemType = GetItemType<T>();
+            var menuType = GetMenuType<T>();
+
+            // Create the list of DropdownItems
+            var itemList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType));
+
+            foreach (var t in items)
+            {
+                var dropdownItem = Activator.CreateInstance(itemType, t.ToString(), t.ToString(), null, null, selected.Equals(t));
+                itemList.Add(dropdownItem);
+            }
+
+            // Create DropdownMenu with the items list and a callback action
+            var dropdownMenu = Activator.CreateInstance(menuType, itemList, callback, 10, sortItems, showNoneElement);
+            var showAsContextMethod = menuType.GetMethod("ShowAsContext", BindingFlags.Instance | BindingFlags.Public);
+            showAsContextMethod.Invoke(dropdownMenu, new object[] { 0 });
+        }
     }
 }

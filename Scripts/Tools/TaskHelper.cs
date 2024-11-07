@@ -142,47 +142,6 @@ public static class TaskHelper
             await UniTask.Yield(PlayerLoopTiming.FixedUpdate, token);
         }
     }
-    public static async UniTask LerpAsync(float a, float b, float d, Action<float> action)
-    {
-        var e = 0f;
-        var c = b - a;
-
-        while (e < d)
-        {
-            await UniTask.Yield();
-            e += Time.deltaTime;
-            var t = Mathf.Clamp01(e / d);
-
-            action(a + t * c);
-        }
-    }
-    public static async UniTask LerpAsyncUnscaled(float a, float b, float d, Action<float> action)
-    {
-        var e = 0f;
-        var c = b - a;
-
-        while (e < d)
-        {
-            await UniTask.Yield();
-            e += Time.unscaledDeltaTime;
-            var t = Mathf.Clamp01(e / d);
-
-            action(a + t * c);
-        }
-    }
-    public static async UniTask LerpAsync(Vector2 a, Vector2 b, float duration, Action<Vector2> action, CancellationToken token)
-    {
-        var elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            await UniTask.Yield(token);
-            elapsed += Time.deltaTime;
-            var t = Mathf.Clamp01(elapsed / duration);
-
-            action(Vector2.Lerp(a, b, t));
-        }
-    }
     public static UniTask EmptyTask() => UniTask.CompletedTask;
     public static async UniTask Frame() => await UniTask.Yield();
     public static async UniTask DelayOrCondition(TimeSpan duration, Func<bool> condition, CancellationToken token)
@@ -262,4 +221,131 @@ public static class TaskHelper
         }
         return new NTask().Switch(DelayAsync());
     }
+
+
+    public static void EveryFrame(this CancellationToken token, MonoBehaviour source, Action onUpdate, Func<bool> until = null, Action onCancel = null, Action onCancelOrComplete = null, Action onComplete = null)
+    {
+        EveryFrameAsync(token, source, onUpdate, until, onCancel, onCancelOrComplete, onComplete).Forget();
+    }
+    public static async UniTask EveryFrameAsync(this CancellationToken token, MonoBehaviour source, Action onUpdate, Func<bool> until = null, Action onCancel = null, Action onCancelOrComplete = null, Action onComplete = null)
+    {
+        try
+        {
+            while (until == null || until() == false)
+            {
+                await UniTask.WaitForEndOfFrame(source, token);
+                onUpdate?.Invoke();
+            }
+            onComplete?.Invoke();
+        }
+        catch (OperationCanceledException)
+        {
+            onCancel?.Invoke();
+        }
+        finally
+        {
+            onCancelOrComplete?.Invoke();
+        }
+    }
+
+
+    public static async UniTask<bool> NextFrame(this MonoBehaviour mono, CancellationToken token)
+    {
+        try
+        {
+            await UniTask.WaitForEndOfFrame(mono, token);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+    }
+
+    public static async UniTask LerpAsync(float duration, PlayerLoopTiming loop, CancellationToken token, Action<float> Set)
+    {
+        for (var elapsed = 0f; elapsed < duration;)
+        {
+            await UniTask.Yield(loop, token);
+            elapsed += loop.GetDeltaTime();
+            Set(Mathf.Clamp01(elapsed / duration));
+
+            if (elapsed >= duration)
+                return;
+        }
+    }
+
+    public static async UniTask LerpAsync(float startTime, float duration, PlayerLoopTiming loop, bool ignoreTimeScale, CancellationToken token, Action<float> Set)
+    {
+        for (var elapsed = startTime; elapsed < duration;)
+        {
+            await UniTask.Yield(loop, token);
+            elapsed += loop.GetDeltaTime(ignoreTimeScale);
+            Set(Mathf.Clamp01(elapsed / duration));
+
+            if (elapsed >= duration)
+                return;
+        }
+    }
+    public static async UniTask LerpAsync(float duration, PlayerLoopTiming loop, bool ignoreTimeScale, CancellationToken token, Action<float> Set)
+    {
+        for (var elapsed = 0f; elapsed < duration;)
+        {
+            await UniTask.Yield(loop, token);
+            elapsed += loop.GetDeltaTime(ignoreTimeScale);
+            Set(Mathf.Clamp01(elapsed / duration));
+
+            if (elapsed >= duration)
+                return;
+        }
+    }
+
+    public static async UniTask<bool> Yield(this CancellationToken token, PlayerLoopTiming loop = PlayerLoopTiming.Update)
+    {
+        try
+        {
+            await UniTask.Yield(loop, token);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+    }
+}
+
+public struct Token
+{
+    public static implicit operator CancellationToken(Token token) => token.token;
+
+    public CancellationTokenSource Source { get; private set; }
+    public CancellationToken token { get; private set; }
+
+    public Token Enable()
+    {
+        Source = new();
+        return this;
+    }
+    public void Disable()
+    {
+        Source.Kill();
+    }
+    public Token Update(Action onCancel = null)
+    {
+        Source = Source.Refresh();
+        if (onCancel != null)
+            token.Register(onCancel);
+        return this;
+    }
+
+
+    public static CancellationToken Global { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod] static void Start()
+    {
+        var cts = new CancellationTokenSource();
+        Global = cts.Token;
+        AppHelper.onQuit += cts.Kill;
+    }
+
 }

@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using Object = UnityEngine.Object;
 using System.Linq;
 using System.Reflection;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -27,12 +29,16 @@ namespace Neeto
 
         public class PropertyScope : IDisposable
         {
-            public void Dispose() => EditorGUI.EndProperty();
             public PropertyScope(Rect position, SerializedProperty property, GUIContent label)
             {
-                EditorGUI.BeginProperty(position, label, property);
-                NGUI.IndentBoxGUI(position);
+                //var i = EditorGUI.indentLevel;
+                //EditorGUI.indentLevel = 0;
+                //EditorGUI.indentLevel = 0;
+                EditorGUI.BeginProperty(position, GUIContent.none, property);
+                //EditorGUI.indentLevel = i;
+                IndentBoxGUI(position);
             }
+            void IDisposable.Dispose() {  EditorGUI.EndProperty();  }
         }
         public static PropertyScope Property(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -41,6 +47,12 @@ namespace Neeto
         public static PropertyScope Property(Rect position, GUIContent label, SerializedProperty property)
         {
             return new PropertyScope(position, property, label);
+        }
+        public static void IndentBoxGUI(Rect position)
+        {
+            var texture = EditorGUI.indentLevel % 2 == 0 ? NGUI.shadow : NGUI.highlight;
+            if (texture != null)
+                GUI.DrawTexture(EditorGUI.IndentedRect(position), texture);
         }
         public class DisabledScope : IDisposable
         {
@@ -262,44 +274,6 @@ namespace Neeto
                 }
             }
             return false;
-        }
-        public static void IndentBoxGUI(Rect position)
-        {
-            var texture = EditorGUI.indentLevel % 2 == 0 ? NGUI.shadow : NGUI.highlight;
-            if (texture != null)
-                GUI.DrawTexture(EditorGUI.IndentedRect(position), texture);
-        }
-        public static void MinMaxWithFieldsLayout(string label, ref float min, ref float max, float minLimit, float maxLimit)
-        {
-            var rect = GUILayoutUtility.GetLastRect();
-
-            //rect.y += rect.height + EditorGUIUtility.standardVerticalSpacing;
-            rect = GUILayoutUtility.GetRect(EditorGUIUtility.currentViewWidth, EditorGUIUtility.singleLineHeight);
-
-            var lineWidth = rect.width;
-            //var fieldWidth = EditorGUIUtility.fieldWidth;
-            //var labelWidth = lineWidth - fieldWidth;
-
-            var end = rect.xMax;
-
-            var fieldWidth = 80;
-
-            EditorGUI.LabelField(rect, label);
-            //rect.x += (EditorGUIUtility.fieldWidth - (EditorGUIUtility.labelWidth - rect.x)); // ???
-            rect.x = EditorGUIUtility.labelWidth - 10;
-
-            rect.width = fieldWidth;
-
-            min = Mathf.Clamp(EditorGUI.FloatField(rect, min), minLimit, max);
-            rect.x += rect.width - 25;
-            rect.xMax = end - fieldWidth + 25;
-            //rect.width = remaining;
-
-            EditorGUI.MinMaxSlider(rect, ref min, ref max, minLimit, maxLimit);
-            rect.xMin = end - fieldWidth;
-            rect.width = fieldWidth;
-
-            max = Mathf.Clamp(EditorGUI.FloatField(rect, max), min, maxLimit);
         }
         public static void CreateAssetDialogue<T>(string name = null) where T : ScriptableObject
         {

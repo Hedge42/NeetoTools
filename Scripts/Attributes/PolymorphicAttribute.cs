@@ -40,21 +40,20 @@ public class PolymorphicDrawer : PropertyDrawer
     }
     public static void DrawGUI(Rect position, SerializedProperty property, GUIContent label, Type returnType)
     {
-        if (property.propertyType != SerializedPropertyType.ManagedReference)
-        {
-            Debug.LogError($"Property '{property.propertyPath}' is not marked as [SerializeReference]");
-            return;
-        }
-
         using (NGUI.Property(position, property, label))
         {
+            if (property.propertyType != SerializedPropertyType.ManagedReference)
+            {
+                Debug.LogError($"Property '{property.propertyPath}' is not marked as [SerializeReference]");
+                return;
+            }
             var line = position.With(h: NGUI.LineHeight);
-            var fieldRect = line.Move(xMin: NGUI.LabelWidth);
-            if (EditorGUI.DropdownButton(fieldRect, new GUIContent(property.managedReferenceValue.TypeNameOrNull()), FocusType.Passive))
+            if (EditorGUI.DropdownButton(EditorGUI.PrefixLabel(line, label), new GUIContent(property.managedReferenceValue.TypeNameOrNull()), FocusType.Passive))
                 ShowMenu(property, returnType);
 
             NGUI.ContextMenu(property, line);
-            EditorGUI.PropertyField(position, property, label, true);
+            EditorGUI.PropertyField(position, property, GUIContent.none, true);
+            //EditorGUI.indentLevel = 0;
         }
     }
     public static void ShowMenu(SerializedProperty property, Type valueType)

@@ -60,43 +60,14 @@ namespace Neeto
     {
         static Dictionary<Type, MemberInfo[]> cache = new();
 
-        
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            var obj = property.GetProperValue(fieldInfo) as SerializedMember;
-            if (obj.NeedsTarget())
-            {
-                return NGUI.FullLineHeight * 2;
-            }
-            else
-            {
-                return NGUI.FullLineHeight;
-            }
-        }
-
-        public virtual string GetDisplayString(SerializedMember member)
-        {
-            if (member != null && member.GetMember() is MemberInfo info)
-            {
-                return info.DeclaringType.FullName + "." + info.Name;
-            }
-            else
-            {
-                return "(none)";
-            }
-        }
-
-        public virtual string GetDropdownString(MemberInfo info)
-        {
-            return info.ModuleName() + "/" + info.DeclaringType.FullName + "." + info.Name;
-        }
-
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            EditorGUI.indentLevel--;// idk y
             using (NGUI.Property(position, property, label))
             {
                 var value = property.GetProperValue(fieldInfo) as SerializedMember;
+                value.owner = property.serializedObject.targetObject;
+
                 position = position.With(h: NGUI.LineHeight);
 
                 var display = GetDisplayString(value);
@@ -127,11 +98,58 @@ namespace Neeto
                 {
                     EditorGUI.indentLevel++;
                     Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
-                    value.target = EditorGUI.ObjectField(position.Move(y: NGUI.FullLineHeight), "target", value.target, value.GetMember().DeclaringType, true);
+                    var targetType = value.GetMember().DeclaringType;
+                    value.target = EditorGUI.ObjectField(position.Move(y: NGUI.FullLineHeight), "target", value.target, targetType, true);
+
+                    // helper to try get component if it is null
+                    if (!value.target)
+                    {
+                        var sourceType = property.serializedObject.targetObject.GetType();
+                        if (typeof(Component).IsAssignableFrom(targetType) && typeof(Component).IsAssignableFrom(sourceType))
+                            value.target = (property.serializedObject.targetObject as Component).GetComponent(targetType);
+                    }
+
+
                     EditorGUI.indentLevel--;
                 }
             }
         }
+
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            var obj = property.GetProperValue(fieldInfo) as SerializedMember;
+            if (obj.NeedsTarget())
+            {
+                return NGUI.FullLineHeight * 2;
+            }
+            else
+            {
+                return NGUI.FullLineHeight;
+            }
+        }
+
+        public virtual string GetDisplayString(SerializedMember member)
+        {
+            if (member != null && member.GetMember() is MemberInfo info)
+            {
+                return info.DeclaringType.FullName + "." + info.Name;
+            }
+            else if (!member.DeclaringType.Equals(""))
+            {
+                return "ERROR: " + member.DeclaringType + "." + member.MemberName;
+            }
+            else
+            {
+                return "(none)";
+            }
+        }
+
+        public virtual string GetDropdownString(MemberInfo info)
+        {
+            return info.ModuleName() + "/" + info.DeclaringType.FullName + "." + info.Name;
+        }
+
+
 
         public MemberInfo[] FindMembers()
         {

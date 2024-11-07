@@ -392,6 +392,10 @@ namespace Neeto
         {
             return Path.GetFileNameWithoutExtension(info.Module.Name);
         }
+        public static string FullDropdownContent(this MemberInfo info)
+        {
+            return ModuleName(info) + "/" + DropdownContent(info);
+        }
         public static string DropdownPath(this MemberInfo info)
         {
             return info.Module.Name.FileName() + "/";

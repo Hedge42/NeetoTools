@@ -311,6 +311,14 @@ namespace Neeto
             // Apply the rotation to the Rigidbody
             rb.MoveRotation(rotated);
         }
+        public static Quaternion InverseRotation(this Rigidbody rb)
+        {
+            return Quaternion.Inverse(rb.rotation);
+        }
+        public static Quaternion Inverse(this Quaternion q)
+        {
+            return Quaternion.Inverse(q);
+        }
         public static void GetCapsuleCenters(this CapsuleCollider cap, out Vector3 top, out Vector3 bottom, float footClearance = .1f)
         {
             var center = cap.transform.TransformPoint(cap.center);

@@ -8,14 +8,36 @@ using UnityEngine;
 namespace Neeto
 {
     [Serializable]
-    public abstract class SerializedMember
+    public abstract class SerializedMember : ISerializationCallbackReceiver
     {
+        public UnityEngine.Object owner;
         public UnityEngine.Object target;
         [SerializeField] public string DeclaringType;
         [SerializeField] public string MemberName;
 
         public abstract MemberInfo GetMember();
         public virtual bool NeedsTarget() => GetMember() is MemberInfo info && !info.IsStatic();
+
+        public void OnAfterDeserialize()
+        {
+            if (!DeclaringType.Equals(""))
+            {
+                var type = Type.GetType(DeclaringType);
+                if (type == null)
+                {
+                    Debug.LogError($"Type not found. Did the code change? '{DeclaringType}'", owner);
+                    return;
+                }
+
+                var member = GetMember();
+                if (member == null)
+                {
+                    Debug.LogError($"Member not found. Did the code change? '{MemberName}'", owner);
+                    return;
+                }
+            }
+        }
+        public void OnBeforeSerialize() { }
     }
 
     /// <summary>
