@@ -575,7 +575,7 @@ namespace Neeto
             method = targetObject?.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
             if (method != null)
-                return method;
+                return targetObject;
 
             // If not found, traverse parent properties' managedReferenceValues
             SerializedProperty parentProperty = property.Copy();
@@ -658,12 +658,32 @@ namespace Neeto
         }
         public static SerializedProperty Parent(this SerializedProperty property)
         {
-            string path = property.propertyPath;
-            int lastDot = path.LastIndexOf('.');
-            if (lastDot == -1) return null;
-            string parentPath = path.Substring(0, lastDot);
-            return property.serializedObject.FindProperty(parentPath);
+            // https://gist.github.com/monry/9de7009689cbc5050c652bcaaaa11daa
+            var propertyPaths = property.propertyPath.Split('.');
+            if (propertyPaths.Length <= 1)
+            {
+                return default;
+            }
+
+            var parentSerializedProperty = property.serializedObject.FindProperty(propertyPaths.First());
+            for (var index = 1; index < propertyPaths.Length - 1; index++)
+            {
+                if (propertyPaths[index] == "Array" && propertyPaths.Length > index + 1 && Regex.IsMatch(propertyPaths[index + 1], "^data\\[\\d+\\]$"))
+                {
+                    var match = Regex.Match(propertyPaths[index + 1], "^data\\[(\\d+)\\]$");
+                    var arrayIndex = int.Parse(match.Groups[1].Value);
+                    parentSerializedProperty = parentSerializedProperty.GetArrayElementAtIndex(arrayIndex);
+                    index++;
+                }
+                else
+                {
+                    parentSerializedProperty = parentSerializedProperty.FindPropertyRelative(propertyPaths[index]);
+                }
+            }
+
+            return parentSerializedProperty;
         }
+
         static Dictionary<Type, Type> drawerTypes;
         public static Dictionary<Type, Type> GetAllTypesWithPropertyDrawer()
         {

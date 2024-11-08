@@ -31,6 +31,39 @@ namespace Neeto
     }
 
     [Serializable]
+    public class FloatMonitorEvent : IValueMonitor
+    {
+        public SerializedProperty<float> property;
+        public UnityEvent<float> output;
+
+        public async UniTaskVoid MonitorAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
+                output?.Invoke(property.Value);
+            }
+        }
+    }
+
+    [Serializable]
+    public class FloatMonitorSwitch : IValueMonitor
+    {
+        public SerializedProperty<float> property;
+
+        public UnityEvent<float> output;
+
+        public async UniTaskVoid MonitorAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
+                output?.Invoke(property.Value);
+            }
+        }
+    }
+
+    [Serializable]
     public class FloatMonitorSequence : IValueMonitor
     {
         [Serializable]
@@ -44,24 +77,29 @@ namespace Neeto
 
         public async UniTaskVoid MonitorAsync(CancellationToken token)
         {
-            int? lastIndex = null;
+            int lastIndex = -1;
 
-            for (; ; )
+            while(!token.IsCancellationRequested)
             {
+                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
                 var value = property.Value;
                 for (int i = 0; i < elements.Length; i++)
                 {
-                    if (i != lastIndex && elements[i].comparison.Evaluate(value))
+                    if (elements[i].comparison.Evaluate(value))
                     {
-                        lastIndex = i;
-                        elements[i].entered?.Invoke();
+                        if (lastIndex != i)
+                        {
+                            lastIndex = i;
+                            elements[i].entered?.Invoke();
+                        }
+                        break;
                     }
                 }
-
-                await UniTask.Yield(PlayerLoopTiming.EarlyUpdate);
             }
         }
     }
+
+
 
     [Serializable]
     public class BooleanMonitor : IValueMonitor

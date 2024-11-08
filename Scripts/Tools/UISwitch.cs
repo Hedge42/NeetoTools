@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -8,38 +10,94 @@ namespace Neeto
     [DefaultExecutionOrder(6969)]
     public class UISwitch : MonoBehaviour
     {
-        public bool suppressWarning;
-        public UIDocument Default;
-
+        [Indexer(nameof(pages), nameof(SetIndex))]
+        public int index;
 
         [Note("call Switch(ui) and all other objects will be disabled")]
         [ReorderableList(ListStyle.Lined)]
-        public UIDocument[] Docs;
+        public UIController[] pages;
+
 
         void Start()
         {
-            if (Default)
-                Switch(Default);
+            SetIndex(index);
         }
 
         public void DisableAll()
         {
-            foreach (var doc in Docs)
+            foreach (var ui in pages)
             {
-                doc.rootVisualElement.style.display = DisplayStyle.None;
+                ui.Hide();
             }
         }
-        public void Switch(UIDocument Doc)
+        public void SetIndex(int index)
         {
-            foreach (var doc in Docs)
+            Show(pages[this.index = index]);
+        }
+        public void Show(UIController ui)
+        {
+            foreach (var doc in pages)
             {
-                doc.rootVisualElement.style.display = Doc == doc ? DisplayStyle.Flex : DisplayStyle.None;
+                if (doc != ui)
+                {
+                    doc.Hide();
+                }
             }
-            if (Doc.rootVisualElement.style.display != DisplayStyle.Flex)
+            ui.Show();
+        }
+        public void Hide(UIController ui)
+        {
+            ui.Hide();
+        }
+    }
+
+
+    public class IndexerAttribute : PropertyAttribute
+    {
+        public string methodName;
+        public string arrayName;
+        public IndexerAttribute(string arrayName, string methodName)
+        {
+            this.arrayName = arrayName;
+            this.methodName = methodName;
+        }
+
+#if UNITY_EDITOR
+        [CustomPropertyDrawer(typeof(IndexerAttribute))]
+        public class IndexerDrawer : PropertyDrawer
+        {
+            public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
             {
-                Doc.rootVisualElement.style.display = DisplayStyle.Flex;
-                Debug.LogWarning($"UIDocument '{Doc.name}' not a part of the list can cannot be disabled by '{name}'. Enable suppressWarning if this was intentional.", Doc);
+                using (NGUI.Property(position, property))
+                {
+                    var attribute = this.attribute as IndexerAttribute;
+                    var parent = property.Parent();
+                    var array = parent != null ? parent.FindPropertyRelative(attribute.arrayName) : property.serializedObject.FindProperty(attribute.arrayName);
+
+                    if (array.arraySize == 0)
+                        return;
+
+                    var index = EditorGUI.IntSlider(position, label, property.intValue, 0, array.arraySize - 1);
+
+                    if (index != property.intValue)
+                    {
+                        property.intValue = index;
+
+                        var target = property.FindMethodTarget(attribute.methodName, out var method);
+                        method.Invoke(target, new object[] { index });
+                    }
+                }
+            }
+            public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+            {
+                var attribute = this.attribute as IndexerAttribute;
+
+                var parent = property.Parent();
+                var array = parent != null ? parent.FindPropertyRelative(attribute.arrayName) : property.serializedObject.FindProperty(attribute.arrayName);
+
+                return array.arraySize > 0 ? NGUI.FullLineHeight : 0f;
             }
         }
+#endif
     }
 }

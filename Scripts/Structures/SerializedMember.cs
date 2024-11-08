@@ -172,26 +172,20 @@ namespace Neeto
         {
             try
             {
-                return Type.GetType(DeclaringType).GetProperty(MemberName);
+                return Type.GetType(DeclaringType).GetProperty(MemberName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
             }
-            catch
+            catch (Exception e)
             {
+                Debug.LogError($"Failed to get PropertyInfo from '{DeclaringType}.{MemberName}'");
                 return null;
             }
         }
 
         Func<T> InitializeGetter()
         {
-            Debug.Log(target.name);
-
             try
             {
                 _info ??= GetMember() as PropertyInfo;
-                if (_info == null)
-                {
-                    Debug.LogError($"Failed to get PropertyInfo from '{DeclaringType}.{MemberName}'");
-                }
-
                 var targetInstance = Expression.Constant(target);
                 var propertyExpression = Expression.Property(targetInstance, _info);
                 var getExpression = Expression.Lambda<Func<T>>(propertyExpression);
@@ -217,7 +211,7 @@ namespace Neeto
 
                 if (!_info.CanWrite)
                 {
-                    Debug.LogError($"Property '{_info.Name}' does not have a setter.");
+                    Debug.LogWarning($"Property '{_info.NameOr("NULL")}' does not have a setter.");
                     return Default;
                 }
 

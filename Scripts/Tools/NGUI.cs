@@ -1,16 +1,10 @@
-﻿/* Neeto GUI
- */
-
-using UnityEngine;
+﻿using UnityEngine;
 using System;
-using TMPro;
 using System.IO;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
 using System.Linq;
 using System.Reflection;
-using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -29,24 +23,28 @@ namespace Neeto
 
         public class PropertyScope : IDisposable
         {
-            public PropertyScope(Rect position, SerializedProperty property, GUIContent label)
+            public PropertyScope(Rect position, SerializedProperty property, GUIContent label, bool box = true)
             {
-                //var i = EditorGUI.indentLevel;
-                //EditorGUI.indentLevel = 0;
-                //EditorGUI.indentLevel = 0;
                 EditorGUI.BeginProperty(position, GUIContent.none, property);
-                //EditorGUI.indentLevel = i;
-                IndentBoxGUI(position);
+                if (box)
+                    IndentBoxGUI(position);
             }
-            void IDisposable.Dispose() {  EditorGUI.EndProperty();  }
+            void IDisposable.Dispose()
+            {
+                EditorGUI.EndProperty();
+            }
         }
-        public static PropertyScope Property(Rect position, SerializedProperty property, GUIContent label)
+        public static PropertyScope Property(Rect position, SerializedProperty property, GUIContent label, bool box = true)
         {
-            return new PropertyScope(position, property, label);
+            return new PropertyScope(position, property, label, box);
         }
-        public static PropertyScope Property(Rect position, GUIContent label, SerializedProperty property)
+        public static PropertyScope Property(Rect position, SerializedProperty property, bool box = true)
         {
-            return new PropertyScope(position, property, label);
+            return new PropertyScope(position, property, GUIContent.none, box);
+        }
+        public static PropertyScope Property(Rect position, GUIContent label, SerializedProperty property, bool box = true)
+        {
+            return new PropertyScope(position, property, label, box);
         }
         public static void IndentBoxGUI(Rect position)
         {
