@@ -49,16 +49,6 @@ namespace Neeto
         private Action _methodDelegate;
         private MethodInfo _methodInfo;
 
-        public override bool NeedsTarget()
-        {
-            return GetMember() is MethodInfo info && !info.IsStatic;
-        }
-
-        public void Invoke()
-        {
-            (_methodDelegate ??= InitializeDelegate())?.Invoke();
-        }
-
         public override MemberInfo GetMember()
         {
             try
@@ -69,6 +59,17 @@ namespace Neeto
             {
                 return null;
             }
+        }
+
+        public void Invoke()
+        {
+            if (_methodDelegate == null)
+            {
+                _methodDelegate = InitializeDelegate();
+                if (_methodDelegate == null) return;
+            }
+
+            _methodDelegate.Invoke();
         }
 
         private Action InitializeDelegate()
