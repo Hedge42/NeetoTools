@@ -17,13 +17,15 @@ namespace Neeto
     {
         public static implicit operator float(FloatSource source) => source.GetValue();
 
-        [LeftToggle]
+        [HideInInspector]
         public bool shouldClamp;
         [LeftToggle]
         public bool isAbsolute;
-        [LeftToggle]
+        [HideInInspector]
         public bool shouldMultiply;
+        [FieldToggle(nameof(shouldClamp))]
         public Vector2 clampRange = Vector2.up;
+        [FieldToggle(nameof(shouldMultiply))]
         public float multiplyAmount = 1f;
 
         [SerializeReference, Polymorphic]

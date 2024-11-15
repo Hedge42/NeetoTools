@@ -18,9 +18,13 @@ namespace Neeto
         public UIController[] pages;
 
 
-        void Start()
+        void OnEnable()
         {
             SetIndex(index);
+        }
+        void OnDisable()
+        {
+            DisableAll();
         }
 
         public void DisableAll()

@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace Neeto
 {
-    [DefaultExecutionOrder(-100)]
+    [DefaultExecutionOrder(69)]
     [RequireComponent(typeof(UIDocument))]
     public class UIController : MonoBehaviour
     {
@@ -58,6 +58,9 @@ namespace Neeto
         public void DisplayChanged() => UniTask.Post(() => SetDisplay(display));
         public void SetDisplay(DisplayStyle display)
         {
+            if (root == null)
+                return;
+
             bool invoke = display != root.style.display;
 
             root.style.display = this.display = display;

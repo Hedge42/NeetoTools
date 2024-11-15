@@ -70,9 +70,9 @@ public static class TaskHelper
 
         return flag ? value : func();
     }
-    public static NTask Delay(this Action action, float seconds)
+    public static Routine Delay(this Action action, float seconds)
     {
-        return new NTask().Switch(action.DelayAsync(seconds));
+        return new Routine().Switch(action.DelayAsync(seconds));
     }
     public static async UniTask DelayAsync(this Action completed, float seconds, PlayerLoopTiming timing = PlayerLoopTiming.Update)
     {
@@ -203,23 +203,23 @@ public static class TaskHelper
             cts.Kill();
         }
     }
-    public static NTask ExecuteAfter(this Action action, float seconds)
+    public static Routine ExecuteAfter(this Action action, float seconds)
     {
         async UniTask DelayAsync()
         {
             await UniTask.Delay(TimeSpan.FromSeconds(seconds));
             action?.Invoke();
         }
-        return new NTask().Switch(DelayAsync());
+        return new Routine().Switch(DelayAsync());
     }
-    public static NTask ExecuteAfter<T>(this Action<T> action, float seconds, T data)
+    public static Routine ExecuteAfter<T>(this Action<T> action, float seconds, T data)
     {
         async UniTask DelayAsync()
         {
             await UniTask.Delay(TimeSpan.FromSeconds(seconds));
             action?.Invoke(data);
         }
-        return new NTask().Switch(DelayAsync());
+        return new Routine().Switch(DelayAsync());
     }
 
 

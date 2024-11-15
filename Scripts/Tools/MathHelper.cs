@@ -53,14 +53,14 @@ namespace Neeto
 
             return Quaternion.Euler(rotEuler);
         }
-        public static Vector3 Multiply(this Vector3 a, Vector3 b)
+        public static Vector3 MultiplyParts(this Vector3 a, Vector3 b)
         {
             a.x *= b.x;
             a.y *= b.y;
             a.z *= b.z;
             return a;
         }
-        public static Vector3 Divide(this Vector3 a, Vector3 b)
+        public static Vector3 DivideParts(this Vector3 a, Vector3 b)
         {
             a.x /= b.x;
             a.y /= b.y;

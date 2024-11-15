@@ -62,8 +62,7 @@ namespace Neeto
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            EditorGUI.indentLevel--;// idk y
-            using (NGUI.Property(position, property, label))
+            using (NGUI.Property(position, property))
             {
                 var value = property.GetProperValue(fieldInfo) as SerializedMember;
                 value.owner = property.serializedObject.targetObject;
@@ -134,11 +133,7 @@ namespace Neeto
             {
                 return info.DeclaringType.FullName + "." + info.Name;
             }
-            else if (!member.DeclaringType.Equals(""))
-            {
-                return "ERROR: " + member.DeclaringType + "." + member.MemberName;
-            }
-            else
+            else 
             {
                 return "(none)";
             }

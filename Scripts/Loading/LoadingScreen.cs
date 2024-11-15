@@ -71,15 +71,15 @@ namespace Neeto
             loadingScreenHandle.allowSceneActivation = true;
             await loadingScreenHandle;
             var loadingScene = SceneManager.GetSceneByName(LoadingScreen.SCENE_NAME);
-            await Easing.EaseUnscaled(0, 1, 1, Easing.Method.EaseInSine, f => instance.background.alpha = f, token: MCancel.global);
+            await Easing.EaseUnscaled(0, 1, 1, Easing.Method.EaseInSine, f => instance.background.alpha = f, token: Token.global);
 
         }
         public static async UniTask DeactivateAsync()
         {
             LoadingScreen.isLoading = false;
 
-            await TaskHelper.LerpAsync(instance.background.alpha, 1f, PlayerLoopTiming.PostLateUpdate, true, Token.Global, _ => instance.background.alpha = _)
-                            .AttachExternalCancellation(Token.Global);
+            await TaskHelper.LerpAsync(instance.background.alpha, 1f, PlayerLoopTiming.PostLateUpdate, true, Token.global, _ => instance.background.alpha = _)
+                            .AttachExternalCancellation(Token.global);
 
 
             var handle = SceneManager.UnloadSceneAsync(SceneManager.GetSceneByName(SCENE_NAME));

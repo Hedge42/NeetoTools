@@ -54,7 +54,7 @@ namespace Neeto
 
         static async UniTask Ease(Func<PlayerLoopTiming, float> deltaTime, float start, float end, float duration, Method method, Action<float> action, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken? token = null, Func<bool> isPaused = null)
         {
-            var Token = token ?? MCancel.GetGlobalToken();
+            var Token = token ?? global::Token.global;
 
 
             var elapsed = 0f;

@@ -17,64 +17,51 @@ namespace Neeto
     /// <summary>
     /// automatically cancel a routine when a new one is started
     /// </summary>
-    public struct NTask
+    public struct Routine
     {
         public UniTask task;
-        public CancellationTokenSource cts;
-        public CancellationToken token => cts.Token;
+        public Token token { get; private set; }
         public UniTaskStatus status => task.Status;
 
         public event Action stopped;
 
-        public void Kill()
-        {
-            cts.Kill();
-            cts = null;
-        }
+        public void Kill() => token--;
+
         void Stop()
         {
             Kill();
             stopped?.Invoke();
         }
-        public void Refresh()
+        public void Refresh() => token++;
+
+
+
+        public Routine Switch(params UniTask[] tasks)
         {
-            cts = cts.Refresh();
-        }
-
-
-
-        public NTask Switch(params UniTask[] tasks)
-        {
-            cts = cts.Refresh();
-
             task = UniTask.WhenAll(tasks)
-                .AttachExternalCancellation(cts.Token)
-                .AttachExternalCancellation(MCancel.global)
+                .AttachExternalCancellation(++token)
+                .AttachExternalCancellation(Token.global)
                 .ContinueWith(Stop)
                 .Preserve();
 
             task.Forget();
             return this;
         }
-        public NTask Switch(Func<CancellationToken, UniTask> GetTask)
+        public Routine Switch(Func<CancellationToken, UniTask> GetTask)
         {
-            cts = cts.Refresh();
-
-            var task = GetTask(cts.Token)
-                .AttachExternalCancellation(MCancel.global)
+            var task = GetTask(++token)
+                .AttachExternalCancellation(Token.global)
                 .ContinueWith(Stop)
                 .Preserve();
 
             task.Forget();
             return this;
         }
-        public NTask Switch(UniTask _task, Action __onComplete)
+        public Routine Switch(UniTask _task, Action __onComplete)
         {
-            cts = cts.Refresh();
-
             task = _task
-                .AttachExternalCancellation(cts.Token)
-                .AttachExternalCancellation(MCancel.global)
+                .AttachExternalCancellation(++token)
+                .AttachExternalCancellation(Token.global)
                 .ContinueWith(__onComplete)
                 .ContinueWith(Stop)
                 .Preserve();
@@ -82,13 +69,11 @@ namespace Neeto
             task.Forget();
             return this;
         }
-        public NTask Switch(UniTask _task, CancellationToken _token)
+        public Routine Switch(UniTask _task, CancellationToken _token)
         {
-            cts = cts.Refresh();
-
             task = _task
-                .AttachExternalCancellation(cts.Token)
-                .AttachExternalCancellation(MCancel.global)
+                .AttachExternalCancellation(++token)
+                .AttachExternalCancellation(Token.global)
                 .AttachExternalCancellation(_token)
                 .ContinueWith(Stop)
                 .Preserve();
@@ -100,45 +85,9 @@ namespace Neeto
 
 
 
-        public NTask Repeat(params UniTask[] tasks)
+        public static Routine Run(params UniTask[] tasks)
         {
-            cts = cts.Refresh();
-            task = UniTask.WhenAll(tasks)
-                .AttachExternalCancellation(cts.Token)
-                .AttachExternalCancellation(MCancel.global)
-                .Preserve();
-
-            RepeatAsync(task).Forget();
-            return this;
-        }
-
-        public static NTask Run(params UniTask[] tasks)
-        {
-            return new NTask().Switch(tasks);
-        }
-
-        public async UniTask RepeatAsync(UniTask task)
-        {
-            /* redundant condition but feels safer than while(true)
-             */
-
-            //cts = cts.Refresh();
-            //task = UniTask.WhenAll(tasks)
-            //    .AttachExternalCancellation(cts.Token)
-            //    .AttachExternalCancellation(AsyncUtils.GlobalToken)
-            //    .Preserve();
-
-            //try
-            //{
-            while (!token.IsCancellationRequested)
-            {
-                await task;
-            }
-            //}
-            //catch
-            //{
-            //    stopped?.Invoke();
-            //}
+            return new Routine().Switch(tasks);
         }
         public async UniTask SwitchAsync(params UniTask[] tasks)
         {
@@ -147,10 +96,9 @@ namespace Neeto
         }
         UniTask Prepare(params UniTask[] tasks)
         {
-            cts = cts.Refresh();
             return UniTask.WhenAll(tasks)
-                .AttachExternalCancellation(cts.Token)
-                .AttachExternalCancellation(MCancel.global)
+                .AttachExternalCancellation(++token)
+                .AttachExternalCancellation(Token.global)
                 .ContinueWith(Stop)
                 .Preserve();
         }
@@ -158,29 +106,6 @@ namespace Neeto
         {
             await task;
         }
-        public void Add(UniTask task)
-        {
-            // don't cancel state if it's running
-            bool cold = cts == null;
-            if (cold)
-            {
-                cts = cts.Refresh();
-                task = task.ContinueWith(Stop);
-            }
-
-            // compose and fire
-            task = task.AttachExternalCancellation(cts.Token);
-            task = task.AttachExternalCancellation(MCancel.global);
-            task = task.Preserve();
-
-            if (cold)
-            {
-                this.task = task;
-            }
-
-            task.Forget();
-        }
-
         public async UniTask CompletedAsync(Action action = null)
         {
             await UniTask.WaitUntil(IsCompleted);
@@ -209,8 +134,8 @@ namespace Neeto
                 await UniTask.Yield();
         }
 
-        public static NTask operator %(NTask state, UniTask task) => state.Switch(task);
-        public static NTask operator +(NTask state, UniTask task)
+        public static Routine operator %(Routine state, UniTask task) => state.Switch(task);
+        public static Routine operator +(Routine state, UniTask task)
         {
             task.AttachExternalCancellation(state.token)
                 .Preserve()
@@ -221,63 +146,6 @@ namespace Neeto
 
     public static class MCancel
     {
-        static CancellationTokenSource _global;
-        public static CancellationTokenSource globalSource
-        {
-            get
-            {
-                if (!isSetup)
-                    Setup();
-                return _global;
-            }
-        }
-
-        static CancellationTokenSource _scene;
-        public static CancellationTokenSource sceneSource
-        {
-            get
-            {
-                if (!isSetup)
-                    Setup();
-                return _scene;
-            }
-        }
-
-        public static CancellationToken scene => sceneSource.Token;
-        public static CancellationToken global => globalSource.Token;
-
-        static bool isSetup;
-
-        static void Setup()
-        {
-            _global = _global.Refresh();
-            _scene = _scene.Refresh();
-            isSetup = true;
-        }
-
-        [RuntimeInitializeOnLoadMethod]
-        static void OK()
-        {
-            AppHelper.onQuit += CancelGlobal;
-            SceneManager.activeSceneChanged += RefreshSceneToken;
-        }
-        static void CancelGlobal()
-        {
-            globalSource.Kill();
-            sceneSource.Kill();
-            SceneManager.activeSceneChanged -= RefreshSceneToken;
-            isSetup = false;
-        }
-        static void RefreshSceneToken(Scene from, Scene to)
-        {
-            _scene = _scene.Refresh();
-        }
-
-        public static CancellationToken GetGlobalToken()
-        {
-            return globalSource.Token;
-        }
-
         public static CancellationTokenSource Refresh(this CancellationTokenSource source)
         {
             Kill(source);
@@ -393,11 +261,11 @@ namespace Neeto
                 return .1f;
         }
 
-        public static void CreateLoop(PlayerLoopTiming timing, Action action, ref NTask state)
+        public static void CreateLoop(PlayerLoopTiming timing, Action action, ref Routine state)
         {
             state.Switch(LoopAsync(timing, action));
         }
-        public static void CreateLoop(this Action action, PlayerLoopTiming timing, ref NTask state)
+        public static void CreateLoop(this Action action, PlayerLoopTiming timing, ref Routine state)
         {
             state.Switch(LoopAsync(timing, action));
         }
@@ -420,44 +288,6 @@ namespace Neeto
         }
     }
 
-
-    public struct AsyncRunner
-    {
-        public UniTask task;
-        public CancellationTokenSource cts;
-        public CancellationToken token => cts.Token;
-        public UniTaskStatus status => task.Status;
-
-        public void Kill()
-        {
-            cts.Kill();
-        }
-        public void Run(UniTask _task, Component component = null)
-        {
-            cts ??= cts.Refresh();
-
-            //this.cts = cts.Refresh();
-            if (component) cts.RegisterRaiseCancelOnDestroy(component);
-
-            task = _task.AttachExternalCancellation(cts.Token);
-            task = task.AttachExternalCancellation(MCancel.global);
-            task = task.Preserve();
-            task.Forget();
-        }
-        public void OnComplete(UniTaskStatus status, Action action)
-        {
-            AwaitStatus().ContinueWith(_status =>
-            {
-                if (_status == status)
-                    action();
-            }).Forget();
-        }
-        private async UniTask<UniTaskStatus> AwaitStatus()
-        {
-            await task;
-            return task.Status;
-        }
-    }
 
     public struct TaskAggregator
     {

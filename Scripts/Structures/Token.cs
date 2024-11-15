@@ -1,41 +1,94 @@
-﻿using Neeto;
+﻿using Cysharp.Threading.Tasks;
+using JetBrains.Annotations;
+using Neeto;
 using System;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public struct Token
 {
     public static implicit operator CancellationToken(Token token) => token.token;
-    public static Token operator ++(Token t) => t.Update();
+    public static implicit operator bool(Token token) => token.enabled;
+    public static Token operator ++(Token t) => t.Refresh();
+    public static Token operator --(Token t) => t.Disable();
 
-    public CancellationTokenSource Source { get; private set; }
+    public bool enabled { get; private set; }
     public CancellationToken token { get; private set; }
+    CancellationTokenSource source;
 
     public Token Enable()
     {
-        Source = new();
+        source = new();
+        token = source.Token;
+        enabled = true;
         return this;
     }
-    public void Disable()
+    public Token Disable()
     {
-        Source.Kill();
+        source?.Cancel();
+        source?.Dispose();
+        source = null;
+        enabled = false;
+        return this;
     }
-    public Token Update(Action onCancel = null)
+    public void Register(Action onCancel)
     {
-        Source = Source.Refresh();
+        token.Register(onCancel);
+    }
+    public Token Refresh(Action onCancel = null)
+    {
+        source?.Cancel();
+        source?.Dispose();
+        source = new();
+        token = source.Token;
         if (onCancel != null)
             token.Register(onCancel);
         return this;
     }
 
 
-    public static CancellationToken Global { get; private set; }
+    public static CancellationToken global => _global;
+    public static CancellationToken scene => _scene;
+    static Token _global, _scene;
 
-    [RuntimeInitializeOnLoadMethod] static void Start()
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void Start()
     {
-        var cts = new CancellationTokenSource();
-        Global = cts.Token;
-        AppHelper.onQuit += cts.Kill;
+        _global++;
+        AppHelper.onQuit += () => _global--;
+        SceneManager.activeSceneChanged += (_, _) => _scene++;
     }
 
+}
+
+
+namespace Exp
+{
+
+
+
+
+    public struct Routine
+    {
+        Token token;
+        Func<CancellationToken, UniTask> func;
+
+        public Routine(Func<CancellationToken, UniTask> func)
+        {
+            this.func = func;
+            token = default;
+        }
+        public void Pause()
+        {
+            token.Disable();
+        }
+        public void Resume()
+        {
+            func(token.Enable())
+                .AttachExternalCancellation(Token.global)
+                .Forget();
+        }
+    }
 }

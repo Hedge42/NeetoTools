@@ -26,7 +26,7 @@ namespace Neeto
             get => Renderer.color.a;
             set => Renderer.color = Renderer.color.WithA(value);
         }
-        NTask state;
+        Routine state;
 
         private void OnEnable()
         {

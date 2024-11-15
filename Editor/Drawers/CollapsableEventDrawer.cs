@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.Events;
 using System.Linq;
 using Neeto;
+using Toolbox.Editor;
+using Rhinox.Lightspeed;
 
 #if UNITY_EDITOR
 using UnityEditorInternal;
@@ -36,10 +38,26 @@ public class CollapsableEventDrawer : PropertyDrawer
         }
         else
         {
-            var indent = (1 + EditorGUI.indentLevel) * 17f;
-            EditorGUI.DrawRect(position.Move(xMin: indent), Color.black * .3f);
-            EditorGUI.LabelField(position.Move(x: indent), label);
 
+            // add type arguments to label
+            var text = label.text +  $" (";
+            var generics = fieldInfo.FieldType.GetGenericArguments();
+            for(int i = 0; i < generics.Length; i++)
+            {
+                text += generics[i].Name;
+                if (i < generics.Length - 1)
+                {
+                    text += ", ";
+                }
+            }
+            text += ")";
+
+            // show listeners count
+            text += $" [{(property.GetProperValue(fieldInfo) as UnityEventBase).GetPersistentListeners().Count}]";
+
+            position = position.Move(xMin: 2f);
+            EditorGUI.DrawRect(position, Color.black * .25f);
+            EditorGUI.LabelField(position.Move(xMin: 5f), text);
         }
     }
 

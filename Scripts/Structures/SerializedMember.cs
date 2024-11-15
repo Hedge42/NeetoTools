@@ -171,15 +171,7 @@ namespace Neeto
 
         public override MemberInfo GetMember()
         {
-            try
-            {
-                return Type.GetType(DeclaringType).GetProperty(MemberName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to get PropertyInfo from '{DeclaringType}.{MemberName}'");
-                return null;
-            }
+            return Type.GetType(DeclaringType)?.GetProperty(MemberName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy);
         }
 
         Func<T> InitializeGetter()

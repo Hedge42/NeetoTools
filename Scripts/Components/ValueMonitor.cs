@@ -17,7 +17,7 @@ namespace Neeto
 
         void OnEnable()
         {
-            monitor.MonitorAsync(token.Update()).Forget();
+            monitor.MonitorAsync(token.Refresh()).Forget();
         }
         void OnDisable()
         {

@@ -4,6 +4,7 @@ using UnityEngine;
 [Flags]
 public enum Axis
 {
+    None = 0,
     x = 1,
     y = 2,
     z = 4,

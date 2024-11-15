@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Object = UnityEngine.Object;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -16,8 +17,8 @@ namespace Neeto
     public static partial class NGUI
     {
         static Texture2D _shadow, _highlight;
-        public static Texture2D shadow => _shadow ??= Color.black.With(a: .123f).AsTexturePixel();
-        public static Texture2D highlight => _highlight ??= Color.white.With(a: .069f).AsTexturePixel();
+        public static Texture2D shadow => _shadow ??= Color.black.With(a: .1f).AsTexturePixel();
+        public static Texture2D highlight => _highlight ??= Color.white.With(a: .06f).AsTexturePixel();
         #region EDITOR
 #if UNITY_EDITOR
 
@@ -25,7 +26,7 @@ namespace Neeto
         {
             public PropertyScope(Rect position, SerializedProperty property, GUIContent label, bool box = true)
             {
-                EditorGUI.BeginProperty(position, GUIContent.none, property);
+                EditorGUI.BeginProperty(position, label, property);
                 if (box)
                     IndentBoxGUI(position);
             }
@@ -60,6 +61,17 @@ namespace Neeto
         public static DisabledScope Disabled(bool disabled = true)
         {
             return new DisabledScope(disabled);
+        }
+        public static T LoadAssetFromGUID<T>(string guid) where T : UnityEngine.Object
+        {
+            return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
+        }
+        public static T LoadFirstAsset<T>(string search) where T : UnityEngine.Object
+        {
+            var guids = AssetDatabase.FindAssets(search);
+            if (guids.Length == 0)
+                return default;
+            return LoadAssetFromGUID<T>(guids[0]);
         }
 
         public static void CopyMatchingFields(object target, object source)
@@ -140,11 +152,12 @@ namespace Neeto
             return type;
         }
 
-        public static float FullLineHeight => LineHeight + Spacing;
+        public static float IndentWidth => 17f;
+        public static float FullLineHeight => LineHeight + VerticalSpacing;
         public static float LineHeight => EditorGUIUtility.singleLineHeight;
         public static float LabelWidth => EditorGUIUtility.labelWidth;
         public static float ButtonWidth => 22f;
-        public static float Spacing => EditorGUIUtility.standardVerticalSpacing;
+        public static float VerticalSpacing => EditorGUIUtility.standardVerticalSpacing;
         public static string CopyBuffer => EditorGUIUtility.systemCopyBuffer;
         public static Vector2 screenSize => new Vector2(Screen.width, Screen.height);
 
@@ -250,29 +263,7 @@ namespace Neeto
             var path = AssetDatabase.GUIDToAssetPath(guid);
             return result = AssetDatabase.LoadAssetAtPath<T>(path);
         }
-        public static void ApplyAndMarkDirty(this SerializedProperty property)
-        {
-            //Undo.RecordObject(property.serializedObject.targetObject, "Apply properties");
-            property.serializedObject.ApplyModifiedProperties();
-            EditorUtility.SetDirty(property.serializedObject.targetObject);
-        }
-        public static bool GetArrayElementIndex(this SerializedProperty property, out int result)
-        {
-            result = -1;
-            var array = property.Parent();
-            if (array.isArray)
-            {
-                for (int i = 0; i < array.arraySize; i++)
-                {
-                    if (array.GetArrayElementAtIndex(i).propertyPath.Equals(property.propertyPath))
-                    {
-                        result = i;
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+
         public static void CreateAssetDialogue<T>(string name = null) where T : ScriptableObject
         {
             // Prompt the user to choose a save location and file name
@@ -390,9 +381,123 @@ namespace Neeto
             return clone;
         }
 
+        public static void ApplyAndMarkDirty(this SerializedProperty property)
+        {
+            //Undo.RecordObject(property.serializedObject.targetObject, "Apply properties");
+            property.serializedObject.ApplyModifiedProperties();
+            EditorUtility.SetDirty(property.serializedObject.targetObject);
+        }
+        public static bool GetArrayElementIndex(this SerializedProperty property, out int result)
+        {
+            result = -1;
+            if (property.Parent() is SerializedProperty parent && parent.isArray)
+            {
+                for (int i = 0; i < parent.arraySize; i++)
+                {
+                    if (parent.GetArrayElementAtIndex(i).propertyPath.Equals(property.propertyPath))
+                    {
+                        result = i;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        public static SerializedProperty Parent(this SerializedProperty property)
+        {
+            // https://gist.github.com/monry/9de7009689cbc5050c652bcaaaa11daa
+            var propertyPaths = property.propertyPath.Split('.');
+            if (propertyPaths.Length <= 1)
+            {
+                return default;
+            }
+
+            var parentSerializedProperty = property.serializedObject.FindProperty(propertyPaths.First());
+            for (var index = 1; index < propertyPaths.Length - 1; index++)
+            {
+                if (propertyPaths[index] == "Array" && propertyPaths.Length > index + 1 && Regex.IsMatch(propertyPaths[index + 1], "^data\\[\\d+\\]$"))
+                {
+                    var match = Regex.Match(propertyPaths[index + 1], "^data\\[(\\d+)\\]$");
+                    var arrayIndex = int.Parse(match.Groups[1].Value);
+                    parentSerializedProperty = parentSerializedProperty.GetArrayElementAtIndex(arrayIndex);
+                    index++;
+                }
+                else
+                {
+                    parentSerializedProperty = parentSerializedProperty.FindPropertyRelative(propertyPaths[index]);
+                }
+            }
+
+            return parentSerializedProperty;
+        }
+        public static SerializedProperty FindSiblingProperty(this SerializedProperty property, string siblingPropertyName)
+        {
+            if (property == null)
+                throw new System.ArgumentNullException(nameof(property));
+
+            if (string.IsNullOrEmpty(siblingPropertyName))
+                throw new System.ArgumentException("Sibling property name cannot be null or empty.", nameof(siblingPropertyName));
+
+            // Get the property path of the current property
+            string propertyPath = property.propertyPath;
+
+            // Find the last separator in the property path
+            int lastSeparator = propertyPath.LastIndexOf('.');
+
+            // Determine the parent path
+            string parentPath = lastSeparator >= 0 ? propertyPath.Substring(0, lastSeparator) : "";
+
+            // Construct the sibling's property path
+            string siblingPropertyPath = string.IsNullOrEmpty(parentPath) ? siblingPropertyName : $"{parentPath}.{siblingPropertyName}";
+
+            // Find and return the sibling property
+            return property.serializedObject.FindProperty(siblingPropertyPath);
+        }
+        public static void DrawProperties(this SerializedProperty property, Rect position)
+        {
+            var currentProperty = property.Copy();
+            var endProperty = property.GetEndProperty();
+
+            bool enterChildren = true;
+
+            while (currentProperty.NextVisible(enterChildren))
+            {
+                if (SerializedProperty.EqualContents(currentProperty, endProperty))
+                    break;
+
+                position = position.With(h: currentProperty.GetHeight());
+                EditorGUI.PropertyField(position, currentProperty, true);
+                position.y += position.height + NGUI.VerticalSpacing;
+                enterChildren = false;
+            }
+        }
+        public static bool HasChildProperties(this SerializedProperty property)
+        {
+            //Debug.Log(property.propertyPath + " " + property.Copy().CountRemaining());
+            property = property.Copy();
+            return property.CountRemaining() >= 1;
+        }
+        public static bool IsArrayElement(this SerializedProperty property)
+        {
+            return property.propertyPath.EndsWith(']');
+        }
+        public static bool IsArrayElement(this SerializedProperty property, out int index)
+        {
+            index = -1;
+            var result = property.IsArrayElement();
+
+            if (result)
+            {
+                var start = property.propertyPath.LastIndexOf('[') + 1;
+                var str = property.propertyPath.Substring(start, (property.propertyPath.Length - 1) - start);
+                index = int.Parse(str);
+            }
+            return result;
+        }
+
         public static Rect NextLine(this Rect rect, float? height = null)
         {
-            return rect.With(y: rect.yMax + NGUI.Spacing, h: height.HasValue ? height.Value : NGUI.LineHeight);
+            return rect.With(y: rect.yMax + NGUI.VerticalSpacing, h: height.HasValue ? height.Value : NGUI.LineHeight);
         }
         public static Rect GetRect()
         {
