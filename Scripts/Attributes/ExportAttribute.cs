@@ -21,7 +21,7 @@ public class ExportDrawer : PropertyButtonDrawerBase
         // open save file dialogue
         var path = EditorUtility.SaveFilePanel("Export Asset", Application.dataPath, obj.name, GetExtension(obj));
 
-        path = StringHelper.SystemToAssetPath(path);
+        path = NString.SystemToAssetPath(path);
 
         if (!string.IsNullOrEmpty(path))
         {

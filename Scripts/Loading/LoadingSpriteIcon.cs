@@ -24,7 +24,7 @@ namespace Neeto
         public float alpha
         {
             get => Renderer.color.a;
-            set => Renderer.color = Renderer.color.WithA(value);
+            set => Renderer.color = Renderer.color.With(a: value);
         }
         Routine state;
 

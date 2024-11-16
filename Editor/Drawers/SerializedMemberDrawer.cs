@@ -77,7 +77,7 @@ namespace Neeto
                         .Select(info => (info, GetDropdownString(info)))
                         .ToArray();
 
-                    DropdownHelper.Show(info =>
+                    NDropdown.Show(info =>
                     {
                         Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
                         value.target = null;

@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace Neeto
 {
-    public static class ReflectionHelper
+    public static class NReflect
     {
         public static bool TryGetValue<T>(this PropertyInfo info, object instance, out T result)
         {
@@ -235,7 +235,7 @@ namespace Neeto
 
                 var typeParts = typeAndMethodParts.Take(typeAndMethodParts.Length - 1);
                 var typeName = string.Join('.', typeParts);
-                var type = ReflectionHelper.GetType(typeName);
+                var type = NReflect.GetType(typeName);
                 var paramsFull = typeAndMethod[1].TrimEnd(')');
 
                 // Split would create an empty string where it wasn't needed...
@@ -274,7 +274,7 @@ namespace Neeto
                 var targetType = signature.Split('/')[0];
                 var eventName = signature.Split('/')[1];
 
-                info = ReflectionHelper.GetType(targetType).GetEvent(eventName);
+                info = NReflect.GetType(targetType).GetEvent(eventName);
 
                 return info != null;
             }
@@ -323,7 +323,7 @@ namespace Neeto
                 var typeAndName = signature.Split(" => ")[0].Split('/');
                 var typeName = typeAndName[0];
                 var propName = typeAndName[1];
-                var type = ReflectionHelper.GetType(typeName);
+                var type = NReflect.GetType(typeName);
                 info = type.GetProperty(propName, GameCallback.FLAGS_P);
                 return info != null;
             }

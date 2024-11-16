@@ -17,7 +17,7 @@ namespace Neeto
 	{
         [GetComponent] public SphereCollider sphereCollider;
 
-        public Color gizmoColor = Color.cyan.WithA(.15f);
+        public Color gizmoColor = Color.cyan.With(a: .15f);
 
         private void OnDrawGizmos()
         {

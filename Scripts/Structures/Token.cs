@@ -57,7 +57,7 @@ public struct Token
     static void Start()
     {
         _global++;
-        AppHelper.onQuit += () => _global--;
+        NApp.onQuit += () => _global--;
         SceneManager.activeSceneChanged += (_, _) => _scene++;
     }
 

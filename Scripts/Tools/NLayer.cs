@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace Neeto
 {
     [Serializable]
-    public static class LayerHelper
+    public static class NLayer
     {
         public static string[] GetLayerNames()
         {

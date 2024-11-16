@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace Neeto
 {
-    public static class DebugHelper
+    public static class NDebug
     {
         public static void Try(System.Action action, int messageType = 0, UnityEngine.Object link = null)
         {

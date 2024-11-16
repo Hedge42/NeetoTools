@@ -10,7 +10,7 @@ using UnityEditor;
 
 namespace Neeto
 {
-    public static class AppHelper
+    public static class NApp // lol
     {
         public static event Action onQuit;
         public static bool isQuitting { get; private set; }

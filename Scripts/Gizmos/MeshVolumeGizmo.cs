@@ -19,7 +19,7 @@ namespace Neeto
 
         public Mesh mesh;
 
-        public Color gizmoColor = Color.cyan.WithA(.2f);
+        public Color gizmoColor = Color.cyan.With(a: .2f);
 
         private void OnDrawGizmos()
         {

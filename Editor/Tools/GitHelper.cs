@@ -129,7 +129,7 @@ namespace Neeto
             foreach (var _ in cmds)
             {
                 var result = await RunAsync(cmd);
-                Debug.Log(cmd + "\n" + result.output.WithHTML(size: 10, color: Color.white.WithV(.7f)));
+                Debug.Log(cmd + "\n" + result.output.WithHTML(size: 10, color: Color.white.With(v: .7f)));
             }
         }
         static async Task<ProcessResult> RunAsync(string command, string workingDirectory = null, uint timeout = 10000) // 10 secs

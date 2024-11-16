@@ -12,7 +12,7 @@ using System.Net.Http.Headers;
 
 namespace Neeto
 {
-    public static class StringHelper
+    public static class NString
     {
         public static bool EqualsAny(this string s, params string[] arr) => arr.Any(_ => _.Equals(s));
         public static string WithHTML(this string str, Color? color = null, bool bold = false, bool italic = false, uint? size = null)

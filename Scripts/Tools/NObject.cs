@@ -12,7 +12,7 @@ using UnityEngine.Events;
 
 namespace Neeto
 {
-    public static class ObjectHelper
+    public static class NObject
     {
         public static bool Validate(this UnityEventBase unityEvent, Object mono = null)
         {

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Neeto
 {
-    public static class PhysicsHelper
+    public static class NPhysics
     {
         public static void SnapToGround(Rigidbody rb, LayerMask env)
         {

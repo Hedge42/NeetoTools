@@ -1,26 +1,18 @@
 using Cysharp.Threading.Tasks;
-using Neeto;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
-using TMPro;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.Experimental.Rendering;
-using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
-using Object = UnityEngine.Object;
-using Scene = UnityEngine.SceneManagement.Scene;
+
+#if UNITY_EDITOR
+#endif
+using UnityEditor;
 
 namespace Neeto
 {
-    public static class TaskHelper
+    public static class NTask
     {
         public static CancellationTokenSource Refresh(this CancellationTokenSource source)
         {

@@ -7,7 +7,7 @@ using Debug = UnityEngine.Debug;
 using System.Collections.Generic;
 using System.Linq;
 
-public static class CollectionHelper
+public static class NCollection
 {
     // ...
     public static Vector3 WeightedAverage(this (float weight, Vector3 position)[] items) =>

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Neeto
 {
-    public static class MathHelper
+    public static class NMath
     {
         public static Vector3 With(this Vector3 value, float? x = null, float? y = null, float? z = null, float? scale = null)
         {

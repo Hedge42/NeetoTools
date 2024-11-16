@@ -78,7 +78,7 @@ namespace Neeto
         {
             LoadingScreen.isLoading = false;
 
-            await TaskHelper.LerpAsync(instance.background.alpha, 1f, PlayerLoopTiming.PostLateUpdate, true, Token.global, _ => instance.background.alpha = _)
+            await NTask.LerpAsync(instance.background.alpha, 1f, PlayerLoopTiming.PostLateUpdate, true, Token.global, _ => instance.background.alpha = _)
                             .AttachExternalCancellation(Token.global);
 
 

@@ -38,7 +38,7 @@ namespace Neeto
             if (importers == null)
                 OnSelectionChanged();
 
-            var headerColor = new GUIStyle(GUI.skin.label) { fontSize = 14, fontStyle = FontStyle.Bold, normal = { textColor = Color.cyan.WithH(.45f) } };
+            var headerColor = new GUIStyle(GUI.skin.label) { fontSize = 14, fontStyle = FontStyle.Bold, normal = { textColor = Color.cyan.With(h: .45f) } };
             var dropdownColor = new GUIStyle(EditorStyles.popup) { normal = { textColor = Color.white } };
 
             

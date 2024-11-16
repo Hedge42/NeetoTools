@@ -11,7 +11,7 @@ namespace Neeto
     /// <summary>
     /// Create custom DropdownMenu from runtime assembly
     /// </summary>
-    public static class DropdownHelper
+    public static class NDropdown
     {
         static readonly Type ItemType = Type.GetType("UnityDropdown.Editor.DropdownItem`1, UnityDropdown.Editor");
         static readonly Type MenuType = Type.GetType("UnityDropdown.Editor.DropdownMenu`1, UnityDropdown.Editor");

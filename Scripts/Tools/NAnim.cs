@@ -12,7 +12,7 @@ using UnityEngine.Playables;
 
 namespace Neeto
 {
-    public static class AnimationHelper
+    public static class NAnim
     {
         public static async UniTaskVoid InterpolateAsync(Playable playable, float start, float end, CancellationToken token)
         {

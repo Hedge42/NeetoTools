@@ -31,7 +31,7 @@ namespace Neeto.Exp
 
                 if (EditorGUI.DropdownButton(EditorGUI.PrefixLabel(position, new GUIContent(label)), new GUIContent(value.methodName), FocusType.Passive))
                 {
-                    new DropdownMenu<MethodInfo>(methods.Select(m => new DropdownItem<MethodInfo>(m, DropdownHelper.FullDropdownContent(m))).ToList(),
+                    new DropdownMenu<MethodInfo>(methods.Select(m => new DropdownItem<MethodInfo>(m, NDropdown.FullDropdownContent(m))).ToList(),
                         selectedMethod =>
                         {
                             value.methodName = selectedMethod.Name;

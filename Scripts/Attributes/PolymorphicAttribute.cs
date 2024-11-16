@@ -87,12 +87,12 @@ public class PolymorphicDrawer : PropertyDrawer
     {
         var serializedObject = property.serializedObject;
         var propertyPath = property.propertyPath;
-        var types = ReflectionHelper.GetAssignableReferenceTypes(valueType)
+        var types = NReflect.GetAssignableReferenceTypes(valueType)
             .Select(t => (t, GetDisplayPath(t))).ToArray();
         var selected = property.managedReferenceValue != null ?
             GetDisplayPath(property.managedReferenceValue.GetType()) : "none";
 
-        DropdownHelper.Show(OnItemSelected, true, true, selected, types);
+        NDropdown.Show(OnItemSelected, true, true, selected, types);
 
         void OnItemSelected(Type type)
         {

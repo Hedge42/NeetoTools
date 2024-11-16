@@ -51,8 +51,8 @@ namespace Neeto
                             DragAndDrop.AcceptDrag();
                             //e.Use();
 
-                            var positionProperty = property.FindPropertyRelative(ReflectionHelper.BackingField(nameof(Point.position)));
-                            var rotationProperty = property.FindPropertyRelative(ReflectionHelper.BackingField(nameof(Point.rotation)));
+                            var positionProperty = property.FindPropertyRelative(NReflect.BackingField(nameof(Point.position)));
+                            var rotationProperty = property.FindPropertyRelative(NReflect.BackingField(nameof(Point.rotation)));
 
                             positionProperty.vector3Value = transform.position;
                             rotationProperty.quaternionValue = transform.rotation;
