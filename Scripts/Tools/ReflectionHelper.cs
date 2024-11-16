@@ -65,6 +65,19 @@ namespace Neeto
             return null != (attribute = mem.GetCustomAttribute<T>(inherit));
         }
 
+        public static IEnumerable<Assembly> RuntimeAssemblies => Factory.Cache(nameof(RuntimeAssemblies), GetRuntimeAssemblies);
+        public static IEnumerable<Assembly> GetRuntimeAssemblies()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Select(ass => (ass, ass.GetName().Name.ToLower()))
+                .Where(ass_name => !ass_name.Item2.Contains("editor") && !ass_name.Item2.Contains("test"))
+                .Select(ass_name => ass_name.Item1);
+        }
+
+        public static IEnumerable<MethodInfo> GetMethods(BindingFlags flags = BindingFlags.Default)
+        {
+            return RuntimeAssemblies.SelectMany(asm => asm.GetTypes()).GetMethods(flags);
+        }
         public static IEnumerable<MethodInfo> GetMethods(this IEnumerable<Assembly> assemblies, BindingFlags flags = BindingFlags.Default)
         {
             return assemblies.SelectMany(asm => asm.GetTypes()).GetMethods(flags);
@@ -73,13 +86,26 @@ namespace Neeto
         {
             return types.SelectMany(t => t.GetMethods(flags));
         }
-        public static IEnumerable<PropertyInfo> GetProperties(this IEnumerable<Assembly> assemblies, BindingFlags flags = BindingFlags.Default)
+
+        public static IEnumerable<PropertyInfo> GetProperties(Type returnType, BindingFlags flags = BindingFlags.Default)
         {
-            return assemblies.SelectMany(asm => asm.GetTypes()).GetProperties(flags);
+            return GetProperties(RuntimeAssemblies, returnType, flags);
         }
-        public static IEnumerable<PropertyInfo> GetProperties(this IEnumerable<Type> types, BindingFlags flags = BindingFlags.Default)
+        public static IEnumerable<PropertyInfo> GetProperties(this IEnumerable<Assembly> assemblies, Type returnType, BindingFlags flags = BindingFlags.Default)
         {
-            return types.SelectMany(t => t.GetProperties(flags));
+            return assemblies.SelectMany(asm => asm.GetTypes())
+                .GetProperties(returnType, flags);
+        }
+        public static IEnumerable<PropertyInfo> GetProperties(this IEnumerable<Type> types, Type returnType, BindingFlags flags = BindingFlags.Default)
+        {
+            return types.SelectMany(t => t.GetProperties(flags))
+                .Where(property => returnType.IsAssignableFrom(property.PropertyType));
+        }
+
+
+        public static IEnumerable<EventInfo> GetEvents(BindingFlags flags = BindingFlags.Default)
+        {
+            return RuntimeAssemblies.SelectMany(asm => asm.GetTypes()).GetEvents(flags);
         }
         public static IEnumerable<EventInfo> GetEvents(this IEnumerable<Assembly> assemblies, BindingFlags flags = BindingFlags.Default)
         {
@@ -374,32 +400,7 @@ namespace Neeto
             return Path.GetFileNameWithoutExtension(str);
         }
 
-        public static GUIContent DropdownContent(this MemberInfo info)
-        {
-
-            if (info == null)
-                return new GUIContent("(none)");
-
-            var content = new GUIContent($"{info.DeclaringType.Name}.{info.Name}");
-
-            if (info is MethodInfo method)
-            {
-                content.text = $"{content.text} {string.Join(',', method.GetParameterTypes().Select(t => t.Name))}";
-            }
-            return content;
-        }
-        public static string ModuleName(this MemberInfo info)
-        {
-            return Path.GetFileNameWithoutExtension(info.Module.Name);
-        }
-        public static string FullDropdownContent(this MemberInfo info)
-        {
-            return ModuleName(info) + "/" + DropdownContent(info);
-        }
-        public static string DropdownPath(this MemberInfo info)
-        {
-            return info.Module.Name.FileName() + "/";
-        }
+        
         public static bool HasAttribute<T>(object obj, out T result) where T : Attribute
         {
             result = default;

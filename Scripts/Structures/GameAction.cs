@@ -1431,7 +1431,7 @@ namespace Neeto
         {
             var flags = BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Instance;
             var returnType = field.FieldType.GetGenericArguments()[0];
-            var properties = ReflectionHelper.GetRuntimeTypes().GetProperties(flags)
+            var properties = ReflectionHelper.RuntimeAssemblies.GetProperties(returnType, flags)
                 // needs get method for other logic & generics not supported
                 .Where(prop => prop.GetMethod != null && prop.CanRead && !prop.DeclaringType.ContainsGenericParameters && (prop.GetMethod.IsStatic || prop.DeclaringType.IsSerializable) && returnType.IsAssignableFrom(prop.PropertyType))
                 .Select(prop => (prop, GetDisplayPath(prop)))

@@ -6,6 +6,8 @@ using Object = UnityEngine.Object;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using SolidUtilities.UnityEditorInternals;
+using TMPro;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -14,11 +16,35 @@ using UnityEditor;
 
 namespace Neeto
 {
-    public static partial class NGUI
+    public static class NGUI
     {
+        #region RUNTIME
         static Texture2D _shadow, _highlight;
         public static Texture2D shadow => _shadow ??= Color.black.With(a: .1f).AsTexturePixel();
         public static Texture2D highlight => _highlight ??= Color.white.With(a: .06f).AsTexturePixel();
+
+        public static Rect LerpRect(Rect rectA, Rect rectB, float t)
+        {
+            var result = new Rect();
+            result.position = Vector2.Lerp(rectA.position, rectB.position, t);
+            result.size = Vector2.Lerp(rectA.size, rectB.size, t);
+            return result;
+        }
+        public static Vector2 SetTextAndUpdateWidth(this TextMeshProUGUI tmp, string text, float margins = 0f)
+        {
+            tmp.text = text;
+            var size = tmp.rectTransform.sizeDelta;
+            size.x = Mathf.Max(tmp.preferredWidth + margins * 2, size.y);
+            return tmp.rectTransform.sizeDelta = size;
+        }
+        public static void SetTextAndUpdateHeight(this TextMeshProUGUI tmp, string text)
+        {
+            tmp.text = text;
+            var size = tmp.rectTransform.sizeDelta;
+            size.y = tmp.preferredHeight;
+            tmp.rectTransform.sizeDelta = size;
+        }
+        #endregion RUNTIME
         #region EDITOR
 #if UNITY_EDITOR
 
@@ -172,6 +198,95 @@ namespace Neeto
         public static GUIContent sceneIn => EditorGUIUtility.IconContent("SceneLoadIn");
         public static GUIContent hidden => EditorGUIUtility.IconContent("scenevis_hidden@2x");
         public static GUIContent visible => EditorGUIUtility.IconContent("d_animationvisibilitytoggleon@2x");
+
+        public static void MinMaxWithFieldsLayout(string label, ref float min, ref float max, float minLimit, float maxLimit)
+        {
+            var rect = GUILayoutUtility.GetLastRect();
+
+            //rect.y += rect.height + EditorGUIUtility.standardVerticalSpacing;
+            rect = GUILayoutUtility.GetRect(EditorGUIUtility.currentViewWidth, EditorGUIUtility.singleLineHeight);
+
+            var lineWidth = rect.width;
+            //var fieldWidth = EditorGUIUtility.fieldWidth;
+            //var labelWidth = lineWidth - fieldWidth;
+
+            var end = rect.xMax;
+
+            var fieldWidth = 80;
+
+            EditorGUI.LabelField(rect, label);
+            //rect.x += (EditorGUIUtility.fieldWidth - (EditorGUIUtility.labelWidth - rect.x)); // ???
+            rect.x = EditorGUIUtility.labelWidth - 10;
+
+            rect.width = fieldWidth;
+
+            min = Mathf.Clamp(EditorGUI.FloatField(rect, min), minLimit, max);
+            rect.x += rect.width - 25;
+            rect.xMax = end - fieldWidth + 25;
+            //rect.width = remaining;
+
+            EditorGUI.MinMaxSlider(rect, ref min, ref max, minLimit, maxLimit);
+            rect.xMin = end - fieldWidth;
+            rect.width = fieldWidth;
+
+            max = Mathf.Clamp(EditorGUI.FloatField(rect, max), min, maxLimit);
+        }
+        public static void DrawScriptField(ScriptableObject obj)
+        {
+            var script = MonoScript.FromScriptableObject(obj);
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.ObjectField(script, typeof(MonoScript), false);
+            EditorGUI.EndDisabledGroup();
+        }
+        public static void DrawScriptField(SerializedObject obj)
+        {
+            var target = obj.targetObject;
+            var type = obj.targetObject.GetType();
+
+            MonoScript script;
+            if (target is ScriptableObject so)
+                script = MonoScript.FromScriptableObject(so);
+            else if (target is MonoBehaviour mb)
+                script = MonoScript.FromMonoBehaviour(mb);
+            else
+            {
+                return;
+            }
+
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.ObjectField(script, typeof(MonoScript), false);
+            EditorGUI.EndDisabledGroup();
+        }
+        public static void DrawPropertiesLayout(this SerializedObject serializedObject, params string[] props)
+        {
+            EditorGUI.BeginChangeCheck();
+            foreach (var propName in props)
+            {
+                var serializedProperty = serializedObject.FindProperty(propName);
+                EditorGUILayout.PropertyField(serializedProperty);
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+                EditorUtility.SetDirty(serializedObject.targetObject);
+            }
+        }
+        public static void DrawProperties(this SerializedObject serializedObject, Rect rect, params string[] props)
+        {
+            EditorGUI.BeginChangeCheck();
+            foreach (var propName in props)
+            {
+                var property = serializedObject.FindProperty(propName);
+                rect.height = EditorGUI.GetPropertyHeight(property);
+                EditorGUI.PropertyField(rect, property);
+                rect.y += rect.height + EditorGUIUtility.standardVerticalSpacing;
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+                EditorUtility.SetDirty(serializedObject.targetObject);
+            }
+        }
 
         public static Dictionary<Type, Type> FindPropertyDrawerTypes()
         {
@@ -610,7 +725,7 @@ namespace Neeto
 
             return rect;
         }
-        public static Rect Move(this Rect rect, Vector2? position = null, Vector2? size = null, float? x = null, float? y = null, float? width = null, float? height = null, float? xMin = null, float? xMax = null, float? yMin = null, float? yMax = null, Vector2? min = null, Vector2? max = null)
+        public static Rect Move(this Rect rect, Vector2? position = null, Vector2? size = null, float? x = null, float? y = null, float? w = null, float? h = null, float? xMin = null, float? xMax = null, float? yMin = null, float? yMax = null, Vector2? min = null, Vector2? max = null)
         {
             if (y is float Y)
             {
@@ -635,13 +750,13 @@ namespace Neeto
             {
                 rect.size += size.Value;
             }
-            if (width.HasValue)
+            if (w.HasValue)
             {
-                rect.width += width.Value;
+                rect.width += w.Value;
             }
-            if (height.HasValue)
+            if (h.HasValue)
             {
-                rect.height += height.Value;
+                rect.height += h.Value;
             }
             if (xMin.HasValue)
             {
@@ -768,9 +883,88 @@ namespace Neeto
                 content.tooltip = tooltip;
             return content;
         }
+
+
+
+        public static void StartDrag(Object[] objects)
+        {
+            DragAndDrop.PrepareStartDrag();
+            DragAndDrop.objectReferences = objects;
+            DragAndDrop.StartDrag("Dragging Prefab");
+            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+        }
+        public static bool AcceptDrag(Rect dropArea)
+        {
+            Event e = Event.current;
+            GUI.Box(dropArea, "");
+
+            switch (e.type)
+            {
+                case EventType.DragUpdated:
+                case EventType.DragPerform:
+
+                    if (!dropArea.Contains(e.mousePosition))
+                        break;
+
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+
+                    if (e.type == EventType.DragPerform)
+                    {
+                        DragAndDrop.AcceptDrag();
+                        return true;
+                    }
+                    e.Use();
+                    break;
+            }
+            return false;
+        }
+        public static int MouseDown(Rect rect)
+        {
+            var e = Event.current;
+            if (e.type == EventType.MouseDown)
+            {
+                if (MouseInRect(rect))
+                    return e.button;
+            }
+            return -1;
+        }
+        public static bool MouseInRect(Rect rect)
+        {
+            var mouseLocal = Event.current.mousePosition - rect.position;
+            return mouseLocal.x > 0
+                && mouseLocal.x < rect.width
+                && mouseLocal.y > 0
+                && mouseLocal.y < rect.height;
+        }
+        public static bool MouseUp(this Event Event)
+        {
+            return Event.type == EventType.MouseUp;// == EventType.MouseUp;// && Event.button == button;
+        }
+        public static IEnumerable<T> LoadAssets<T>() where T : Object
+        {
+            return AssetDatabase.FindAssets($"t:{typeof(T).Name}")
+                .Select(guid => AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid)));
+        }
+
+
+        public static bool GetArrayProperty(this SerializedProperty property, out SerializedProperty arrayProperty)
+        {
+            var i = property.propertyPath.LastIndexOf(".Array");
+            var newPath = property.propertyPath.Substring(0, i);
+            arrayProperty = property.serializedObject.FindProperty(newPath);
+
+            return arrayProperty != null;
+        }
+        public static bool IsArrayOrElement(this SerializedProperty property)
+        {
+            return property.isArray || IsElement(property);
+        }
+        public static bool IsElement(this SerializedProperty property)
+        {
+            return property.propertyPath.EndsWith(']');
+        }
 #endif
         #endregion
-
 
     }
 }

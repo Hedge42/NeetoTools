@@ -113,6 +113,7 @@ namespace Neeto
 
             return result ??= new GameObject($"{typeof(T).Name} Instance").AddComponent<T>();
         }
+
         public static void Destroy(this GameObject obj)
         {
             if (Application.isPlaying)
@@ -143,9 +144,9 @@ namespace Neeto
         }
         public static void OnDestroy(this GameObject gameObject, UnityAction action)
         {
-            var c = gameObject.GetOrAddComponent<OnDestroyEvent>();
-            c.onDestroy.AddListener(action);
+            gameObject.GetOrAddComponent<OnDestroyEvent>().onDestroy.AddListener(action);
         }
+
         public static void SetEnabled(bool value, params Behaviour[] components)
         {
             foreach (var _ in components)
@@ -168,6 +169,18 @@ namespace Neeto
         public static void Disable(this MonoBehaviour mono)
         {
             mono.enabled = false;
+        }
+
+        public static void CopyTo(this Transform from, Transform to)
+        {
+#if UNITY_EDITOR
+            UnityEditor.Undo.RecordObject(to, "Copy Transform");
+#endif
+
+            to.transform.SetParent(from?.parent);
+            to.localPosition = from.localPosition;
+            to.localRotation = from.localRotation;
+            to.localScale = from.localScale;
         }
         public static Ray Ray(this Transform transform)
         {
@@ -249,7 +262,7 @@ namespace Neeto
         {
             return others.OrderBy(b => (b.position - position).sqrMagnitude).FirstOrDefault();
         }
-        public static void ResetLocalOrientation(this Transform transform)
+        public static void ResetLocalPoint(this Transform transform)
         {
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;

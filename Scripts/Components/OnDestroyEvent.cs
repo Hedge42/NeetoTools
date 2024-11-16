@@ -18,10 +18,7 @@ namespace Neeto
     }
     public static class OnDestroyHelper
     {
-        public static void OnDestroyAddListener(this GameObject gameObject, Action action)
-        {
-            gameObject?.GetOrAddComponent<OnDestroyEvent>().onDestroy.AddListener(action.Invoke);
-        }
+
     }
 
 }

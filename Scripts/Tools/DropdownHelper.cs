@@ -2,6 +2,9 @@ using System;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using System.IO;
+using System.Linq;
 
 namespace Neeto
 {
@@ -72,5 +75,33 @@ namespace Neeto
             var showAsContextMethod = menuType.GetMethod("ShowAsContext", BindingFlags.Instance | BindingFlags.Public);
             showAsContextMethod.Invoke(dropdownMenu, new object[] { 0 });
         }
+
+        public static GUIContent DropdownContent(this MemberInfo info)
+        {
+
+            if (info == null)
+                return new GUIContent("(none)");
+
+            var content = new GUIContent($"{info.DeclaringType.Name}.{info.Name}");
+
+            if (info is MethodInfo method)
+            {
+                content.text = $"{content.text} {string.Join(',', method.GetParameterTypes().Select(t => t.Name))}";
+            }
+            return content;
+        }
+        public static string FullDropdownContent(this MemberInfo info)
+        {
+            return ModuleName(info) + "/" + DropdownContent(info);
+        }
+        public static string DropdownPath(this MemberInfo info)
+        {
+            return info.Module.Name.FileName() + "/";
+        }
+        public static string ModuleName(this MemberInfo info)
+        {
+            return Path.GetFileNameWithoutExtension(info.Module.Name);
+        }
+
     }
 }
