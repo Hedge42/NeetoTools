@@ -3,7 +3,8 @@
 
 namespace Neeto
 {
-    public struct MENU
+
+    public struct Menu
     {
         /* (⌐■_■)
         (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧
@@ -17,7 +18,7 @@ namespace Neeto
         (。_。)
         ( ´_ゝ` )
          */
-        public const string Neeto = "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧/";
+        public const string Neeto = "(✿◡‿◡)/";
         public const string Assets = "Assets/" + Neeto;
         public const string Create = "Assets/Create/" + Neeto;
         public const string GameObject = "GameObject/" + Neeto;

@@ -12,7 +12,7 @@ using UnityEngine.AI;
 public static partial class EditorHelper
 {
     [QuickAction]
-    [MenuItem(MENU.Open + "Package manifest", priority = Neeto.MENU.Bottom)]
+    [MenuItem(Neeto.Menu.Open + "Package manifest", priority = Neeto.Menu.Bottom)]
     static void OpenPackageManifest()
     {
         EditorApplication.delayCall += () =>
@@ -21,91 +21,91 @@ public static partial class EditorHelper
         };
     }
 
-    [MenuItem(MENU.Open + "Build Settings", priority = Neeto.MENU.Low)]
+    [MenuItem(Neeto.Menu.Open + "Build Settings", priority = Neeto.Menu.Low)]
     static void OpenBuildSettings()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Navigation Window")]
+    [MenuItem(Neeto.Menu.Open + "Navigation Window")]
     static void OpenNavigation()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.NavMeshEditorWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Occlusion Window")]
+    [MenuItem(Neeto.Menu.Open + "Occlusion Window")]
     [QuickAction]
     static void OpenOcclusion()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.OcclusionCullingWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Player Settings", priority = Neeto.MENU.Low)]
+    [MenuItem(Neeto.Menu.Open + "Player Settings", priority = Neeto.Menu.Low)]
     [QuickAction]
     static void OpenPlayerSettings()
     {
         SettingsService.OpenProjectSettings("Project/Player");
     }
 
-    [MenuItem(MENU.Open + "Profiler Window")]
+    [MenuItem(Neeto.Menu.Open + "Profiler Window")]
     static void OpenProfiler()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.ProfilerWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Addressable Groups", priority = Neeto.MENU.Low)]
+    [MenuItem(Neeto.Menu.Open + "Addressable Groups", priority = Neeto.Menu.Low)]
     static void OpenAddressableGroups()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.AddressableAssets.GUI.AddressableAssetsWindow,Unity.Addressables.Editor"));
     }
 
-    [MenuItem(MENU.Open + "Lighting Settings", priority = Neeto.MENU.Low)]
+    [MenuItem(Neeto.Menu.Open + "Lighting Settings", priority = Neeto.Menu.Low)]
     static void OpenLightingSettings()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.LightingWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Graphics Settings", priority = Neeto.MENU.Low)]
+    [MenuItem(Neeto.Menu.Open + "Graphics Settings", priority = Neeto.Menu.Low)]
     static void OpenGraphicsSettings()
     {
         SettingsService.OpenProjectSettings("Project/Graphics");
     }
 
-    [MenuItem(MENU.Open + "Timeline")]
+    [MenuItem(Neeto.Menu.Open + "Timeline")]
     static void OpenTimeline()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.Timeline.TimelineWindow,Unity.Timeline.Editor"));
     }
 
-    [MenuItem(MENU.Open + "Package Manager")]
+    [MenuItem(Neeto.Menu.Open + "Package Manager")]
     static void OpenPackageManager()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.PackageManager.UI.PackageManagerWindow,UnityEditor"));
     }
 
-    [MenuItem(MENU.Open + "Physics Settings", priority = Neeto.MENU.Low)]
+    [MenuItem(Neeto.Menu.Open + "Physics Settings", priority = Neeto.Menu.Low)]
     public static void OpenPhysicsSettings()
     {
         SettingsService.OpenProjectSettings("Project/Physics");
     }
-    [MenuItem(MENU.Open + "Neeto Settings", priority = Neeto.MENU.Low)]
+    [MenuItem(Neeto.Menu.Open + "Neeto Settings", priority = Neeto.Menu.Low)]
     public static void OpenNeetoSettings()
     {
         SettingsService.OpenProjectSettings("Project/Neeto");
     }
 
-    [MenuItem(MENU.Open + "Persistent Data Directory", priority = Neeto.MENU.Bottom)]
+    [MenuItem(Neeto.Menu.Open + "Persistent Data Directory", priority = Neeto.Menu.Bottom)]
     public static void OpenPersistentDataDirectory()
     {
         EditorUtility.OpenWithDefaultApp(Application.persistentDataPath);
     }
-    [MenuItem(MENU.Open + "Project Directory", priority = Neeto.MENU.Bottom)]
+    [MenuItem(Neeto.Menu.Open + "Project Directory", priority = Neeto.Menu.Bottom)]
     public static void OpenProjectDirectory()
     {
         EditorUtility.OpenWithDefaultApp(Path.GetDirectoryName(Application.dataPath));
     }
 
-    [MenuItem(MENU.Run + nameof(SnapToMouse) + " #G")]
+    [MenuItem(Neeto.Menu.Run + nameof(SnapToMouse) + " #G")]
     public static void SnapToMouse()
     {
         if (!Selection.activeGameObject)
@@ -136,7 +136,7 @@ public static partial class EditorHelper
         else Debug.LogError(output + " (FAIL)", transform);
     }
 
-    [MenuItem(MENU.Run + nameof(SnapToNavMesh))]
+    [MenuItem(Neeto.Menu.Run + nameof(SnapToNavMesh))]
     public static void SnapToNavMesh()
     {
         if (!Selection.activeGameObject)
@@ -160,7 +160,7 @@ public static partial class EditorHelper
         }
     }
 
-    [MenuItem(MENU.Run + nameof(SnapToGround))]
+    [MenuItem(Neeto.Menu.Run + nameof(SnapToGround))]
     public static void SnapToGround()
     {
         if (!Selection.activeGameObject)
@@ -188,7 +188,7 @@ public static partial class EditorHelper
         }
     }
 
-    [MenuItem(MENU.Debug + "Find Global Editors")]
+    [MenuItem(Neeto.Menu.Debug + "Find Global Editors")]
     public static void DisplayDefaultEditorOverrides()
     {
         HashSet<Type> editorTypes = new HashSet<Type>();
@@ -223,14 +223,14 @@ public static partial class EditorHelper
         Debug.Log(output);
     }
 
-    [MenuItem(MENU.Assets + "Log Object Type", false)]
+    [MenuItem(Neeto.Menu.Assets + "Log Object Type", false)]
     public static void LogObjectType()
     {
         var obj = Selection.activeObject;
         Debug.Log($"{obj.name} type:{obj.GetType()}");
     }
 
-    [MenuItem(MENU.Assets + "Log Object Type", true)]
+    [MenuItem(Neeto.Menu.Assets + "Log Object Type", true)]
     public static bool CanLogObjectType()
     {
         return Selection.activeObject != null;

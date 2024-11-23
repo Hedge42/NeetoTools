@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Neeto
 {
-    [CreateAssetMenu(menuName = MENU.Neeto + nameof(ScriptableLoadingTask))]
+    [CreateAssetMenu(menuName = Menu.Neeto + nameof(ScriptableLoadingTask))]
     public class ScriptableLoadingTask : ScriptableObject
     {
         public LoadingTask task;

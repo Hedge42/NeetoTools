@@ -62,7 +62,7 @@ namespace Neeto
                                 .ToArray();
                         }
                         Debug.Log($"Showing...({values.Length})");
-                        NDropdown.Show(result =>
+                        NGUI.ShowDropdown(result =>
                         {
                             nameProperty.stringValue = result;
                             nameProperty.ApplyAndMarkDirty();

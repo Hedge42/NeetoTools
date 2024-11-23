@@ -74,10 +74,10 @@ namespace Neeto
                 if (EditorGUI.DropdownButton(EditorGUI.PrefixLabel(position, label), new GUIContent(display), FocusType.Passive))
                 {
                     var options = FindMembers().Cast<TMemberInfo>()
-                        .Select(info => (info, GetDropdownString(info)))
+                        .Select(info => (info, GetDropdowNGUI(info)))
                         .ToArray();
 
-                    NDropdown.Show(info =>
+                    NGUI.ShowDropdown(info =>
                     {
                         Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
                         value.target = null;
@@ -139,9 +139,9 @@ namespace Neeto
             }
         }
 
-        public virtual string GetDropdownString(MemberInfo info)
+        public virtual string GetDropdowNGUI(MemberInfo info)
         {
-            return info.ModuleName() + "/" + info.DeclaringType.FullName + "." + info.Name;
+            return info.GetModuleName() + "/" + info.DeclaringType.FullName + "." + info.Name;
         }
 
 

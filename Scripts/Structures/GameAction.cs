@@ -102,7 +102,7 @@ namespace Neeto
             var isProp = typeof(GamePropBase).IsAssignableFrom(info.FieldType);
             var propType = info.FieldType.GetGenericArguments()[0];
 
-            var types = NReflect.GetRuntimeTypes()
+            var types = NGUI.GetRuntimeTypes()
                 .Where(t => t.IsPublic && !t.IsEnum);
             var props = types.SelectMany(t => t.GetProperties(FLAGS_P))
                 .Where(p => p.PropertyType.Equals(propType));
@@ -113,7 +113,7 @@ namespace Neeto
         {
             var generics = info.FieldType.GetGenericArguments().ToList();
 
-            var types = NReflect.GetRuntimeTypes()
+            var types = NGUI.GetRuntimeTypes()
                 .Where(t => t.IsPublic && !t.IsEnum);
 
             var attribute = info.GetCustomAttribute<PolymorphicAttribute>();
@@ -150,7 +150,7 @@ namespace Neeto
             if this is an instance method, make the caller a potential argument
              */
 
-            var list = NReflect.GetParameterTypes(method).ToList();
+            var list = NGUI.GetParameterTypes(method).ToList();
             if (!method.IsStatic)
                 list.Insert(0, method.DeclaringType); // add the calling type as a potential argument
                                                       //list.AddRange(MReflect.GetParameterTypes(method));
@@ -426,7 +426,7 @@ namespace Neeto
             }
             else if (type.Equals(typeof(LayerMask)))
             {
-                selected.intValue = EditorGUI.MaskField(position, selected.intValue, NLayer.GetLayerNames());
+                selected.intValue = EditorGUI.MaskField(position, selected.intValue, NGUI.GetLayerNames());
             }
             else if (argType == Argument.ArgType.Reference)
             {
@@ -521,7 +521,7 @@ namespace Neeto
 
         // derived
         private MethodInfo _info;
-        public MethodInfo info => _info ??= NReflect.ToMethod(signature);
+        public MethodInfo info => _info ??= NGUI.ToMethod(signature);
 
 
         private bool valid;
@@ -641,7 +641,7 @@ namespace Neeto
         public object target => isReferenceTarget ? referenceTarget : objectTarget;
 
         PropertyInfo _info;
-        public PropertyInfo info => _info ??= NReflect.ToProperty(signature);
+        public PropertyInfo info => _info ??= NGUI.ToProperty(signature);
 
         public abstract object objectValue { get; }
     }
@@ -812,13 +812,13 @@ namespace Neeto
 
             var typeParts = typeAndMethodParts.Take(typeAndMethodParts.Length - 1);
             var typeName = string.Join('.', typeParts);
-            var type = NReflect.GetType(typeName);
+            var type = NGUI.GetType(typeName);
             var paramsFull = typeAndMethod[1].TrimEnd(')');
 
             // Split would create an empty string where it wasn't needed...
             if (!string.IsNullOrWhiteSpace(paramsFull))
             {
-                var paramTypes = paramsFull.Split(',').Select(n => NReflect.GetType(n)).ToArray();
+                var paramTypes = paramsFull.Split(',').Select(n => NGUI.GetType(n)).ToArray();
                 return type.GetMethod(methodName, paramTypes);
             }
             else
@@ -831,7 +831,7 @@ namespace Neeto
         {
             return new GameAction
             {
-                signature = NReflect.ToSignature(method)
+                signature = NGUI.ToSignature(method)
             };
         }
 
@@ -860,7 +860,7 @@ namespace Neeto
         object target;
         private Rect InvokeButtonGUI(SerializedProperty property, Rect position)
         {
-            target ??= NReflect.FindReflectionTarget(property, fieldInfo);
+            target ??= NGUI.FindReflectionTarget(property, fieldInfo);
 
             var buttonPosition = position.With(xMin: position.xMax - NGUI.ButtonWidth);
             if (target is GameAction action)
@@ -902,13 +902,13 @@ namespace Neeto
         public static MethodInfo GetMethod(SerializedProperty property)
         {
             var sig = property.FindPropertyRelative(nameof(GameAction.signature));
-            var result = NReflect.ToMethod(sig.stringValue, out var method);
+            var result = NGUI.ToMethod(sig.stringValue, out var method);
 
             if (!result)
             {
                 if (sig != null && !sig.stringValue.IsEmpty())
                 {
-                    NReflect.ToMethod(sig.stringValue);
+                    NGUI.ToMethod(sig.stringValue);
                     Debug.LogError($"Invalid method. Does this code still exist? {sig.stringValue}", property.serializedObject.targetObject);
                 }
             }
@@ -944,7 +944,7 @@ namespace Neeto
 
             if (argumentTypes.Count != size)
             {
-                Debug.Log($"wtf ({Signature(property).stringValue}:{argumentTypes.JoinString()})");
+                Debug.Log($"wtf ({Signature(property).stringValue}:{argumentTypes.JoiNGUI()})");
             }
 
             EditorGUI.indentLevel++;
@@ -983,7 +983,7 @@ namespace Neeto
             // TODO try-catch?
             if (_method != null)
             {
-                sig.stringValue = NReflect.ToSignature(_method);// GetSignature(_);
+                sig.stringValue = NGUI.ToSignature(_method);// GetSignature(_);
 
 
                 var methodTypes = GameAction.GetMethodArgumentTypes(_method);
@@ -1001,7 +1001,7 @@ namespace Neeto
                         var referenceProperty = arg.FindPropertyRelative(nameof(Argument.argReference));
                         var typeProperty = arg.FindPropertyRelative(nameof(Argument.referenceType));
 
-                        var assignableTypes = NReflect.GetAssignableReferenceTypes(methodTypes[a]);
+                        var assignableTypes = NGUI.GetAssignableReferenceTypes(methodTypes[a]);
                         if (assignableTypes.Count() == 1)
                             referenceProperty.managedReferenceValue = Activator.CreateInstance(assignableTypes.ElementAt(0));
                         else
@@ -1076,7 +1076,7 @@ namespace Neeto
                 if (GUI.Button(buttonPosition, "?"))
                 {
 
-                    var target = NReflect.FindReflectionTarget(property, fieldInfo) as GamePropBase;
+                    var target = NGUI.FindReflectionTarget(property, fieldInfo) as GamePropBase;
                     Debug.Log((target.propertyInfo as PropertyInfo).GetValue(target.target));
                 }
                 EditorGUI.EndDisabledGroup();
@@ -1107,13 +1107,13 @@ namespace Neeto
         public static PropertyInfo GetProperty(SerializedProperty property)
         {
             var sig = property.FindPropertyRelative(nameof(GameAction.signature));
-            var result = NReflect.ToProperty(sig.stringValue, out var Property);
+            var result = NGUI.ToProperty(sig.stringValue, out var Property);
 
             if (!result)
             {
                 if (sig != null && !sig.stringValue.IsEmpty())
                 {
-                    NReflect.ToProperty(sig.stringValue);
+                    NGUI.ToProperty(sig.stringValue);
                     Debug.LogError($"Invalid Property. Does this code still exist? {sig.stringValue}", property.serializedObject.targetObject);
                 }
             }
@@ -1184,7 +1184,7 @@ namespace Neeto
             // TODO try-catch?
             if (info != null && info.GetMethod != null)
             {
-                sig.stringValue = NReflect.ToSignature(info);// GetSignature(_);
+                sig.stringValue = NGUI.ToSignature(info);// GetSignature(_);
 
                 if (!info.GetMethod.IsStatic)
                 {
@@ -1370,7 +1370,7 @@ namespace Neeto
 
             // Append type name
             var tt = info.DeclaringType;
-            option.Append($"{info.ModuleName()}/{NReflect.GetDeclaringString(info.DeclaringType)}.");
+            option.Append($"{info.GetModuleName()}/{NGUI.GetDeclaringString(info.DeclaringType)}.");
             option.Append(info.Name).Append(' ');
             if (info.IsStatic)
                 option.Append('*');
@@ -1395,7 +1395,7 @@ namespace Neeto
 
             // Append type name
             var tt = info.DeclaringType;
-            option.Append($"{info.ModuleName()}/{NReflect.GetDeclaringString(info.DeclaringType)}.");
+            option.Append($"{info.GetModuleName()}/{NGUI.GetDeclaringString(info.DeclaringType)}.");
             option.Append(info.Name).Append(' ');
             if (info.AddMethod.IsStatic)
                 option.Append('*');
@@ -1417,7 +1417,7 @@ namespace Neeto
             StringBuilder option = new StringBuilder();
 
             // Append type name
-            option.Append($"{propertyInfo.ModuleName()}/{NReflect.GetDeclaringString(propertyInfo.DeclaringType)}.{propertyInfo.Name} ");
+            option.Append($"{propertyInfo.GetModuleName()}/{NGUI.GetDeclaringString(propertyInfo.DeclaringType)}.{propertyInfo.Name} ");
             if (propertyInfo.GetMethod.IsStatic)
                 option.Append('*');
 
@@ -1431,7 +1431,7 @@ namespace Neeto
         {
             var flags = BindingFlags.GetProperty | BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Instance;
             var returnType = field.FieldType.GetGenericArguments()[0];
-            var properties = NReflect.RuntimeAssemblies.GetProperties(returnType, flags)
+            var properties = NGUI.RuntimeAssemblies.GetProperties(returnType, flags)
                 // needs get method for other logic & generics not supported
                 .Where(prop => prop.GetMethod != null && prop.CanRead && !prop.DeclaringType.ContainsGenericParameters && (prop.GetMethod.IsStatic || prop.DeclaringType.IsSerializable) && returnType.IsAssignableFrom(prop.PropertyType))
                 .Select(prop => (prop, GetDisplayPath(prop)))
@@ -1444,7 +1444,7 @@ namespace Neeto
                 return;
             }
 
-            NDropdown.Show(onSelect, true, true, GetDisplayPath(selected), properties);
+            NGUI.ShowDropdown(onSelect, true, true, GetDisplayPath(selected), properties);
         }
         public static void EventDropdown(FieldInfo field, EventInfo selected, Action<EventInfo> onSelect)
         {
@@ -1457,7 +1457,7 @@ namespace Neeto
                 flags |= f_attr.flags;
 
 
-            var events = NReflect.GetRuntimeTypes().GetEvents(flags);
+            var events = NGUI.GetRuntimeTypes().GetEvents(flags);
 
             if (events.Count() == 0)
             {
@@ -1478,7 +1478,7 @@ namespace Neeto
             //.Where(m => m.GetParameterTypesWithTarget());
             var items = events.Select(evnt => (evnt, GameActionHelper.GetDisplayPath(evnt))).ToArray();
 
-            NDropdown.Show(onSelect, true, true, GameActionHelper.GetDisplayPath(selected), items);
+            NGUI.ShowDropdown(onSelect, true, true, GameActionHelper.GetDisplayPath(selected), items);
         }
         public static void MethodDropdown(FieldInfo field, MethodInfo selected, Action<MethodInfo> onSelect)
         {
@@ -1491,7 +1491,7 @@ namespace Neeto
                 flags |= f_attr.flags;
 
 
-            var methods = NReflect.GetRuntimeTypes().GetMethods(flags)
+            var methods = NGUI.GetRuntimeTypes().GetMethods(flags)
                 .Where(m => !m.ContainsGenericParameters && (m.IsStatic || m.ReflectedType.IsSerializable) && !m.DeclaringType.ContainsGenericParameters
                 && !m.GetParameters().Any(p => p.ParameterType.IsGenericType || p.IsOut || p.IsRetval || p.IsLcid || p.IsIn || !p.ParameterType.IsSerializable || p.ParameterType.IsByRef || p.ParameterType.IsArray || typeof(Delegate).IsAssignableFrom(p.ParameterType)));
 
@@ -1523,7 +1523,7 @@ namespace Neeto
                 .Where(_ => !_.Item2.Contains("&"))
                 .ToArray();
 
-            NDropdown.Show(onSelect, true, true, GetDisplayPath(selected), items);
+            NGUI.ShowDropdown(onSelect, true, true, GetDisplayPath(selected), items);
         }
 
         public static string GetSearchName(MethodInfo info)

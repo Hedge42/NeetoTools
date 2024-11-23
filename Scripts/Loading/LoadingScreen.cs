@@ -76,12 +76,9 @@ namespace Neeto
         {
             LoadingScreen.isLoading = false;
 
-            await NTask.LerpAsync(instance.background.alpha, 1f, PlayerLoopTiming.PostLateUpdate, true, Token.global, _ => instance.background.alpha = _)
-                            .AttachExternalCancellation(Token.global);
-
+            await Token.global.LerpAsync(instance.background.alpha, 1f, PlayerLoopTiming.PostLateUpdate, true, _ => instance.background.alpha = _);
 
             var handle = SceneManager.UnloadSceneAsync(SceneManager.GetSceneByName(SCENE_NAME));
-            //await handle.WithCancellation(instance.cts.Token);
             while (!handle.isDone)
                 await UniTask.Yield();
         }

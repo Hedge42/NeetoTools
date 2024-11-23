@@ -1,5 +1,6 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using System.Threading;
 
 #if UNITY_EDITOR
 #endif
@@ -19,7 +20,7 @@ namespace Neeto
             get => Renderer.color.a;
             set => Renderer.color = Renderer.color.With(a: value);
         }
-        Routine state;
+        Token token;
 
         private void OnEnable()
         {
@@ -31,20 +32,20 @@ namespace Neeto
         }
         private void OnDestroy()
         {
-            state.Kill();
+            token.Disable();
         }
         public void Enable(bool enabled)
         {
-            state %= EnableAsync(enabled);
+            EnableAsync(enabled, ++token).Forget();
         }
-        async UniTask EnableAsync(bool enabled)
+        async UniTask EnableAsync(bool enabled, CancellationToken token)
         {
             var elapsed = 0f;
             var end = enabled ? 1f : 0f;
             var start = alpha;
             do
             {
-                await UniTask.Yield();
+                await UniTask.Yield(token);
                 elapsed += Time.deltaTime;
                 var t = Mathf.Clamp01(elapsed / fadeDuration);
                 alpha = Mathf.Lerp(start, end, t);

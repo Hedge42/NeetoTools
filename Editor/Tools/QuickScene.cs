@@ -86,7 +86,7 @@ namespace Neeto
             return isLocked;
         }
 
-        [UnityEditor.MenuItem(MENU.Open + nameof(Neeto.QuickScene), priority = MENU.Top)]
+        [UnityEditor.MenuItem(Menu.Open + nameof(Neeto.QuickScene), priority = Menu.Top)]
         public static void Open()
         {
             var window = GetWindow<QuickScene>();

@@ -72,11 +72,11 @@ namespace Neeto
         }
         public static async UniTask Ease(float start, float end, float duration, Method method, Action<float> action, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken? token = null, Func<bool> isPaused = null)
         {
-            await Ease(NTask.GetDeltaTime, start, end, duration, method, action, timing, token, isPaused);
+            await Ease(Loop.GetDeltaTime, start, end, duration, method, action, timing, token, isPaused);
         }
         public static async UniTask EaseUnscaled(float start, float end, float duration, Method method, Action<float> action, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken? token = null, Func<bool> isPaused = null)
         {
-            await Ease(NTask.GetUnscaledDeltaTime, start, end, duration, method, action, timing, token, isPaused);
+            await Ease(Loop.GetUnscaledDeltaTime, start, end, duration, method, action, timing, token, isPaused);
         }
         public static float EaseInSine(float t)
         {

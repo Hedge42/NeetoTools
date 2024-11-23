@@ -87,7 +87,7 @@ namespace Neeto
     }
 #endif
     [Serializable]
-    public class ResolutionDropdown : UIElement<DropdownField>
+    public class ResolutioNGUI : UIElement<DropdownField>
     {
         public string Value
         {
@@ -107,7 +107,7 @@ namespace Neeto
         }
     }
     [Serializable]
-    public class FullscreenDropdown : UIElement<DropdownField>
+    public class FullscreeNGUI : UIElement<DropdownField>
     {
         public string Value
         {

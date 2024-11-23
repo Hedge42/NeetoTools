@@ -18,69 +18,34 @@ namespace Neeto
         //bool foldout;
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var foldoutRect = new Rect(position);
-            foldoutRect.height = EditorGUIUtility.singleLineHeight;
-            property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, GUIContent.none, true);
-
-            if (property.isExpanded)
+            using (NGUI.Property(position, property))
             {
-                // draw event
-                position.xMin += EditorGUI.indentLevel * 17f;
-
-                EditorGUI.BeginChangeCheck();
-                drawer.OnGUI(position, property, label);
-                if (EditorGUI.EndChangeCheck())
+                if (property.IsExpanded(position))
                 {
-                    property.serializedObject.ApplyModifiedProperties();
-                    EditorUtility.SetDirty(property.serializedObject.targetObject);
+                    // draw default event
+                    drawer.OnGUI(position, property, label);
                 }
-            }
-            else
-            {
-
-                // add type arguments to label
-                var text = label.text + $" (";
-                var generics = fieldInfo.FieldType.GetGenericArguments();
-                for (int i = 0; i < generics.Length; i++)
+                else // add type arguments to label and show listener count
                 {
-                    text += generics[i].Name;
-                    if (i < generics.Length - 1)
+                    var text = label.text + $" (";
+                    var generics = fieldInfo.FieldType.GetGenericArguments();
+                    for (int i = 0; i < generics.Length; i++)
                     {
-                        text += ", ";
+                        text += generics[i].Name;
+                        if (i < generics.Length - 1)
+                        {
+                            text += ", ";
+                        }
                     }
+
+                    // show listeners count
+                    text += $") [{(property.GetProperValue(fieldInfo) as UnityEventBase).GetPersistentListeners().Count}]";
+                    position = position.Move(xMin: 2f);
+                    EditorGUI.DrawRect(position, Color.black * .25f);
+                    EditorGUI.LabelField(position.Move(xMin: 5f), text);
                 }
-                text += ")";
-
-                // show listeners count
-                text += $" [{(property.GetProperValue(fieldInfo) as UnityEventBase).GetPersistentListeners().Count}]";
-
-                position = position.Move(xMin: 2f);
-                EditorGUI.DrawRect(position, Color.black * .25f);
-                EditorGUI.LabelField(position.Move(xMin: 5f), text);
             }
         }
-
-        public Color GetRectColor(UnityEventBase _, SerializedProperty prop)
-        {
-            var any = _.GetPersistentEventCount() >= 1;
-            var faulted = !_.Validate(prop.serializedObject.targetObject);
-            var a = .2f;
-            var color = new Color(a, a, a, 1f);
-
-            if (faulted)
-            {
-                return color.With(r: .25f);
-            }
-            else if (any)
-            {
-                return color.With(g: .22f);
-            }
-            else // empty
-            {
-                return color;
-            }
-        }
-
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             if (property.isExpanded)
@@ -89,7 +54,7 @@ namespace Neeto
             }
             else
             {
-                return EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                return NGUI.LineHeight;
             }
         }
     }

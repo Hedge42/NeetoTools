@@ -86,12 +86,12 @@ public class PolymorphicDrawer : PropertyDrawer
     {
         var serializedObject = property.serializedObject;
         var propertyPath = property.propertyPath;
-        var types = NReflect.GetAssignableReferenceTypes(valueType)
+        var types = NGUI.GetAssignableReferenceTypes(valueType)
             .Select(t => (t, GetDisplayPath(t))).ToArray();
         var selected = property.managedReferenceValue != null ?
             GetDisplayPath(property.managedReferenceValue.GetType()) : "none";
 
-        NDropdown.Show(OnItemSelected, true, true, selected, types);
+        NGUI.ShowDropdown(OnItemSelected, true, true, selected, types);
 
         void OnItemSelected(Type type)
         {
@@ -110,7 +110,7 @@ public class PolymorphicDrawer : PropertyDrawer
     }
     public static string GetDisplayPath(Type t)
     {
-        return $"{t.ModuleName()}/{t.GetDeclaringString()}{t.GetInheritingString()}";
+        return $"{t.GetModuleName()}/{t.GetDeclaringString()}{t.GetInheritingString()}";
     }
 }
 #endif
