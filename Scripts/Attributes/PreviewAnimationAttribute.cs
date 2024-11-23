@@ -4,11 +4,11 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-public class PreviewInInspectorAttribute : PropertyAttribute
+public class PreviewAnimationAttribute : PropertyAttribute
 {
     #region EDITOR
 #if UNITY_EDITOR
-    [CustomPropertyDrawer(typeof(PreviewInInspectorAttribute))]
+    [CustomPropertyDrawer(typeof(PreviewAnimationAttribute))]
     class PreviewInInspectorDrawer : PropertyDrawer
     {
         private static GameObject lastSelectedObject;
@@ -28,7 +28,7 @@ public class PreviewInInspectorAttribute : PropertyAttribute
             }
 
             // Get the attribute and find the AnimationClip by field name
-            PreviewInInspectorAttribute previewAttr = (PreviewInInspectorAttribute)attribute;
+            PreviewAnimationAttribute previewAttr = (PreviewAnimationAttribute)attribute;
             SerializedProperty clipProperty = FindSiblingProperty(property, previewAttr.clipName);
             if (clipProperty == null || clipProperty.propertyType != SerializedPropertyType.ObjectReference)
             {
@@ -135,7 +135,7 @@ public class PreviewInInspectorAttribute : PropertyAttribute
 
     public string clipName { get; }
 
-    public PreviewInInspectorAttribute(string clipName)
+    public PreviewAnimationAttribute(string clipName)
     {
         this.clipName = clipName;
     }

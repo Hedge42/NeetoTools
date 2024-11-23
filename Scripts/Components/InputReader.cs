@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
@@ -49,26 +50,41 @@ namespace Neeto
             action?.Disable();
             action?.Dispose();
         }
-        
+
     }
     [Serializable]
     public abstract class AsyncInput : IInputEvent
     {
-        protected CancellationTokenSource cts;
+        protected Token token;
         public virtual void Disable()
         {
-            cts?.Cancel();
-            cts?.Dispose();
-            cts = null;
+            token.Disable();
         }
         public virtual void Enable()
         {
-            cts?.Cancel();
-            cts?.Dispose();
-            cts = new();
-            EnableAsync(cts.Token).Forget();
+            EnableAsync(++token).Forget();
         }
         protected abstract UniTaskVoid EnableAsync(CancellationToken token);
+    }
+    [Serializable]
+    public abstract class AsyncInputAction : AsyncInput
+    {
+        [SerializeReference] InputActionReference inputReference;
+        public InputAction input { get; private set; }
+
+        public override void Enable()
+        {
+            input?.Disable();
+            input = inputReference.action.Clone();
+            input.Enable();
+
+            base.Enable();
+        }
+        public override void Disable()
+        {
+            base.Disable();
+            input?.Disable();
+        }
     }
 
     [Serializable]
@@ -128,6 +144,57 @@ namespace Neeto
         {
             base.Enable();
             //action.started += callback.Invoke;
+        }
+    }
+
+    [Serializable]
+    public class Vector2InputEvent : AsyncInputAction
+    {
+        public PlayerLoopTiming loop = PlayerLoopTiming.Update;
+
+        public UnityEvent<Vector2> output;
+        protected override async UniTaskVoid EnableAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await UniTask.Yield(loop, token);
+                output?.Invoke(input.ReadValue<Vector2>());
+            }
+        }
+    }
+
+    [Serializable]
+    public class GroupedInput : IInputEvent
+    {
+        public string[] groups;
+
+        [SerializeReference, Polymorphic, ReorderableList]
+        public IInputEvent input;
+
+        public bool enabled { get; protected set; }
+
+        public void Enable()
+        {
+            input.Enable();
+            enabled = true;
+        }
+        public void Disable()
+        {
+            input.Disable();
+            enabled = false;
+        }
+        public void SetActive(bool value)
+        {
+            if (value && !enabled)
+                Enable();
+            else if (!value && enabled)
+                Disable();
+        }
+
+        public void UpdateDisabled(string[] disabledGroups)
+        {
+            bool enabled = !groups.Intersect(disabledGroups).Any();
+            SetActive(enabled);
         }
     }
 }

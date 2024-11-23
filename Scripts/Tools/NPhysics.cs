@@ -7,7 +7,7 @@ namespace Neeto
 {
     public static class NPhysics
     {
-        public static void SnapToGround(Rigidbody rb, LayerMask env)
+        public static void SnapToGround(this Rigidbody rb, LayerMask env)
         {
             var qti = QueryTriggerInteraction.Ignore;
             var pos = rb.position + Vector3.up * 2f; // start from above
@@ -16,6 +16,5 @@ namespace Neeto
                 rb.position = hit.point;
             }
         }
-
     }
 }

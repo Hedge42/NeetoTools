@@ -1,68 +1,66 @@
 ﻿using System;
 using UnityEngine;
-using System.Reflection;
-using Neeto;
-
 
 #if UNITY_EDITOR
 using UnityEditor;
-[CustomPropertyDrawer(typeof(GetComponentAttribute))]
-public class AutoGetComponentAttributeDrawer : PropertyDrawer
-{
-    GetComponentAttribute atr => attribute as GetComponentAttribute;
-
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-    {
-        using (NGUI.Property(position, label, property))
-        {
-            if (!property.objectReferenceValue && property.serializedObject.targetObject is Component component)
-            {
-                var type = atr.type ?? fieldInfo.FieldType;
-
-                property.objectReferenceValue = atr.scope switch
-                {
-                    ComponentScope.Self => component.GetComponent(type),
-                    ComponentScope.Parent => component.GetComponentInParent(type),
-                    ComponentScope.Children => component.GetComponentInChildren(type),
-                    ComponentScope.Find => GameObject.FindObjectOfType(type),
-                    _ => throw new System.NotImplementedException()
-                };
-            }
-            EditorGUI.PropertyField(position, property, label);
-        }
-    }
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-    {
-        return EditorGUI.GetPropertyHeight(property, label);
-    }
-}
-
 #endif
 
-[Flags]
-public enum ComponentScope
+namespace Neeto
 {
-    Self = 1,
-    Parent = 2,
-    Children = 4,
-    Find = 8
-}
-
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-public class GetComponentAttribute : PropertyAttribute
-{
-    public Type type;
-    public ComponentScope scope;
-
-    public GetComponentAttribute(ComponentScope scope = ComponentScope.Self)
+    /// <summary>
+    /// Find the first component in the given scope
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class GetComponentAttribute : PropertyAttribute
     {
-        this.scope = scope;
+        public ComponentScope scope;
+
+        public GetComponentAttribute(ComponentScope scope = ComponentScope.Self)
+        {
+            this.scope = scope;
+        }
+    }
+    [Flags]
+    public enum ComponentScope
+    {
+        Self = 1,
+        Parent = 2,
+        Children = 4,
     }
 
-    /// <summary>Automates editor referencing</summary>
-    public GetComponentAttribute(Type type, ComponentScope scope = ComponentScope.Self)
+#if UNITY_EDITOR
+    [CustomPropertyDrawer(typeof(GetComponentAttribute))]
+    class GetComponentAttributeDrawer : PropertyDrawer
     {
-        this.type = type;
-        this.scope = scope;
+
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            using (NGUI.Property(position, property, false))
+            {
+                if (!property.objectReferenceValue && property.serializedObject.targetObject is Component component)
+                {
+                    var attribute = base.attribute as GetComponentAttribute;
+                    var type = fieldInfo.FieldType;
+                    var obj = property.objectReferenceValue;
+
+                    if (!obj && attribute.scope.HasFlag(ComponentScope.Self))
+                        obj = component.GetComponent(type);
+
+                    if (!obj && attribute.scope.HasFlag(ComponentScope.Parent))
+                        obj = component.GetComponentInParent(type);
+
+                    if (!obj && attribute.scope.HasFlag(ComponentScope.Children))
+                        obj = component.GetComponentInChildren(type);
+
+                    property.objectReferenceValue = obj;
+                }
+                EditorGUI.PropertyField(position, property, label);
+            }
+        }
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            return EditorGUI.GetPropertyHeight(property, label);
+        }
     }
+#endif
 }

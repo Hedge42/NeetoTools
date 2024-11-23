@@ -19,6 +19,7 @@ public struct Token
 
     public Token Enable()
     {
+        source?.Cancel();
         source = new();
         token = source.Token;
         enabled = true;
