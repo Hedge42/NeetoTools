@@ -1,14 +1,7 @@
-using System;
-using System.Collections;
-using System.Linq;
 using UnityEngine;
-using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
-using Debug = UnityEngine.Debug;
 using Cysharp.Threading.Tasks;
 
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 
 

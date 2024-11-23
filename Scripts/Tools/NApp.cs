@@ -1,7 +1,5 @@
 using UnityEngine;
 using System;
-using System.Collections;
-using Object = UnityEngine.Object;
 using Cysharp.Threading.Tasks;
 
 #if UNITY_EDITOR

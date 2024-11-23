@@ -1,8 +1,4 @@
 using UnityEngine;
-using System;
-using System.Collections;
-using Object = UnityEngine.Object;
-using System.Collections.Generic;
 
 #if UNITY_EDITOR
 using UnityEditor;

@@ -2,7 +2,6 @@ using UnityEngine;
 using System;
 using UnityEngine.Events;
 using System.Collections.Generic;
-using UnityEngine.Rendering;
 
 #if UNITY_EDITOR
 using UnityEditor;

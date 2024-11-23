@@ -1,13 +1,6 @@
-using System;
-using System.Collections;
-using System.Linq;
 using UnityEngine;
-using Object = UnityEngine.Object;
-using Debug = UnityEngine.Debug;
-using UnityEngine.VFX;
 
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 
 

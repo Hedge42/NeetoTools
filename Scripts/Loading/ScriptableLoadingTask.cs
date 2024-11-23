@@ -1,17 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
-using Debug = UnityEngine.Debug;
-using Cysharp.Threading.Tasks;
-using UnityEngine.SceneManagement;
-using UnityEngine.AI;
 
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 
 namespace Neeto

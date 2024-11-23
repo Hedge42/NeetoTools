@@ -1,9 +1,7 @@
 using Cysharp.Threading.Tasks;
-using System;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Debug = UnityEngine.Debug;
 
 #if UNITY_EDITOR
 #endif

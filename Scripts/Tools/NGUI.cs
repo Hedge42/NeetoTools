@@ -6,7 +6,6 @@ using Object = UnityEngine.Object;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using SolidUtilities.UnityEditorInternals;
 using TMPro;
 
 #if UNITY_EDITOR

@@ -1,7 +1,4 @@
-﻿using UnityEngine;
-using System;
-
-namespace Neeto
+﻿namespace Neeto
 {
     //[Flags]
     public enum VectorFlags : int

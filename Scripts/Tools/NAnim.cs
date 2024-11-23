@@ -1,14 +1,13 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.Animations;
 using UnityEngine.Playables;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Neeto
 {

@@ -5,7 +5,6 @@ using System;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditorInternal;
 using System.Reflection;
 #endif
 

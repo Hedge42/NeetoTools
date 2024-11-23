@@ -1,7 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Net.NetworkInformation;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace Neeto
@@ -23,6 +22,7 @@ namespace Neeto
         }
     }
 
+#if UNITY_EDITOR
     [CustomPropertyDrawer(typeof(FieldToggleAttribute))] 
     public class FieldToggleAttributeDrawer : PropertyDrawer
     {
@@ -48,4 +48,5 @@ namespace Neeto
             return property.GetHeight();
         }
     }
+#endif
 }

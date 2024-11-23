@@ -1,9 +1,5 @@
 using UnityEngine;
 using System;
-
-using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
-using Debug = UnityEngine.Debug;
 using System.Collections.Generic;
 using System.Linq;
 

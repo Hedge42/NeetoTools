@@ -1,19 +1,13 @@
-using System;
-using System.Collections;
-using System.Linq;
 using UnityEngine;
-using Object = UnityEngine.Object;
-using Debug = UnityEngine.Debug;
 using UnityEngine.VFX;
 
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 
 
 namespace Neeto
 {
-	public class VFXVolumeGizmo : MonoBehaviour
+    public class VFXVolumeGizmo : MonoBehaviour
 	{
 		[GetComponent] public VisualEffect vfx;
 

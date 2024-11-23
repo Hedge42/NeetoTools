@@ -2,8 +2,6 @@
 using UnityEditor;
 using Rhinox.Lightspeed.Reflection;
 using System.Reflection;
-using System.Collections;
-using System;
 
 namespace Neeto
 {

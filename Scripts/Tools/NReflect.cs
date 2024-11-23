@@ -5,13 +5,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using UnityEditor;
-using System.Diagnostics;
 using Debug = UnityEngine.Debug;
-using System.Text.RegularExpressions;
-using UnityEngine.UIElements;
-using Neeto;
 using System.IO;
-using UnityEngine;
 
 
 namespace Neeto
@@ -626,10 +621,10 @@ namespace Neeto
              * FieldInfo target is not compatible with Unity's target*/
             object target = property.serializedObject.targetObject;
 
-            var field = target.GetType().GetField(info.Name);
+            var field = target.GetType().GetField(info.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field != null && field.Name.Equals(info.Name))
             {
-                return info.GetValue(target);
+                return target;
             }
             /* expected fieldInfo target is not the targetObject...
             */

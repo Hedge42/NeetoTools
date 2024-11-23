@@ -1,10 +1,5 @@
-using System;
-using System.Collections;
-using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
-using Debug = UnityEngine.Debug;
 
 #if UNITY_EDITOR
 using UnityEditor;

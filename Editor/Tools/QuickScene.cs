@@ -1,10 +1,6 @@
 ﻿#if UNITY_EDITOR
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using System.IO;
-using System;
 using Object = UnityEngine.Object;
 using UnityEditor.SceneManagement;
 

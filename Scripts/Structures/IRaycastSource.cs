@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace Neeto
+﻿namespace Neeto
 {
     public interface IRaycastSource
     {

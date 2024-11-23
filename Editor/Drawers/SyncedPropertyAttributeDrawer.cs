@@ -2,12 +2,8 @@
 
 namespace Neeto
 {
-    using System.Reflection;
     using Toolbox.Editor;
     using UnityEditor;
-    using Rhinox.Lightspeed;
-    using Rhinox.Lightspeed.Editor;
-    using Rhinox.Lightspeed.Reflection;
 
     [CustomPropertyDrawer(typeof(SyncedPropertyAttribute))]
     public class SyncedPropertyAttributeDrawer : PropertyDrawer
@@ -17,7 +13,7 @@ namespace Neeto
             using (NGUI.Property(position, property, false))
             {
                 var attribute = base.attribute as SyncedPropertyAttribute;
-                var target =  property.FindReflectionTarget(fieldInfo);
+                var target = property.FindReflectionTarget(fieldInfo);
                 var propertyInfo = target.GetType().GetProperty(attribute.propertyInfoName);
 
                 if (propertyInfo == null)
@@ -37,16 +33,12 @@ namespace Neeto
                 }
 
                 // get value from property
-                property.SetProperValue(fieldInfo, propertyInfo.GetValue(target));
-
                 EditorGUI.BeginChangeCheck();
                 EditorGUI.PropertyField(position, property, label);
-                var changed = EditorGUI.EndChangeCheck();
-
-                // display error
-                if (changed)
+                var value = property.GetProperValue(fieldInfo);
+                if (EditorGUI.EndChangeCheck() || !propertyInfo.GetValue(target).Equals(value))
                 {
-                    propertyInfo.SetValue(target, fieldInfo.GetValue(target));
+                    propertyInfo.SetValue(target, value);
                 }
             }
         }
