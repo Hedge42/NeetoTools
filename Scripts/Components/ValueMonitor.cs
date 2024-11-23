@@ -15,7 +15,7 @@ namespace Neeto
 
         void OnEnable()
         {
-            monitor.MonitorAsync(token.Refresh()).Forget();
+            monitor.MonitorAsync(token.Enable()).Forget();
         }
         void OnDisable()
         {
@@ -34,13 +34,10 @@ namespace Neeto
         public SerializedProperty<float> property;
         public UnityEvent<float> output;
 
-        public async UniTaskVoid MonitorAsync(CancellationToken token)
+        public UniTaskVoid MonitorAsync(CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
-            {
-                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
-                output?.Invoke(property.Value);
-            }
+            Loop.Void(() => output?.Invoke(property.Value), token, PlayerLoopTiming.LastPostLateUpdate);
+            return default;
         }
     }
 
@@ -51,13 +48,10 @@ namespace Neeto
 
         public UnityEvent<float> output;
 
-        public async UniTaskVoid MonitorAsync(CancellationToken token)
+        public UniTaskVoid MonitorAsync(CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
-            {
-                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
-                output?.Invoke(property.Value);
-            }
+            Loop.Void(() => output?.Invoke(property.Value), token, PlayerLoopTiming.LastPostLateUpdate);
+            return default;
         }
     }
 
@@ -73,13 +67,12 @@ namespace Neeto
         public SerializedProperty<float> property;
         public Element[] elements;
 
-        public async UniTaskVoid MonitorAsync(CancellationToken token)
+        public UniTaskVoid MonitorAsync(CancellationToken token)
         {
             int lastIndex = -1;
 
-            while(!token.IsCancellationRequested)
+            Loop.Void(() =>
             {
-                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, token);
                 var value = property.Value;
                 for (int i = 0; i < elements.Length; i++)
                 {
@@ -93,7 +86,9 @@ namespace Neeto
                         break;
                     }
                 }
-            }
+            },
+            token, PlayerLoopTiming.LastPostLateUpdate);
+            return default;
         }
     }
 
@@ -110,27 +105,23 @@ namespace Neeto
         public UnityEvent onTrue;
         public UnityEvent onFalse;
 
-        public async UniTaskVoid MonitorAsync(CancellationToken token)
+        public UniTaskVoid MonitorAsync(CancellationToken token)
         {
-
             bool? lastValue = sendInitial ? null : property.Value;
-            for (; ; )
+            Loop.Void(() =>
             {
-                await UniTask.Yield(PlayerLoopTiming.PostLateUpdate);
                 var newValue = property.Value;
 
                 if (lastValue != newValue)
                 {
                     if (newValue)
-                    {
                         onTrue?.Invoke();
-                    }
                     else
-                    {
                         onFalse?.Invoke();
-                    }
                 }
-            }
+            }, 
+            token, PlayerLoopTiming.PostLateUpdate);
+            return default;
         }
     }
 }

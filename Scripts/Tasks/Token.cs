@@ -7,20 +7,28 @@ using UnityEngine.SceneManagement;
 
 public struct Token
 {
-    public static implicit operator CancellationToken(Token token) => token.token;
-    public static implicit operator bool(Token token) => token.enabled;
-    public static Token operator ++(Token t) => t.Refresh();
-    public static Token operator --(Token t) => t.Disable();
+    public static implicit operator CancellationToken(Token Token) => Token.token;
+    public static implicit operator bool(Token Token) => Token.enabled;
+    public static Token operator ++(Token Token) => Token.Enable();
+    public static Token operator --(Token Token) => Token.Disable();
 
     public bool enabled { get; private set; }
-    public CancellationToken token { get; private set; }
     CancellationTokenSource source;
+    CancellationToken token;
+    CancellationToken? linkedToken;
 
-    public static Token Create() => new Token().Enable();
+    public Token (CancellationToken? linkedToken = null)
+    {
+        this.linkedToken = linkedToken;
+    }
+    
+
+
     public Token Enable()
     {
         source?.Cancel();
-        source = new();
+        source?.Dispose();
+        source = LinkedSource(linkedToken);
         token = source.Token;
         enabled = true;
         return this;
@@ -37,19 +45,30 @@ public struct Token
     {
         token.Register(onCancel);
     }
-    public Token Refresh(Action onCancel = null)
+    public void SetLink(CancellationToken? linked)
     {
-        source?.Cancel();
-        source?.Dispose();
-        source = new();
-        token = source.Token;
-        if (onCancel != null)
-            token.Register(onCancel);
-        return this;
+        linkedToken = linked;
+    }
+    public void Unlink()
+    {
+        linkedToken = null;
     }
 
     #region EXTENSIONS
+    public static Token Create(CancellationToken? linkedToken = null)
+    {
+        return new Token(linkedToken);
+    }
+    public static CancellationTokenSource LinkedSource(CancellationToken? _token)
+    {
+        return _token is CancellationToken token
+            ? CancellationTokenSource.CreateLinkedTokenSource(token)
+            : new CancellationTokenSource();
+    }
+
+    /// <summary>Cancels when game stops playing</summary>
     public static CancellationToken global => _global;
+    /// <summary>Cancels when active scene is changed</summary>
     public static CancellationToken scene => _scene;
     static Token _global, _scene;
 
@@ -66,6 +85,7 @@ public struct Token
 
 public static class TokenExtensions
 {
+
     public static CancellationTokenSource Refresh(this CancellationTokenSource source)
     {
         Kill(source);

@@ -8,28 +8,83 @@ namespace Neeto
 {
     public struct Loop
     {
-        public bool isRunning { get; private set; }
-        public PlayerLoopTiming timing { get; private set; }
-        Token token { get; set; }
-        Action update { get; set; }
-
-        public static Loop Create(PlayerLoopTiming timing, Action update)
+        public static Routine Create(Action update, PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
-            var loop = new Loop();
-            loop.timing = timing;
-            loop.update = update;
-            return loop;
+            return new(token => UntilCancelled(update, token, timing));
         }
-        public void Start() => StartAsync().Forget();
-        public void Stop() => token.Disable();
-        public async UniTask StartAsync()
+
+        /// <summary>Until cancelled</summary>
+        public static void Void(Action update, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
-            var token = ++this.token;
+            UniTask.Void(async () =>
+            {
+                for (; ; )
+                {
+                    await UniTask.Yield(timing, token, true);
+                    update();
+                }
+            });
+        }
+        public static async UniTask UntilCancelled(Action update, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            for (; ; )
+            {
+                await UniTask.Yield(timing);
+                if (token.IsCancellationRequested)
+                    return;
+                update();
+            }
+        }
+        public static async UniTask ForSeconds(float duration, Action update, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            var elapsed = 0f;
+            while (elapsed < duration)
+            {
+                await UniTask.Yield(timing, token, true);
+                elapsed += GetDeltaTime(timing);
+                update();
+            }
+        }
+        public static async UniTask WhileAsync(Func<bool> continueCondition, Action update, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
             for (; ; )
             {
                 await UniTask.Yield(timing, token, true);
+                if (!continueCondition())
+                    return;
                 update();
             }
+        }
+        public static async UniTask UntilAsync(Func<bool> exitCondition, Action update, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            for (; ; )
+            {
+                await UniTask.Yield(timing, token, true);
+                if (exitCondition())
+                    return;
+                update();
+            }
+        }
+
+        public static Routine Until(Func<bool> exitCondition, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            return new(t => UniTask.WaitUntil(exitCondition, timing, t, true), token);
+        }
+        public static Routine Until(Func<bool> exitCondition, Action update, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            return new(t => UntilAsync(exitCondition, update, t, timing), token);
+        }
+        public static Routine While(Func<bool> continueCondition, Action update, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            return new Routine(t => WhileAsync(continueCondition, update, t), token);
+        }
+        public static Routine UntilCancelled(Action update, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            return new(t => UntilCancelled(update, t, timing), token);
+        }
+        public static Routine ForSeconds(float duration, Action update, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            return new(t => ForSeconds(duration, update, t), token);
         }
 
         public static float GetDeltaTime(PlayerLoopTiming timing)

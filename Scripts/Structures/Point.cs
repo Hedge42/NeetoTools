@@ -191,62 +191,32 @@ namespace Neeto
         #endregion
 
         #region Operators
-        public static implicit operator Point((Vector3 pos, Vector3 euler) t) => new Point(t.pos, t.euler);
-        public static implicit operator Point((Vector3 pos, Quaternion rot) t) => new Point(t.pos, t.rot);
-        public static implicit operator Point(Transform t) => t.GetWorldPoint();
-        public static Vector3 operator +(Point o) => o;
-        public static Point operator -(Point o) => (-1 * o.position, Quaternion.Inverse(o));
-        public static implicit operator Vector3(Point o) => o.position;
-        public static implicit operator Quaternion(Point o) => o.rotation;
-        public static implicit operator Ray(Point o) => o.ray;
+        public static implicit operator Point((Vector3 position, Vector3 eulerAngles) _) => new Point(_.position, _.eulerAngles);
+        public static implicit operator Point((Vector3 position, Quaternion rotation) _) => new Point(_.position, _.rotation);
+        public static implicit operator Point(Transform transform) => transform.GetWorldPoint();
+        public static Vector3 operator +(Point _) => _.position;
+        public static Point operator -(Point _) => (-1 * _.position, Quaternion.Inverse(_));
+        public static implicit operator Vector3(Point _) => _.position;
+        public static implicit operator Quaternion(Point _) => _.rotation;
+        public static implicit operator Ray(Point _) => _.ray;
 
-        /// <summary>return updated position</summary>
-        public static Point operator +(Point w, Point delta)
+        /// <summary>move and rotate the point by the delta</summary>
+        public static Point operator +(Point point, Point delta)
         {
-            return new Point(w.position + delta.position, w.rotation * delta.rotation);
+            return new Point(point.position + delta.position, point.rotation * delta.rotation);
         }
-        /// <summary>return updated position</summary>
-        public static Transform operator +(Transform t, Point dw)
+        /// <summary>rotate the point by the quaternion</summary>
+        public static Quaternion operator *(Point point, Quaternion deltaRotation)
         {
-            var w = (Point)t + dw;
-            t.SetWorldPoint(w);
-            return t;
+            point.rotation *= deltaRotation;
+            return point;
         }
-        /// <summary>return updated position</summary>
-        public static Transform operator &(Transform t, Point w)
-        {
-            t.SetWorldPoint(w);
-            return t;
-        }
-        /// <summary>return updated position</summary>
-        public static Transform operator -(Transform t, Point dw)
-        {
-            var w = (Point)t - dw;
-            t.SetWorldPoint(w);
-            return t;
-        }
-        /// <summary>return updated position</summary>
-        public static Point operator +(Point dw, Transform t) => (Point)t + dw;
-        /// <summary>return updated position</summary>
-        public static Quaternion operator *(Point w, Quaternion b)
-        {
-            w.rotation *= b;
-            return w;
-        }
-        /// <summary>return delta position</summary>
-        public static Point operator -(Point left, Point right)
+        /// <summary>move and rotate the point by the inverse delta</summary>
+        public static Point operator -(Point point, Point delta)
         {
             return new Point(
-                left.position - right.position,
-                left.rotation * Quaternion.Inverse(right.rotation));
-        }
-        /// <summary>"to"</summary>
-        public static Point operator ^(Transform t, Point o) => (t.TransformPoint(o.position), t.rotation * o.rotation);
-        public static Point operator %(Point w, Transform t)
-        {
-            Point prev = t;
-            t.SetWorldPoint(w);
-            return w - prev;
+                point.position - delta.position,
+                point.rotation * Quaternion.Inverse(delta.rotation));
         }
         public static bool operator ==(Point left, Point right)
         {
@@ -260,6 +230,16 @@ namespace Neeto
     }
     public static class PointExtensions
     {
+        public static Point GetDeltas(this Animator animator)
+        {
+            return (animator.deltaPosition, animator.deltaRotation);
+        }
+        public static void AddDeltas(this Transform transform, Point delta)
+        {
+            transform.position += delta.position;
+            transform.rotation *= delta.rotation;
+        }
+
         public static Point GetWorldPoint(this Transform transform)
         {
             return new Point(transform.position, transform.rotation);
