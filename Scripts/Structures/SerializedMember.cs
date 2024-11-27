@@ -2,6 +2,7 @@ using Rhinox.Lightspeed.Reflection;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
 
 namespace Neeto
@@ -9,31 +10,36 @@ namespace Neeto
     [Serializable]
     public abstract class SerializedMember : ISerializationCallbackReceiver
     {
+        public enum Status
+        {
+            Pending,
+            Success,
+            Failed,
+        }
+
         public UnityEngine.Object owner;
         public UnityEngine.Object target;
         [SerializeField] public string DeclaringType;
         [SerializeField] public string MemberName;
+        public bool hasData => DeclaringType.IsNotEmpty() && MemberName.IsNotEmpty();
+        public MemberInfo member { get; private set; }
+        public bool hasMember => member != null;
 
         public abstract MemberInfo GetMember();
         public virtual bool NeedsTarget() => GetMember() is MemberInfo info && !info.IsStatic();
 
         public void OnAfterDeserialize()
         {
-            if (!DeclaringType.Equals(""))
-            {
-                var type = Type.GetType(DeclaringType);
-                if (type == null)
-                {
-                    Debug.LogError($"Type not found. Did the code change? '{DeclaringType}'", owner);
-                    return;
-                }
+            if (!hasData)
+                return;
 
-                var member = GetMember();
-                if (member == null)
-                {
-                    Debug.LogError($"Member not found. Did the code change? '{MemberName}'", owner);
-                    return;
-                }
+            try
+            {
+                this.member = GetMember();
+            }
+            catch
+            {
+                Debug.LogError($"Member serialization failed '{DeclaringType}.{MemberName}'", owner);
             }
         }
         public void OnBeforeSerialize() { }
@@ -50,14 +56,7 @@ namespace Neeto
 
         public override MemberInfo GetMember()
         {
-            try
-            {
-                return Type.GetType(DeclaringType)?.GetMethod(MemberName);
-            }
-            catch
-            {
-                return null;
-            }
+            return Type.GetType(DeclaringType)?.GetMethod(MemberName);
         }
 
         public void Invoke()
@@ -116,21 +115,14 @@ namespace Neeto
 
         public override MemberInfo GetMember()
         {
-            try
-            {
-                return Type.GetType(DeclaringType)?.GetMethod(MemberName);
-            }
-            catch
-            {
-                return null;
-            }
+            return Type.GetType(DeclaringType)?.GetMethod(MemberName);
         }
 
         private Action<T> InitializeDelegate()
         {
             try
             {
-                _methodInfo ??= GetMember() as MethodInfo;
+                _methodInfo = member as MethodInfo;
                 if (_methodInfo == null)
                 {
                     Debug.LogError($"Failed to get MethodInfo from '{DeclaringType}.{MemberName}'");
@@ -175,9 +167,12 @@ namespace Neeto
 
         Func<T> InitializeGetter()
         {
+            if (!hasMember)
+                return () => default;
+
             try
             {
-                _info ??= GetMember() as PropertyInfo;
+                _info = member as PropertyInfo;
                 var targetInstance = Expression.Constant(target);
                 var propertyExpression = Expression.Property(targetInstance, _info);
                 var getExpression = Expression.Lambda<Func<T>>(propertyExpression);
@@ -191,20 +186,17 @@ namespace Neeto
         }
         Action<T> InitializeSetter()
         {
-            Action<T> Default = _ => { };
+            if (!hasData || !hasMember)
+                return _ => { };
+
             try
             {
-                _info ??= GetMember() as PropertyInfo;
-                if (_info == null)
-                {
-                    Debug.LogError($"Failed to get PropertyInfo from '{DeclaringType}.{MemberName}'");
-                    return Default;
-                }
+                _info = member as PropertyInfo;
 
                 if (!_info.CanWrite)
                 {
                     Debug.LogWarning($"Property '{_info.NameOr("NULL")}' does not have a setter.");
-                    return Default;
+                    return _ => { };
                 }
 
                 var targetInstance = Expression.Constant(target);
@@ -217,7 +209,7 @@ namespace Neeto
             catch
             {
                 Debug.LogError($"Something went wrong in '{DeclaringType}.{MemberName}'");
-                return Default;
+                return _ => { };
             }
         }
     }
@@ -248,21 +240,17 @@ namespace Neeto
 
         public override MemberInfo GetMember()
         {
-            try
-            {
-                return Type.GetType(DeclaringType)?.GetEvent(MemberName);
-            }
-            catch
-            {
-                return null;
-            }
+            return Type.GetType(DeclaringType)?.GetEvent(MemberName);
         }
 
         private Action<Action> InitializeAddHandler()
         {
+            if (!hasData)
+                return default;
+
             try
             {
-                _info ??= GetMember() as EventInfo;
+                _info = member as EventInfo;
                 if (_info == null)
                 {
                     Debug.LogError($"Failed to get EventInfo from '{DeclaringType}.{MemberName}'");
@@ -285,9 +273,12 @@ namespace Neeto
 
         private Action<Action> InitializeRemoveHandler()
         {
+            if (!hasData)
+                return default;
+
             try
             {
-                _info ??= GetMember() as EventInfo;
+                _info = member as EventInfo;
                 if (_info == null)
                 {
                     Debug.LogError($"Failed to get EventInfo from '{DeclaringType}.{MemberName}'");
@@ -336,21 +327,17 @@ namespace Neeto
 
         public override MemberInfo GetMember()
         {
-            try
-            {
-                return Type.GetType(DeclaringType)?.GetEvent(MemberName);
-            }
-            catch
-            {
-                return null;
-            }
+            return Type.GetType(DeclaringType)?.GetEvent(MemberName);
         }
 
         private Action<Action<T>> InitializeAddHandler()
         {
+            if (!hasData)
+                return default;
+
             try
             {
-                _info ??= GetMember() as EventInfo;
+                _info = member as EventInfo;
                 if (_info == null)
                 {
                     Debug.LogError($"Failed to get EventInfo from '{DeclaringType}.{MemberName}'");

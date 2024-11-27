@@ -15,7 +15,7 @@ namespace Neeto
 
         void OnEnable()
         {
-            monitor.MonitorAsync(token.Enable()).Forget();
+            monitor.MonitorAsync(++token).Forget();
         }
         void OnDisable()
         {
@@ -36,7 +36,7 @@ namespace Neeto
 
         public UniTaskVoid MonitorAsync(CancellationToken token)
         {
-            Loop.Void(() => output?.Invoke(property.Value), token, PlayerLoopTiming.LastPostLateUpdate);
+            Loop.Start(token, PlayerLoopTiming.LastPostLateUpdate, () => output?.Invoke(property.Value));
             return default;
         }
     }
@@ -50,7 +50,7 @@ namespace Neeto
 
         public UniTaskVoid MonitorAsync(CancellationToken token)
         {
-            Loop.Void(() => output?.Invoke(property.Value), token, PlayerLoopTiming.LastPostLateUpdate);
+            Loop.Start(token, PlayerLoopTiming.LastPostLateUpdate, () => output?.Invoke(property.Value));
             return default;
         }
     }

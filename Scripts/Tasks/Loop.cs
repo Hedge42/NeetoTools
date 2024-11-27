@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Neeto;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
@@ -8,12 +9,39 @@ namespace Neeto
 {
     public struct Loop
     {
-        public static Routine Create(Action update, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        public static void Start(CancellationToken token, PlayerLoopTiming timing, Action onUpdate)
         {
-            return new(token => UntilCancelled(update, token, timing));
+            UniTask.Void(async () =>
+            {
+                for (; ; )
+                {
+                    await UniTask.Yield(timing, token, true);
+                    onUpdate();
+                }
+            });
+        }
+        public static async UniTask StartAsync(CancellationToken token, PlayerLoopTiming timing, Action update)
+        {
+            for (; ; )
+            {
+                await UniTask.Yield(timing, token, true);
+                update();
+            }
+        }
+        public static void Interpolate(CancellationToken token, float duration, PlayerLoopTiming timing, Action<float> onT)
+        {
+            UniTask.Void(async () =>
+            {
+                var elapsed = 0f;
+                for (; ; )
+                {
+                    await UniTask.Yield(timing, token, true);
+                    elapsed += timing.GetDeltaTime();
+                    onT.Invoke(Mathf.Clamp01(elapsed / duration));
+                }
+            });
         }
 
-        /// <summary>Until cancelled</summary>
         public static void Void(Action update, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
             UniTask.Void(async () =>
@@ -24,6 +52,11 @@ namespace Neeto
                     update();
                 }
             });
+        }
+
+        public static async UniTask UntilCancelled(CancellationToken token)
+        {
+            await UniTask.WaitUntil(() => token.IsCancellationRequested);
         }
         public static async UniTask UntilCancelled(Action update, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
@@ -36,6 +69,20 @@ namespace Neeto
             }
         }
         public static async UniTask ForSeconds(float duration, Action update, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            var elapsed = 0f;
+            while (elapsed < duration)
+            {
+                await UniTask.Yield(timing, token, true);
+                elapsed += GetDeltaTime(timing);
+                update();
+            }
+        }
+        public static async UniTask ForSeconds(float duration, CancellationToken token, Action update)
+        {
+            await ForSeconds(duration, token, PlayerLoopTiming.Update, update);
+        }
+        public static async UniTask ForSeconds(float duration, CancellationToken token, PlayerLoopTiming timing, Action update)
         {
             var elapsed = 0f;
             while (elapsed < duration)
@@ -64,27 +111,6 @@ namespace Neeto
                     return;
                 update();
             }
-        }
-
-        public static Routine Until(Func<bool> exitCondition, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
-        {
-            return new(t => UniTask.WaitUntil(exitCondition, timing, t, true), token);
-        }
-        public static Routine Until(Func<bool> exitCondition, Action update, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
-        {
-            return new(t => UntilAsync(exitCondition, update, t, timing), token);
-        }
-        public static Routine While(Func<bool> continueCondition, Action update, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
-        {
-            return new Routine(t => WhileAsync(continueCondition, update, t), token);
-        }
-        public static Routine UntilCancelled(Action update, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
-        {
-            return new(t => UntilCancelled(update, t, timing), token);
-        }
-        public static Routine ForSeconds(float duration, Action update, CancellationToken? token = null, PlayerLoopTiming timing = PlayerLoopTiming.Update)
-        {
-            return new(t => ForSeconds(duration, update, t), token);
         }
 
         public static float GetDeltaTime(PlayerLoopTiming timing)
@@ -128,51 +154,6 @@ namespace Neeto
             // reasonable default? This will never be used, who am I kidding
             else
                 return .1f;
-        }
-
-        public static void Update(CancellationToken token, MonoBehaviour source, Action onUpdate, Func<bool> until = null, Action onCancel = null, Action onCancelOrComplete = null, Action onComplete = null)
-        {
-            UpdateAsync(token, source, onUpdate, until, onCancel, onCancelOrComplete, onComplete).Forget();
-        }
-        public static async UniTask UpdateAsync(CancellationToken token, MonoBehaviour source, Action onUpdate, Func<bool> until = null, Action onCancel = null, Action onCancelOrComplete = null, Action onComplete = null)
-        {
-            try
-            {
-                while (until == null || until() == false)
-                {
-                    await UniTask.WaitForEndOfFrame(source, token);
-                    onUpdate?.Invoke();
-                }
-                onComplete?.Invoke();
-            }
-            catch (OperationCanceledException)
-            {
-                onCancel?.Invoke();
-            }
-            finally
-            {
-                onCancelOrComplete?.Invoke();
-            }
-        }
-
-        public static async UniTaskVoid UpdateAsync(PlayerLoopTiming timing, int frameSkip, CancellationToken token, Action action)
-        {
-            while (!token.IsCancellationRequested)
-            {
-                action?.Invoke();
-
-                for (int i = 0; i < frameSkip; i++)
-                    await UniTask.Yield(timing, token);
-            }
-        }
-        public static async UniTaskVoid UpdateAsync(PlayerLoopTiming timing, float delay, bool ignoreTimeScale, CancellationToken token, Action action)
-        {
-            int ms = delay.ToMilliseconds();
-            while (!token.IsCancellationRequested)
-            {
-                action?.Invoke();
-                await UniTask.Delay(ms, ignoreTimeScale, timing, token);
-            }
         }
     }
 

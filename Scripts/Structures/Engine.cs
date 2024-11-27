@@ -525,7 +525,7 @@ namespace Neeto
                 {
                     var currentDistance = Vector3.Distance(transform.position - relativeStart, waypoints[targetIndex - 1].position);
                     var segmentProgress = currentDistance / segmentDistance;
-                    distanceCovered += speed * Time.deltaTime;
+                    distanceCovered += speed * UnityEngine.Time.deltaTime;
                     float t = distanceCovered / totalDistance;
                     float segmentFactor = t / segmentTime;
                     transform.position = Vector3.Lerp(startPosition, endPosition, segmentProgress);
@@ -598,7 +598,7 @@ namespace Neeto
             Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
 
             // Calculate the step size for rotation based on angular speed and deltaTime
-            float step = angularSpeed * Time.fixedDeltaTime;
+            float step = angularSpeed * UnityEngine.Time.fixedDeltaTime;
 
             // Slerp (spherical linear interpolate) from the current rotation to the target rotation
             Quaternion rotated = Quaternion.Slerp(rb.rotation, lookRotation, step);
@@ -681,13 +681,31 @@ namespace Neeto
         #endregion
 
         #region ANIMATION
+        public static float NormalizedTime(this Playable playable)
+        {
+            return Mathf.Clamp01((float)playable.GetTime() / (float)playable.GetDuration());
+        }
+        public static async UniTask Time(this Playable playable, float time, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            while (playable.IsValid() && playable.GetTime() < time)
+            {
+                await UniTask.Yield(timing, token, true);
+            }
+        }
+        public static async UniTask NormalizedTime(this Playable playable, float t, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            while (playable.IsValid() && playable.NormalizedTime() < t)
+            {
+                await UniTask.Yield(timing, token, true);
+            }
+        }
         public static async UniTaskVoid InterpolateAsync(Playable playable, float start, float end, CancellationToken token)
         {
             playable.Pause();
             while (playable.IsValid())
             {
                 await UniTask.Yield(PlayerLoopTiming.PostLateUpdate, token);
-                var nextTime = (float)playable.GetTime() + Time.deltaTime * (float)playable.GetSpeed();
+                var nextTime = (float)playable.GetTime() + UnityEngine.Time.deltaTime * (float)playable.GetSpeed();
                 playable.SetTime(Mathf.Clamp(nextTime, start, end));
             }
         }

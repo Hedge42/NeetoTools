@@ -12,6 +12,27 @@ namespace Neeto
         {
             await UniTask.Delay(TimeSpan.FromSeconds(seconds), ignoreTimescale, timing, token, true);
         }
+        public static void Void(float seconds, CancellationToken token, Action action)
+        {
+            UniTask.Void(async () =>
+            {
+                await UniTask.WaitForSeconds(seconds);
+                if (!token.IsCancellationRequested)
+                    action();
+            });
+        }
+        public static async UniTask Seconds(float seconds, Action action, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        {
+            var elapsed = 0f;
+            var start = Time.time;
+            while (elapsed < seconds)
+            {
+                await UniTask.Yield(timing, token, true);
+                elapsed = Time.time - start;
+            }
+            action();
+        }
+
         public static async UniTask Frame(MonoBehaviour mono, CancellationToken token)
         {
             await UniTask.WaitForEndOfFrame(mono, token, true);

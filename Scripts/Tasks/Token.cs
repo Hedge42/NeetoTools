@@ -7,64 +7,44 @@ using UnityEngine.SceneManagement;
 
 public struct Token
 {
+    public static implicit operator Token(CancellationToken t) => Create(t);
     public static implicit operator CancellationToken(Token Token) => Token.token;
     public static implicit operator bool(Token Token) => Token.enabled;
-    public static Token operator ++(Token Token) => Token.Enable();
-    public static Token operator --(Token Token) => Token.Disable();
+
+    public static Token operator ++(Token Token) { Token.Enable(); return Token; }
+    public static Token operator --(Token Token) { Token.Disable(); return Token; }
+    public static Token operator %(Token token, CancellationToken? link)
+    {
+        token.parent = link;
+        return ++token;
+    }
 
     public bool enabled { get; private set; }
     CancellationTokenSource source;
     CancellationToken token;
-    CancellationToken? linkedToken;
+    CancellationToken? parent;
 
-    public Token (CancellationToken? linkedToken = null)
-    {
-        this.linkedToken = linkedToken;
-    }
-    
-
-
-    public Token Enable()
+    public void Enable()
     {
         source?.Cancel();
         source?.Dispose();
-        source = LinkedSource(linkedToken);
+        source = parent == null ? new() : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)parent);
+        //source = LinkedSource(parent);
         token = source.Token;
         enabled = true;
-        return this;
     }
-    public Token Disable()
+    public void Disable()
     {
         source?.Cancel();
         source?.Dispose();
         source = null;
         enabled = false;
-        return this;
-    }
-    public void Register(Action onCancel)
-    {
-        token.Register(onCancel);
-    }
-    public void SetLink(CancellationToken? linked)
-    {
-        linkedToken = linked;
-    }
-    public void Unlink()
-    {
-        linkedToken = null;
     }
 
     #region EXTENSIONS
-    public static Token Create(CancellationToken? linkedToken = null)
-    {
-        return new Token(linkedToken);
-    }
-    public static CancellationTokenSource LinkedSource(CancellationToken? _token)
-    {
-        return _token is CancellationToken token
-            ? CancellationTokenSource.CreateLinkedTokenSource(token)
-            : new CancellationTokenSource();
-    }
+    public Token(CancellationToken token) => parent = token;
+    public static Token Create(CancellationToken token) => new(token);
+    public static Token Create() => new();
 
     /// <summary>Cancels when game stops playing</summary>
     public static CancellationToken global => _global;
@@ -76,7 +56,7 @@ public struct Token
     static void Start()
     {
         _global++;
-        Engine.onQuit += () => _global--;
+        Engine.onQuit += _global.Disable;
         SceneManager.activeSceneChanged += (_, _) => _scene++;
     }
     #endregion
@@ -131,6 +111,7 @@ public static class TokenExtensions
         foreach (var t in tasks)
             t.AttachExternalCancellation(token).Forget();
     }
+    public static bool Canceled(this CancellationToken token) => token.IsCancellationRequested;
     public static UniTask.Awaiter GetAwaiter(this CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken secondary = default)
     {
         return UniTask.Create(async () =>
