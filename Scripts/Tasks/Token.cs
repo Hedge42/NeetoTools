@@ -11,13 +11,12 @@ public struct Token
 {
     public static implicit operator Token(CancellationToken t) => Create(t);
     public static implicit operator CancellationToken(Token Token) => Token.token;
-    public static implicit operator bool(Token Token) => Token.enabled;
+    public static implicit operator bool(Token Token) => !Token.token.IsCancellationRequested;
 
     public static Token operator ++(Token Token) { Token.Cancel(); return new(); }
     public static CancellationToken operator &(Token token, CancellationToken link) => new Token(token, link);
     public static CancellationToken operator &(Token token, Component component) => new Token(token, component.GetCancellationTokenOnDestroy());
 
-    public bool enabled { get; private set; }
     CancellationTokenSource source;
     CancellationToken token;
 
@@ -25,7 +24,6 @@ public struct Token
     {
         source?.Cancel();
         source?.Dispose();
-        enabled = false;
     }
     public void Register(Action a) => token.Register(a);
 
@@ -34,7 +32,6 @@ public struct Token
     {
         source = CancellationTokenSource.CreateLinkedTokenSource(tokens);
         token = source.Token;
-        enabled = true;
     }
     public static Token Create(params CancellationToken[] tokens) => new(tokens);
     public static Token Create() => new();

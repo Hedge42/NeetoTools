@@ -2,6 +2,7 @@
 
 namespace Neeto
 {
+    using Rhinox.Lightspeed.Reflection;
     using Toolbox.Editor;
     using UnityEditor;
 
@@ -13,8 +14,8 @@ namespace Neeto
             using (NGUI.Property(position, property, false))
             {
                 var attribute = base.attribute as SyncedPropertyAttribute;
-                var target = property.FindReflectionTarget(fieldInfo);
-                var propertyInfo = target.GetType().GetProperty(attribute.propertyInfoName);
+                var fieldTarget = property.FindReflectionTarget(fieldInfo);
+                var propertyInfo = fieldTarget.GetType().GetProperty(attribute.propertyInfoName);
 
                 if (propertyInfo == null)
                 {
@@ -26,19 +27,29 @@ namespace Neeto
                     EditorGUI.HelpBox(position, $"property '{attribute.propertyInfoName}' does not match field type of '{fieldInfo.Name}'", MessageType.Error);
                     return;
                 }
-                else if (propertyInfo.GetMethod == null || propertyInfo.SetMethod == null)
+                else if (propertyInfo.GetMethod == null)
                 {
-                    EditorGUI.HelpBox(position, $"property '{attribute.propertyInfoName}' must have get and set accessors", MessageType.Error);
+                    EditorGUI.HelpBox(position, $"property '{attribute.propertyInfoName}' must at least have an accessible getter", MessageType.Error);
                     return;
                 }
 
-                // get value from property
+                var hasSetter = propertyInfo.SetMethod != null;
+                var propertyTarget = propertyInfo.IsStatic() ? null : fieldTarget;
+
                 EditorGUI.BeginChangeCheck();
+                EditorGUI.BeginDisabledGroup(!hasSetter);
+
                 EditorGUI.PropertyField(position, property, label);
-                var value = property.GetProperValue(fieldInfo);
-                if (EditorGUI.EndChangeCheck() || !propertyInfo.GetValue(target).Equals(value))
+                var fieldValue = property.GetProperValue(fieldInfo);
+                var propertyValue = propertyInfo.GetValue(propertyTarget);
+
+                EditorGUI.EndDisabledGroup();
+                if (EditorGUI.EndChangeCheck() || propertyValue != fieldValue)
                 {
-                    propertyInfo.SetValue(target, value);
+                    if (hasSetter)
+                        propertyInfo.SetValue(propertyTarget, fieldValue); // set via propertyInfo instead of field
+                    else
+                        property.SetProperValue(fieldInfo, propertyValue); // read-only
                 }
             }
         }
