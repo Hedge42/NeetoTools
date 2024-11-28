@@ -17,7 +17,7 @@ public class OpenCylinderGenerator : MonoBehaviour
     public MeshRenderer meshRenderer;
 
 
-    [Button]
+    [ContextMenu(nameof(Generate))]
     void Generate()
     {
         meshFilter.mesh = GenerateOpenCylinderMesh(sides, radius, height);

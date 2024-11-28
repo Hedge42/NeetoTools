@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
+using Toolbox.Editor;
+using Rhinox.Lightspeed.Reflection;
+using UnityEditor;
+
 
 namespace Neeto
 {
-    using Rhinox.Lightspeed.Reflection;
-    using Toolbox.Editor;
-    using UnityEditor;
 
     [CustomPropertyDrawer(typeof(SyncedPropertyAttribute))]
     public class SyncedPropertyAttributeDrawer : PropertyDrawer
@@ -14,7 +15,7 @@ namespace Neeto
             using (NGUI.Property(position, property, false))
             {
                 var attribute = base.attribute as SyncedPropertyAttribute;
-                var fieldTarget = property.FindReflectionTarget(fieldInfo);
+                var fieldTarget = property.GetDeclaringObject();
                 var propertyInfo = fieldTarget.GetType().GetProperty(attribute.propertyInfoName);
 
                 if (propertyInfo == null)

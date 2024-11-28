@@ -23,7 +23,7 @@ namespace Neeto
         public UnityEvent<Mesh> onGenerateMesh;
 
 #if UNITY_EDITOR
-        [Button]
+        [ContextMenu(nameof(Generate))]
         public void Generate()
         {
             if (mesh != null)
@@ -37,7 +37,7 @@ namespace Neeto
 
             onGenerateMesh?.Invoke(mesh);
         }
-        [Button]
+        [ContextMenu(nameof(Export))]
         public void Export()
         {
             // open save file dialogue

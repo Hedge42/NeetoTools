@@ -43,7 +43,8 @@ namespace Neeto
             }
         }
 
-        [Button]
+
+        [ContextMenu(nameof(CreateInstance))]
         public Mesh CreateInstance()
         {
             ClearInstance();

@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using Neeto;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -9,28 +8,21 @@ namespace Neeto
 {
     public class PlayableBlender
     {
-        public static implicit operator Playable(PlayableBlender blender) => blender.container;
-
         public PlayableGraph graph { get; private set; }
-        //public PlayableOutput output { get; private set; }
         const int PREV = 0;
         const int NEXT = 1;
 
-        Playable container;
+        PlayableOutput output;
         public Playable source
         {
-            get => container.GetInput(0);
-            private set
-            {
-                container.DisconnectInput(0);
-                container.ConnectInput(0, value, 0);
-            }
+            get => output.GetSourcePlayable();
+            private set => output.SetSourcePlayable(value);
         }
-        
-        public PlayableBlender(PlayableGraph graph)
+
+        public PlayableBlender(Animator animator, PlayableGraph graph)
         {
             this.graph = graph;
-            container = Playable.Create(graph, 1);
+            output = AnimationPlayableOutput.Create(graph, animator.name, animator);
         }
         public void Blend(Playable next, CancellationToken token, float duration = .15f)
         {
@@ -41,7 +33,7 @@ namespace Neeto
             }
 
             var mixer = AnimationMixerPlayable.Create(graph, 2);
-            mixer.ConnectInput(PREV, container, 0, 1);
+            mixer.ConnectInput(PREV, source, 0, 1);
             mixer.ConnectInput(NEXT, next, 0, 0);
             source = mixer;
 

@@ -13,7 +13,6 @@ public class ProceduralTerrain : MonoBehaviour
     [GetComponent]
     public MeshFilter meshFilter;
 
-    [Button]
     void Reset()
     {
         resolution = 256;
@@ -21,7 +20,8 @@ public class ProceduralTerrain : MonoBehaviour
         maxVerticalAngle = 20f;
     }
 
-    [Button]
+    [ContextMenu(nameof(GenerateTerrainPlane))]
+
     void GenerateTerrainPlane()
     {
         GeneratePlaneMesh(size, resolution);

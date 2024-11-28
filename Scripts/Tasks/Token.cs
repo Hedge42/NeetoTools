@@ -1,8 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using Neeto;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,12 +8,12 @@ using UnityEngine.SceneManagement;
 public struct Token
 {
     public static implicit operator Token(CancellationToken t) => Create(t);
-    public static implicit operator CancellationToken(Token Token) => Token.token;
-    public static implicit operator bool(Token Token) => !Token.token.IsCancellationRequested;
+    public static implicit operator CancellationToken(Token t) => t.token;
+    public static implicit operator bool(Token t) => !t.token.IsCancellationRequested;
 
-    public static Token operator ++(Token Token) { Token.Cancel(); return new(); }
-    public static CancellationToken operator &(Token token, CancellationToken link) => new Token(token, link);
-    public static CancellationToken operator &(Token token, Component component) => new Token(token, component.GetCancellationTokenOnDestroy());
+    public static Token operator ++(Token t) { t.Cancel(); return Create(); }
+    public static CancellationToken operator &(Token t, CancellationToken link) => new Token(t, link);
+    public static CancellationToken operator &(Token t, Component component) => new Token(t, component.GetCancellationTokenOnDestroy());
 
     CancellationTokenSource source;
     CancellationToken token;
@@ -24,6 +22,7 @@ public struct Token
     {
         source?.Cancel();
         source?.Dispose();
+        source = null;
     }
     public void Register(Action a) => token.Register(a);
 
@@ -34,7 +33,13 @@ public struct Token
         token = source.Token;
     }
     public static Token Create(params CancellationToken[] tokens) => new(tokens);
-    public static Token Create() => new();
+    public static Token Create()
+    {
+        var t = new Token();
+        t.source = new();
+        t.token = t.source.Token;
+        return t;
+    }
 
     /// <summary>Cancels when game stops playing</summary>
     public static CancellationToken global => _global;

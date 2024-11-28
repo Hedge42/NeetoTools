@@ -2,6 +2,7 @@
 using UnityEditor;
 using Rhinox.Lightspeed.Reflection;
 using System.Reflection;
+using Toolbox.Editor;
 
 namespace Neeto
 {
@@ -25,7 +26,7 @@ namespace Neeto
             }
             else if (ReflectionUtility.TryGetMember(fieldInfo.ReflectedType, name, out var member, flags))
             {
-                var target = property.FindReflectionTarget(fieldInfo);
+                var target = property.GetDeclaringObject();
                 if (member.TryGetValue(target, out string result) && !string.IsNullOrEmpty(result))
                 {
                     label.text = result;

@@ -11,7 +11,7 @@ namespace Neeto
     {
         public LoadingTask task;
 
-        [Button]
+        [ContextMenu(nameof(Load))]
         public void Load()
         {
             task.Load();

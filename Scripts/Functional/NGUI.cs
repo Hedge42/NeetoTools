@@ -11,8 +11,11 @@ using System.Collections;
 using System.Diagnostics;
 using Object = UnityEngine.Object;
 using Debug = UnityEngine.Debug;
+using Rhinox.Lightspeed.Editor;
+using Rhinox.Lightspeed.Reflection;
 
 #if UNITY_EDITOR
+//using Neeto.Toolbox;
 using UnityEditor;
 #endif
 
@@ -1096,40 +1099,6 @@ namespace Neeto
             }
 
             return null;
-        }
-        public static object FindReflectionTarget(this SerializedProperty property, FieldInfo info)
-        {
-            // FieldInfo target is not compatible with Unity's target
-            object target = property.serializedObject.targetObject;
-
-            var field = target.GetType().GetField(info.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (field != null && field.Name.Equals(info.Name))
-                return target;
-
-            // expected fieldInfo target is not the targetObject...
-
-            // If not found, traverse up 
-            //property = property.Copy();
-            while (property.depth > 0)
-            {
-                property = property.Parent();
-
-                if (property == null)
-                    continue;
-                if (property.propertyType != SerializedPropertyType.ManagedReference)
-                    continue;
-                if (property.managedReferenceValue == null)
-                    continue;
-
-                if (info.GetValue(property.managedReferenceValue) != null)
-                    return property.managedReferenceValue;
-            }
-
-            return null;
-        }
-        public static object GetValue(this FieldInfo info, SerializedProperty property)
-        {
-            return info.GetValue((object)FindReflectionTarget(property, info));
         }
 
         static Dictionary<Type, Type> drawerTypes;
