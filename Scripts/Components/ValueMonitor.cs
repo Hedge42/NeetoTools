@@ -19,7 +19,7 @@ namespace Neeto
         }
         void OnDisable()
         {
-            token.Disable();
+            token.Cancel();
         }
     }
 

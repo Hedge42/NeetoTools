@@ -26,6 +26,7 @@ namespace Neeto
         Self = 1,
         Parent = 2,
         Children = 4,
+        Scene = 8
     }
 
 #if UNITY_EDITOR
@@ -51,6 +52,9 @@ namespace Neeto
 
                     if (!obj && attribute.scope.HasFlag(ComponentScope.Children))
                         obj = component.GetComponentInChildren(type);
+
+                    if (!obj && attribute.scope.HasFlag(ComponentScope.Scene))
+                        obj = GameObject.FindObjectOfType(type);
 
                     property.objectReferenceValue = obj;
                 }

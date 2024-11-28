@@ -20,7 +20,7 @@ namespace Neeto
             ++token;
             await UniTask.WhenAll(tasks.Select(t => t(token)));
         }
-        public void Cancel() => token.Disable();
+        public void Cancel() => token.Cancel();
 
         public static TaskPool Create(params UniTask[] tasks)
         {

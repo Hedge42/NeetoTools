@@ -66,14 +66,6 @@ namespace Neeto
 
             completed?.Invoke();
         }
-        public static Routine ExecuteAfter(this Action action, float seconds)
-        {
-            return Routine.Create(token => Delay.Seconds(seconds, token).ContinueWith(action));
-        }
-        public static Routine ExecuteAfter<T>(this Action<T> action, float seconds, T data)
-        {
-            return Routine.Create(token => Delay.Seconds(seconds, token).ContinueWith(() => action(data)));
-        }
         public static async UniTask Frame() => await UniTask.Yield();
         public static async UniTask DelayOrCondition(TimeSpan duration, Func<bool> condition, CancellationToken token)
         {

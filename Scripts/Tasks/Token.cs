@@ -1,6 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
 using Neeto;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,39 +13,30 @@ public struct Token
     public static implicit operator CancellationToken(Token Token) => Token.token;
     public static implicit operator bool(Token Token) => Token.enabled;
 
-    public static Token operator ++(Token Token) { Token.Enable(); return Token; }
-    public static Token operator --(Token Token) { Token.Disable(); return Token; }
-    public static Token operator %(Token token, CancellationToken? link)
-    {
-        token.parent = link;
-        return ++token;
-    }
+    public static Token operator ++(Token Token) { Token.Cancel(); return new(); }
+    public static CancellationToken operator &(Token token, CancellationToken link) => new Token(token, link);
+    public static CancellationToken operator &(Token token, Component component) => new Token(token, component.GetCancellationTokenOnDestroy());
 
     public bool enabled { get; private set; }
     CancellationTokenSource source;
     CancellationToken token;
-    CancellationToken? parent;
 
-    public void Enable()
+    public void Cancel()
     {
         source?.Cancel();
         source?.Dispose();
-        source = parent == null ? new() : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)parent);
-        //source = LinkedSource(parent);
+        enabled = false;
+    }
+    public void Register(Action a) => token.Register(a);
+
+    #region EXTENSIONS
+    public Token(params CancellationToken[] tokens)
+    {
+        source = CancellationTokenSource.CreateLinkedTokenSource(tokens);
         token = source.Token;
         enabled = true;
     }
-    public void Disable()
-    {
-        source?.Cancel();
-        source?.Dispose();
-        source = null;
-        enabled = false;
-    }
-
-    #region EXTENSIONS
-    public Token(CancellationToken token) => parent = token;
-    public static Token Create(CancellationToken token) => new(token);
+    public static Token Create(params CancellationToken[] tokens) => new(tokens);
     public static Token Create() => new();
 
     /// <summary>Cancels when game stops playing</summary>
@@ -56,7 +49,7 @@ public struct Token
     static void Start()
     {
         _global++;
-        Engine.onQuit += _global.Disable;
+        Engine.onQuit += _global.Cancel;
         SceneManager.activeSceneChanged += (_, _) => _scene++;
     }
     #endregion
@@ -112,6 +105,8 @@ public static class TokenExtensions
             t.AttachExternalCancellation(token).Forget();
     }
     public static bool Canceled(this CancellationToken token) => token.IsCancellationRequested;
+    public static void Fire(this UniTask task, CancellationToken token) => task.AttachExternalCancellation(token).Forget();
+    public static UniTask With(this UniTask task, CancellationToken token) => task.AttachExternalCancellation(token);
     public static UniTask.Awaiter GetAwaiter(this CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update, CancellationToken secondary = default)
     {
         return UniTask.Create(async () =>

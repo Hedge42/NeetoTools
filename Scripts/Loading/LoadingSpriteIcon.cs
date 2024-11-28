@@ -32,7 +32,7 @@ namespace Neeto
         }
         private void OnDestroy()
         {
-            token.Disable();
+            token.Cancel();
         }
         public void Enable(bool enabled)
         {

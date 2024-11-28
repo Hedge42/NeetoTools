@@ -58,7 +58,7 @@ namespace Neeto
         protected Token token;
         public virtual void Disable()
         {
-            token.Disable();
+            token.Cancel();
         }
         public virtual void Enable()
         {

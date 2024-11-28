@@ -194,17 +194,12 @@ namespace Neeto
         public static implicit operator Point((Vector3 position, Vector3 eulerAngles) _) => new Point(_.position, _.eulerAngles);
         public static implicit operator Point((Vector3 position, Quaternion rotation) _) => new Point(_.position, _.rotation);
         public static implicit operator Point(Transform transform) => transform.GetWorldPoint();
-        public static Vector3 operator +(Point _) => _.position;
-        public static Point operator -(Point _) => (-1 * _.position, Quaternion.Inverse(_));
         public static implicit operator Vector3(Point _) => _.position;
         public static implicit operator Quaternion(Point _) => _.rotation;
         public static implicit operator Ray(Point _) => _.ray;
+        public static Point operator +(Point a, Point b) => (a.position + b.position, a.rotation * b.rotation);
+        public static Point operator -(Point _) => (-1 * _.position, Quaternion.Inverse(_));
 
-        /// <summary>move and rotate the point by the delta</summary>
-        public static Point operator +(Point point, Point delta)
-        {
-            return new Point(point.position + delta.position, point.rotation * delta.rotation);
-        }
         /// <summary>rotate the point by the quaternion</summary>
         public static Quaternion operator *(Point point, Quaternion deltaRotation)
         {
@@ -234,7 +229,7 @@ namespace Neeto
         {
             return (animator.deltaPosition, animator.deltaRotation);
         }
-        public static void AddDeltas(this Transform transform, Point delta)
+        public static void Add(this Transform transform, Point delta)
         {
             transform.position += delta.position;
             transform.rotation *= delta.rotation;

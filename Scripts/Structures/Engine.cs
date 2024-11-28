@@ -692,9 +692,9 @@ namespace Neeto
                 await UniTask.Yield(timing, token, true);
             }
         }
-        public static async UniTask NormalizedTime(this Playable playable, float t, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
+        public static async UniTask WaitForNormalizedTime(this Playable playable, float t, CancellationToken token, PlayerLoopTiming timing = PlayerLoopTiming.Update)
         {
-            while (playable.IsValid() && playable.NormalizedTime() < t)
+            while (playable.IsValid() && playable.GetPlayState() == PlayState.Playing && playable.NormalizedTime() < t)
             {
                 await UniTask.Yield(timing, token, true);
             }
