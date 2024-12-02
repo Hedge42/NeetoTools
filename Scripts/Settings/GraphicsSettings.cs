@@ -1,20 +1,47 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace Neeto
 {
-    public static class GraphicsSettings
+    [Serializable]
+    public class GraphicsSettings : SettingsModule
     {
-        public static string NiceLabel(this Resolution resolution)
+        public static GraphicsSettings instance { get; private set; } = new Lazy<GraphicsSettings>(Load<GraphicsSettings>);
+
+        //public Resolution resolution;
+        public Vector2Int dimensions;
+        public FullScreenMode fullScreen;
+        public int refreshRate;
+        public bool unlockedFrameRate;
+        public bool vsync;
+
+        public override void SetDefaults()
         {
-            return resolution.ToString().Split('@')[0].Trim();
+            dimensions = new(1920, 1080);
+            fullScreen = FullScreenMode.FullScreenWindow;
+            refreshRate = (int)Screen.currentResolution.refreshRateRatio.numerator;
+            unlockedFrameRate = false;
+            vsync = false;
         }
+        public override void Apply()
+        {
+            QualitySettings.vSyncCount = vsync ? 1 : 0;
+            Application.targetFrameRate = unlockedFrameRate ? -1 : refreshRate;
+            Screen.SetResolution(dimensions.x, dimensions.y, fullScreen);
+        }
+        public void Load() => (instance = Load<GraphicsSettings>()).Apply();
+
         public static IEnumerable<string> GetResolutionLabels()
         {
             return Screen.resolutions.Select(NiceLabel);
         }
-        public static void ApplyResolution(this Resolution resolution, bool? fullScreen = null)
+        public static string NiceLabel(Resolution resolution)
+        {
+            return resolution.ToString().Split('@')[0].Trim();
+        }
+        public static void ApplyResolution(Resolution resolution, bool? fullScreen = null)
         {
             Screen.SetResolution(resolution.width, resolution.height, fullScreen ?? Screen.fullScreen);
         }
@@ -23,7 +50,7 @@ namespace Neeto
             var e = str.Split('x').Select(_ => int.Parse(_.Trim())).ToArray();
             return new Resolution { width = e[0], height = e[1] };
         }
-        public static int GetIndex(this Resolution resolution)
+        public static int GetIndex(Resolution resolution)
         {
             for (int i = 0; i < Screen.resolutions.Length; i++)
             {
@@ -35,22 +62,19 @@ namespace Neeto
             }
             return 0;
         }
-        public static Resolution With(this Resolution Resolution, Vector2Int? dimensions = null, int? w = null, int? h = null)
+        public static int GetIndex(Vector2Int dim)
         {
-            if (dimensions is Vector2Int Dimensions)
+            for (int i = 0; i < Screen.resolutions.Length; i++)
             {
-                Resolution.width = Dimensions.x;
-                Resolution.height = Dimensions.y;
+                if (Screen.resolutions[i].width == dim.x &&
+                    Screen.resolutions[i].height == dim.y)
+                {
+                    return i;
+                }
             }
-            if (w is int W)
-            {
-                Resolution.width = W;
-            }
-            if (h is int H)
-            {
-                Resolution.height = H;
-            }
-            return Resolution;
+            return 0;
         }
     }
+
+
 }

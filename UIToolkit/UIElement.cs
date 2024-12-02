@@ -87,7 +87,7 @@ namespace Neeto
     }
 #endif
     [Serializable]
-    public class ResolutioNGUI : UIElement<DropdownField>
+    public class ResolutionDropdown : UIElement<DropdownField>
     {
         public string Value
         {
@@ -95,7 +95,8 @@ namespace Neeto
             set
             {
                 PlayerPrefs.SetString(selector, value);
-                GraphicsSettings.ParseResolution(value).ApplyResolution();
+                var res = GraphicsSettings.ParseResolution(value);
+                GraphicsSettings.ApplyResolution(res);
             }
         }
 
@@ -149,4 +150,7 @@ namespace Neeto
         }
     }
     [Serializable] public class ProgressBarElement : UIElement<ProgressBar> { }
+
+
+
 }

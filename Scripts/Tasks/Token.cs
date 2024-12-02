@@ -12,8 +12,9 @@ public struct Token
     public static implicit operator bool(Token t) => !t.token.IsCancellationRequested;
 
     public static Token operator ++(Token t) { t.Cancel(); return Create(); }
-    public static CancellationToken operator &(Token t, CancellationToken link) => new Token(t, link);
-    public static CancellationToken operator &(Token t, Component component) => new Token(t, component.GetCancellationTokenOnDestroy());
+    public static CancellationToken operator ~(Token t) => t;
+    public static CancellationToken operator &(Token t, CancellationToken link) => Create(t, link);
+    public static CancellationToken operator &(Token t, Component component) => Create(t, component.GetCancellationTokenOnDestroy());
 
     CancellationTokenSource source;
     CancellationToken token;
@@ -26,13 +27,13 @@ public struct Token
     }
     public void Register(Action a) => token.Register(a);
 
-    #region EXTENSIONS
-    public Token(params CancellationToken[] tokens)
+    public static Token Create(params CancellationToken[] tokens)
     {
-        source = CancellationTokenSource.CreateLinkedTokenSource(tokens);
-        token = source.Token;
+        var t = new Token();
+        t.source = CancellationTokenSource.CreateLinkedTokenSource(tokens);
+        t.token = t.source.Token;
+        return t;
     }
-    public static Token Create(params CancellationToken[] tokens) => new(tokens);
     public static Token Create()
     {
         var t = new Token();
@@ -54,7 +55,6 @@ public struct Token
         Engine.onQuit += _global.Cancel;
         SceneManager.activeSceneChanged += (_, _) => _scene++;
     }
-    #endregion
 }
 
 

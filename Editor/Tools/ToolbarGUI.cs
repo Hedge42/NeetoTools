@@ -12,8 +12,8 @@ namespace Neeto
     {
         static bool enabled
         {
-            get => Settings.instance.experimentalEditorFeatures;
-            set => Settings.instance.experimentalEditorFeatures = value;
+            get => NeetoSettings.instance.experimentalEditorFeatures;
+            set => NeetoSettings.instance.experimentalEditorFeatures = value;
         }
         static ToolbarGUI()
         {
