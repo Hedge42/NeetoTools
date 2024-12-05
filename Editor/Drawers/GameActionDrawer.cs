@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
+using Toolbox.Editor;
+using Rhinox.Lightspeed.Editor;
+using Rhinox.Lightspeed.Reflection;
 #endif
 
 namespace Neeto
@@ -13,29 +16,38 @@ namespace Neeto
     [CustomPropertyDrawer(typeof(GameMethod), true)]
     public class GameActionDrawer : PropertyDrawer
     {
+        GameMethod target;
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            target = property.GetProperValue(fieldInfo) as GameMethod;
             using (NGUI.Property(position, label, property))
             {
+
                 if (HandleDropdownGUI(position.With(h: NGUI.LineHeight), property, label))
                 {
                     HandleArgumentsGUI(position.Move(y: NGUI.FullLineHeight), property);
                 }
             }
-        }
 
-        object target;
+            if (!target.IsValid())
+            {
+                EditorGUI.DrawRect(position, Color.red.With(a: .2f));
+            }
+        }
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var args = property.FindPropertyRelative(nameof(GameMethod.arguments));
-            var count = args.arraySize;
+            var args = target.arguments;
+            var argsProp = property.FindPropertyRelative(nameof(GameMethod.arguments));
+            var count = args.Length;
             var height = NGUI.FullLineHeight;
 
             if (property.isExpanded && count > 0)
             {
                 for (int i = 0; i < count; i++)
                 {
-                    var prop = ArgumentDrawer.GetSelectedProperty(args.GetArrayElementAtIndex(i));
+                    //var prop = argsProp.GetArrayElementAtIndex(i);
+                    
+                    var prop = ArgumentDrawer.GetSelectedProperty(argsProp.GetArrayElementAtIndex(i));
 
                     if (prop != null)
                         height += EditorGUI.GetPropertyHeight(prop);
@@ -63,18 +75,22 @@ namespace Neeto
         }
         public bool HandleDropdownGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var method = GetMethod(property);
-            var content = new GUIContent(GameActionHelper.GetLabelName(method));
+            var target = property.GetProperValue(fieldInfo) as GameMethod;
 
-            var lbRect = position.With(xMax: position.xMin + EditorGUIUtility.fieldWidth);
-            var ddRect = position.With(xMin: lbRect.xMax);
+            var method = GetMethod(property);
+            var content = new GUIContent(target.signature);
+
+            var ddRect = EditorGUI.PrefixLabel(position.With(h: NGUI.LineHeight), label);
+            var lbRect = ddRect.With(xMin: position.xMin, xMax: ddRect.xMin);
 
             var isExpandable = method != null && Arguments(property).arraySize > 0;
 
-            if (isExpandable)
-                property.isExpanded = EditorGUI.Foldout(lbRect.With(h: NGUI.LineHeight), property.isExpanded, label, true);
-            else
-                EditorGUI.PrefixLabel(lbRect, label);
+
+
+            if (target.IsValid() && target.arguments?.Length > 0)
+            {
+                NGUI.IsExpanded(property, lbRect);
+            }
 
             if (EditorGUI.DropdownButton(ddRect.With(h: NGUI.LineHeight), content, FocusType.Passive))
             {
@@ -90,7 +106,7 @@ namespace Neeto
 
             if (argumentTypes.Count != size)
             {
-                Debug.Log($"wtf ({Signature(property).stringValue}:{argumentTypes.JoiNGUI()})");
+                Debug.Log($"wtf ({Signature(property).stringValue}:{argumentTypes.JoinString()})");
             }
 
             EditorGUI.indentLevel++;

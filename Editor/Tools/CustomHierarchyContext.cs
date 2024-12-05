@@ -68,7 +68,7 @@ namespace Neeto
             items = items.OrderBy(item => item.Value.priority).ToList();
 
             var menu = new DropdownMenu<(int priority, Action action)>(items, _ => _.action.Invoke());
-            menu.Root.Expanded = true;
+            menu.ExpandAllFolders();
             menu.ShowAsContext();
         }
 

@@ -7,7 +7,7 @@ namespace Neeto
 {
     class AnimationGadget : EditorWindow
     {
-        [UnityEditor.MenuItem(Menu.Neeto + nameof(AnimationGadget))]
+        [UnityEditor.MenuItem(Neeto.Menu.Main + nameof(AnimationGadget))]
         static void Open() => GetWindow<AnimationGadget>();
 
         Object[] importers;

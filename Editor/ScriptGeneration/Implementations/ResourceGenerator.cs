@@ -25,7 +25,7 @@ namespace Neeto
             // find all resource asset paths
             var resourcePaths = AssetDatabase.FindAssets("t:Object", new[] { "Assets" })
                 .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
-                .Where(path => path.Contains("/Resources/"));// && Directory.Exists(Path.Combine(MPath.project, path)));
+                .Where(path => path.Contains("/Resources/"));// && Directory.Exists(Path.Combine(Neeto.Menu.project, path)));
 
             Debug.Log(resourcePaths.Count());
 

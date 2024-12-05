@@ -9,7 +9,7 @@ namespace Neeto
 #if UNITY_EDITOR
     public class TerrainGadget : EditorWindow
     {
-        [UnityEditor.MenuItem(Menu.Open + nameof(Neeto.TerrainGadget), priority = Menu.Top)]
+        [UnityEditor.MenuItem(Neeto.Menu.Open + nameof(Neeto.TerrainGadget), priority = Neeto.Menu.Top)]
         public static TerrainGadget Open()
         {
             var window = GetWindow<TerrainGadget>(false, "Terrain Replacer", true);

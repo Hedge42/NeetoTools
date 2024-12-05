@@ -71,7 +71,7 @@ namespace Neeto
             items = items.OrderBy(item => item.Value.priority).ToList();
 
             var menu = new DropdownMenu<(int priority, Action action)>(items, _ => _.action.Invoke());
-            menu.Root.Expanded = true;
+            menu.ExpandAllFolders();
             menu.ShowAsContext();
         }
 
@@ -115,8 +115,8 @@ namespace Neeto
                     {
                         var asset = ScriptableObject.CreateInstance(type);
                         var assetPath = Selection.activeObject ? AssetDatabase.GetAssetPath(Selection.activeObject) : $"Assets/";
-                        var systemPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), assetPath);
-                        if (!Directory.Exists(systemPath)) // is file?
+                        var systeMenu = Path.Combine(Path.GetDirectoryName(Application.dataPath), assetPath);
+                        if (!Directory.Exists(systeMenu)) // is file?
                             assetPath = Path.GetDirectoryName(assetPath);
                         assetPath = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(assetPath, $"{type.Name}.asset"));
                         AssetDatabase.CreateAsset(asset, assetPath);

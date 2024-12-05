@@ -15,7 +15,7 @@ namespace Neeto
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
-    [CreateAssetMenu(menuName = Menu.Neeto + nameof(ScriptGenerator), order = Menu.Mid)]
+    [CreateAssetMenu(menuName = Neeto.Menu.Main + nameof(ScriptGenerator), order = Neeto.Menu.Mid)]
     public class ScriptGenerator : ScriptableObject
     {
 #if UNITY_EDITOR

@@ -21,7 +21,7 @@ public static partial class EditorHelper
         };
     }
 
-    [MenuItem(Neeto.Menu.Open + "Build Settings", priority = Neeto.Menu.Low)]
+    [MenuItem(Neeto.Menu.Open + "Build Settings", priority = Neeto.Menu.Low)] 
     static void OpenBuildSettings()
     {
         EditorWindow.GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));

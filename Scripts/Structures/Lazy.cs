@@ -4,16 +4,23 @@ using System;
 
 namespace Neeto
 {
-    public struct Lazy<T> where T : class
+    public struct Lazy<T>
     {
-        public static implicit operator T(Lazy<T> _) => _.value ??= _.factory();
+        struct FailState { }
 
-        public T value { get; private set; }
+        public static implicit operator T(Lazy<T> _) => _.GetValue();
+
+        object _value;
+        public T value => GetValue();
+        public T GetValue() => (T)(_value ??= factory());
+
         Func<T> factory;
         public Lazy(Func<T> factory)
         {
             this.factory = factory;
-            value = null;
+            _value = null;
         }
+
+        
     }
 }

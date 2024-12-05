@@ -6,32 +6,38 @@ using UnityEngine;
 namespace Neeto
 {
     [Serializable]
-    public class GraphicsSettings : SettingsModule
+    public struct GraphicsSettings
     {
-        public static GraphicsSettings instance { get; private set; } = new Lazy<GraphicsSettings>(Load<GraphicsSettings>);
+        static readonly Preference<GraphicsSettings> pref;
 
-        //public Resolution resolution;
         public Vector2Int dimensions;
         public FullScreenMode fullScreen;
-        public int refreshRate;
+        public int frameRate;
         public bool unlockedFrameRate;
         public bool vsync;
 
-        public override void SetDefaults()
+        public void SetDefaults()
         {
             dimensions = new(1920, 1080);
             fullScreen = FullScreenMode.FullScreenWindow;
-            refreshRate = (int)Screen.currentResolution.refreshRateRatio.numerator;
-            unlockedFrameRate = false;
+            frameRate = Application.targetFrameRate;
+            unlockedFrameRate = frameRate > 0;
             vsync = false;
         }
-        public override void Apply()
+        public void Apply()
         {
             QualitySettings.vSyncCount = vsync ? 1 : 0;
-            Application.targetFrameRate = unlockedFrameRate ? -1 : refreshRate;
+            Application.targetFrameRate = unlockedFrameRate ? -1 : frameRate;
             Screen.SetResolution(dimensions.x, dimensions.y, fullScreen);
         }
-        public void Load() => (instance = Load<GraphicsSettings>()).Apply();
+        public void Read() => pref.Read().CopyTo(this);
+        public void Write() => pref.Write(this);
+        public void Load()
+        {
+            Read();
+            Apply();
+        }
+
 
         public static IEnumerable<string> GetResolutionLabels()
         {

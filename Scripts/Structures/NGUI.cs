@@ -29,6 +29,9 @@ namespace Neeto
         public static Texture2D shadow => _shadow ??= Color.black.With(a: .1f).AsTexturePixel();
         public static Texture2D highlight => _highlight ??= Color.white.With(a: .06f).AsTexturePixel();
 
+        public static readonly Color Shadow = Color.black.With(a: .1f);
+        public static readonly Color Light = Color.white.With(a: .06f);
+
         public static Rect LerpRect(Rect rectA, Rect rectB, float t)
         {
             var result = new Rect();
@@ -53,6 +56,25 @@ namespace Neeto
         #endregion RUNTIME
 
         #region RUNTIME_REFLECTION
+        public static void CopyTo<T>(this T source, T dest)
+        {
+            var type = typeof(T);
+
+            // Copy all fields
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                field.SetValue(dest, field.GetValue(source));
+            }
+
+            // Copy all properties
+            foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            {
+                if (property.CanWrite)
+                {
+                    property.SetValue(dest, property.GetValue(source));
+                }
+            }
+        }
         public static bool TryGetValue<T>(this PropertyInfo info, object instance, out T result)
         {
             result = default;
@@ -99,6 +121,9 @@ namespace Neeto
         {
             return null != (attribute = mem.GetCustomAttribute<T>(inherit));
         }
+
+        public static BindingFlags PrivateStatic => BindingFlags.NonPublic | BindingFlags.Static;
+        public static BindingFlags Static => BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
 
         public static IEnumerable<Assembly> RuntimeAssemblies => Factory.Cache(nameof(RuntimeAssemblies), GetRuntimeAssemblies);
         public static IEnumerable<Assembly> GetRuntimeAssemblies()
@@ -601,9 +626,7 @@ namespace Neeto
         }
         public static string SystemToAssetPath(this string s)
         {
-            var path = Application.dataPath;
-            s = s.Substring(path.Length);
-            return "Assets/" + s;
+            return ("Assets/" + s.Substring(Application.dataPath.Length + 1)).Replace('\\', '/');
         }
         public static string SuccessOrFail(this bool flag) => flag ? "SUCCESS" : "FAIL";
         public static string NameOrNull(this Type type) => type == null ? "NULL" : type.Name;
@@ -668,10 +691,19 @@ namespace Neeto
             end = input.LastIndexOf(after);
             return 0 <= start && start < end && end < input.Length;
         }
-        public static string JoiNGUI<T>(this IEnumerable<T> items, char separator = ',', Func<T, string> getString = null)
+        public static string JoinString<T>(this IEnumerable<T> items, char separator = ',', Func<T, string> getString = null)
         {
             getString ??= _ => _.ToString();
             return string.Join(separator, items.Select(getString));
+        }
+        public static string JoinString(this IEnumerable<string> items)
+        {
+            var sb = new StringBuilder();
+            foreach (var s in items)
+            {
+                sb.AppendLine(s);
+            }
+            return sb.ToString();
         }
         public static string[] AsArray(this string text) => new string[] { text };
         public static string ExtractLast(this string input, string before, string after)
@@ -776,6 +808,8 @@ namespace Neeto
         {
             return Path.GetFileNameWithoutExtension(info.Module.Name);
         }
+
+
         #endregion
 
         #region DEBUG_EXTENSIONS
@@ -941,9 +975,8 @@ namespace Neeto
         }
         public static void IndentBoxGUI(Rect position)
         {
-            var texture = EditorGUI.indentLevel % 2 == 0 ? NGUI.shadow : NGUI.highlight;
-            if (texture != null)
-                GUI.DrawTexture(EditorGUI.IndentedRect(position), texture);
+            var color = EditorGUI.indentLevel % 2 == 0 ? NGUI.Shadow : NGUI.Light;
+            EditorGUI.DrawRect(EditorGUI.IndentedRect(position), color);
         }
         public class DisabledScope : IDisposable
         {
@@ -1147,9 +1180,38 @@ namespace Neeto
                 }
             }
         }
+
+        public static TextAsset FindScriptAsset(this MethodInfo method)
+        {
+            if (method == null)
+                throw new System.ArgumentException("f u");
+
+            // Get file path using Debug symbols
+            // Generate a StackFrame to retrieve file and line info
+            var stackTrace = new StackTrace(true);
+            foreach (var frame in stackTrace.GetFrames())
+            {
+                if (frame.GetMethod() == method)
+                {
+                    string filePath = frame.GetFileName();
+                    if (!string.IsNullOrEmpty(filePath))
+                    {
+                        var assetPath = SystemToAssetPath(filePath);
+                        return AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+                    }
+                }
+            }
+            return null;
+        }
+        public static TextAsset FindScript(this Action action)
+        {
+            return FindScriptAsset(action.Method);
+        }
+
         #endregion
 
         #region ASSET_DATABASE
+        public static string GetAssetPath(this Object _) => AssetDatabase.GetAssetPath(_);
         public static T LoadAssetFromGUID<T>(string guid) where T : UnityEngine.Object
         {
             return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
@@ -1623,6 +1685,10 @@ namespace Neeto
         #endregion
 
         #region EVENTS
+        public static bool ToolbarButton(GUIContent content)
+        {
+            return GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.Width(25));
+        }
         public static void StartDrag(Object[] objects)
         {
             DragAndDrop.PrepareStartDrag();
@@ -1900,6 +1966,38 @@ namespace Neeto
                 position.y += position.height + NGUI.VerticalSpacing;
                 enterChildren = false;
             }
+        }
+        public static float GetRecursiveHeight(this SerializedProperty property)
+        {
+            var currentProperty = property.Copy();
+            var endProperty = property.GetEndProperty();
+
+            bool enterChildren = true;
+            var height = 0f;
+            while (currentProperty.NextVisible(enterChildren))
+            {
+                if (SerializedProperty.EqualContents(currentProperty, endProperty))
+                    break;
+
+                height += EditorGUI.GetPropertyHeight(currentProperty, true) + NGUI.VerticalSpacing;
+            }
+            return height;
+        }
+        public static float GetRecursiveHeight(this SerializedObject obj)
+        {
+            var currentProperty = obj.GetIterator();// property.Copy();
+            currentProperty.NextVisible(true);
+            var end = currentProperty.Copy().GetEndProperty();
+            var height = 0f;
+            do
+            {
+                if (currentProperty.propertyPath.Equals(end.propertyPath))
+                    break;
+
+                height += EditorGUI.GetPropertyHeight(currentProperty, true) + NGUI.VerticalSpacing;
+            }
+            while (currentProperty.NextVisible(true));
+            return height;
         }
         public static bool HasChildProperties(this SerializedProperty property)
         {
