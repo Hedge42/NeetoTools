@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using System.Text;
+using Cysharp.Threading.Tasks;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -46,102 +47,18 @@ namespace Neeto
             | (BindingFlags.SetProperty & BindingFlags.GetProperty);
         #endregion
         #region Serialization
-        public virtual void OnAfterDeserialize()
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            //referenceData = this;
-            IsValid();
+            UniTask.Post(() =>
+            {
+                IsValid();
+            });
         }
-        public virtual void OnBeforeSerialize()
-        {
-            //referenceData = this;
-        }
+        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
         #endregion
 
         public string signature;
         public abstract bool IsValid();
-
-
-        public static IEnumerable<MethodInfo> GetMethods(FieldInfo info)
-        {
-            var generics = info.FieldType.GetGenericArguments().ToList();
-
-            var isFunc = typeof(GameFuncBase).IsAssignableFrom(info.FieldType);
-            var flags = isFunc ? FLAGS_F : FLAGS_M;
-
-            //var methods = Module.ALL.GetTypes()
-
-            var methods = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(asm => asm.GetTypes())
-                .Where(type => type.IsPublic && !type.IsEnum && !type.IsGenericType && !type.ContainsGenericParameters)
-                .SelectMany(type => type.GetMethods(flags))
-                .Where(m => !m.ContainsGenericParameters
-                            && !m.GetParameterTypes().Any(p => p.ContainsGenericParameters)); // non-generic parameters
-
-            var fieldTypes = info.FieldType.GetGenericArguments();
-            methods = methods.Where(m =>
-                m.GetParameters().All(p => // all parameters are supported
-                    Argument.EnumOf(p.ParameterType) != Argument.ArgType.Null
-                        || fieldTypes.Any(f => p.ParameterType.IsAssignableFrom(f)))); // support as dynamic
-
-            if (isFunc)
-            {
-                var returnType = info.FieldType.GetGenericArguments()[0];
-                methods = methods.Where(m => returnType.IsAssignableFrom(m.ReturnType));
-                generics.RemoveAt(0);
-            }
-
-            var matching = methods.Where(m => GetMethodArgumentTypes(m).Intersect(generics).Count() == generics.Count);
-            //Debug.Log($"matching:{matching.Count()}");
-
-            return matching;
-        }
-        public static IEnumerable<PropertyInfo> GetProperties(FieldInfo info)
-        {
-            var generics = info.FieldType.GetGenericArguments().ToList();
-
-            var isProp = typeof(GamePropBase).IsAssignableFrom(info.FieldType);
-            var propType = info.FieldType.GetGenericArguments()[0];
-
-            var types = NGUI.GetRuntimeTypes()
-                .Where(t => t.IsPublic && !t.IsEnum);
-            var props = types.SelectMany(t => t.GetProperties(FLAGS_P))
-                .Where(p => p.PropertyType.Equals(propType));
-
-            return props;
-        }
-        public static IEnumerable<EventInfo> GetEvents(FieldInfo info)
-        {
-            var generics = info.FieldType.GetGenericArguments().ToList();
-
-            var types = NGUI.GetRuntimeTypes()
-                .Where(t => t.IsPublic && !t.IsEnum);
-
-            var attribute = info.GetCustomAttribute<PolymorphicAttribute>();
-
-            if (attribute.include != null)
-            {
-                types = attribute.include;
-            }
-            else if (attribute.exclude != null)
-            {
-                types = types.Where(t => !attribute.exclude.Contains(t));
-            }
-
-
-            var events = types.SelectMany(t => t.GetEvents(FLAGS_EVENTS));
-            var values = events.Select(e => (e, e.GetAddMethod())); // (EventInfo, MethodInfo)
-
-            values = values.Where(m =>
-                m.Item2.GetParameters().All(p => // all parameters are supported
-                    Argument.EnumOf(p.ParameterType) != Argument.ArgType.Null));
-
-
-            // ensure all parameters are matched, but in no specific order
-            var matching = values.Where(m => GetMethodArgumentTypes(m.Item2)
-                .Intersect(generics).Count() == generics.Count);
-
-            return values.Select(_ => _.Item1);
-        }
 
         public static List<Type> GetMethodArgumentTypes(MethodInfo method)
         {
