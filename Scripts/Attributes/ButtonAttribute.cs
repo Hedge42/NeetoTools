@@ -1,8 +1,12 @@
-﻿public class ButtonAttribute : System.Attribute
+﻿
+namespace Neeto
 {
-    public string label { get; private set; }
-    public ButtonAttribute(string label = null)
+    public class ButtonAttribute : System.Attribute
     {
-        this.label = label;
+        public string label { get; private set; }
+        public ButtonAttribute(string label = null)
+        {
+            this.label = label;
+        }
     }
 }

@@ -2,9 +2,12 @@
 using System;
 using System.Reflection;
 
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Class)]
-public class BindingFlagsAttribute : Attribute
+namespace Neeto
 {
-    public BindingFlags flags { get; set; }
-    public BindingFlagsAttribute(BindingFlags flags) => this.flags = flags;
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Class)]
+    public class BindingFlagsAttribute : Attribute
+    {
+        public BindingFlags flags { get; set; }
+        public BindingFlagsAttribute(BindingFlags flags) => this.flags = flags;
+    }
 }
