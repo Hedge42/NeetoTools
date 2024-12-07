@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 namespace Neeto
 {
+    [Icon("scene-template-dark")]
     [CreateAssetMenu(menuName = Menu.Main + nameof(ScriptableLoadingTask))]
     public class ScriptableLoadingTask : ScriptableObject
     {

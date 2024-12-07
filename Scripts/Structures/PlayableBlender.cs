@@ -6,36 +6,44 @@ using UnityEngine.Playables;
 
 namespace Neeto
 {
-    public class PlayableBlender
+    public struct PlayableBlender : IPlayable
     {
-        public PlayableGraph graph { get; private set; }
+        //public static implicit operator Playable(PlayableBlender _) => _.source;
+
         const int PREV = 0;
         const int NEXT = 1;
 
-        PlayableOutput output;
-        public Playable source
+        public PlayableGraph graph { get; private set; }
+        public Playable source { get; private set; }
+        public Playable current
         {
-            get => output.GetSourcePlayable();
-            private set => output.SetSourcePlayable(value);
+            get => source.GetInput(0);
+            set
+            {
+                if (current.IsValid())
+                    source.DisconnectInput(0);
+                source.ConnectInput(0, value, 0, 1);
+            }
         }
 
-        public PlayableBlender(Animator animator, PlayableGraph graph)
+        public PlayableBlender(PlayableGraph _graph)
         {
-            this.graph = graph;
-            output = AnimationPlayableOutput.Create(graph, animator.name, animator);
+            source = Playable.Create(graph = _graph, 1);
         }
         public void Blend(Playable next, CancellationToken token, float duration = .15f)
         {
-            if (!source.IsValid() || duration <= 0f)
+            if (!current.IsValid() || duration <= 0f)
             {
-                source = next;
+                current = next;
                 return;
             }
 
             var mixer = AnimationMixerPlayable.Create(graph, 2);
-            mixer.ConnectInput(PREV, source, 0, 1);
+            var prev = current;
+            current = mixer;
+            mixer.ConnectInput(PREV, prev, 0, 1);
             mixer.ConnectInput(NEXT, next, 0, 0);
-            source = mixer;
+            graph.Evaluate();
 
             Phase.Start(duration, PlayerLoopTiming.Update, token, t =>
             {
@@ -43,6 +51,8 @@ namespace Neeto
                 mixer.SetInputWeight(NEXT, t);
             });
         }
+
+        public PlayableHandle GetHandle() => source.GetHandle();
     }
 
 }

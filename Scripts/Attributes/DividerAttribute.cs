@@ -1,5 +1,4 @@
 using UnityEngine;
-using Neeto;
 
 
 #if UNITY_EDITOR
@@ -53,25 +52,21 @@ public class DividerAttributeDrawer : DecoratorDrawer
 }
 #endif
 
-namespace Neeto
+/// <summary>Draw a simple divider line in the inspector</summary>
+public class DividerAttribute : PropertyAttribute
 {
+    public bool after;
+    public int padding;
+    public int thickness;
+    public float brightness;
 
-    /// <summary>Draw a simple divider line in the inspector</summary>
-    public class DividerAttribute : PropertyAttribute
+    public DividerAttribute(bool after = true, int padding = 3, int thickness = 1, float brightness = .1f)
     {
-        public bool after;
-        public int padding;
-        public int thickness;
-        public float brightness;
-
-        public DividerAttribute(bool after = true, int padding = 3, int thickness = 1, float brightness = .1f)
-        {
-            this.after = after;
-            this.padding = padding;
-            this.thickness = thickness;
-            this.brightness = brightness;
-        }
-
-        public float totalHeight => (padding * 2) + thickness;
+        this.after = after;
+        this.padding = padding;
+        this.thickness = thickness;
+        this.brightness = brightness;
     }
+
+    public float totalHeight => (padding * 2) + thickness;
 }

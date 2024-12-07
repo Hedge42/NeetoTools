@@ -37,11 +37,25 @@ namespace Neeto
         [SerializeReference, Polymorphic]
         public ILoadAsync[] load;
 
-        bool hasAppContext => (loadOnEnable && !Application.isPlaying) || (loadAtRuntime && Application.isPlaying);
+        bool isValid => !faulted && (loadOnEnable && !Application.isPlaying) || (loadAtRuntime && Application.isPlaying);
+        bool faulted;
+
+        void Awake()
+        {
+            foreach (var task in load)
+            {
+                if (task is not ILoadAsync)
+                {
+                    faulted = true;
+                    Debug.Log($"Improper elements in {nameof(MultiScene)} '{name}'", this);
+                    return;
+                }
+            }
+        }
 
         void Start()
         {
-            if (hasAppContext)
+            if (isValid)
                 LoadScenes();
         }
         public async void LoadScenes()

@@ -1,27 +1,27 @@
 using UnityEngine;
 
-#if UNITY_EDITOR
-#endif
-
-public class LoadingEvent : MonoBehaviour
+namespace Neeto
 {
-    public bool loadOnEnable;
-    public LoadingTask task;
-
-    private void OnEnable()
+    public class LoadingEvent : MonoBehaviour
     {
-        if (loadOnEnable)
-            Load();
-    }
+        public bool loadOnEnable;
+        public LoadingTask task;
 
-    public void Load()
-    {
-        if (!enabled || task == null)
+        private void OnEnable()
         {
-            Debug.LogError($"'{name}' failed to load", this);
-            return;
+            if (loadOnEnable)
+                Load();
         }
 
-        task.Load();
+        public void Load()
+        {
+            if (!enabled || task == null)
+            {
+                Debug.LogError($"'{name}' failed to load", this);
+                return;
+            }
+
+            task.Load();
+        }
     }
 }

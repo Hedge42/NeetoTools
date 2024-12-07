@@ -139,11 +139,11 @@ namespace Neeto
     [Serializable]
     public class StartedAction : InputEvent
     {
-        //public GameAction<InputAction.CallbackContext> callback;
+        public GameAction callback;
         public override void Enable()
         {
             base.Enable();
-            //action.started += callback.Invoke;
+            action.started += _ => callback.Invoke();
         }
     }
 

@@ -9,53 +9,6 @@ using UnityEngine;
 
 namespace Neeto
 {
-    /// <summary>
-    /// Only here for the QuickAction test
-    /// </summary>
-    class SerializedMemberDrawer
-    {
-        [QuickAction] static void Open() => EditorWindow.GetWindow<Tester>();
-        class Tester : EditorWindow
-        {
-            public SerializedProperty<bool> BoolProp;
-            public SerializedEvent<bool> BoolEvent;
-            public SerializedEvent VoidEvent;
-            public SerializedAction MyAction;
-            public SerializedAction<int> MyActionWithParam;
-            Editor editor;
-
-            void OnGUI()
-            {
-                Editor.CreateCachedEditor(this, null, ref editor);
-                editor.OnInspectorGUI();
-
-                if (GUILayout.Button("Test Property..."))
-                {
-                    if (BoolProp.GetMember() != null)
-                    {
-                        Debug.Log(BoolProp.Value);
-                    }
-                }
-                if (GUILayout.Button("Subscribe to events..."))
-                {
-                    if (BoolEvent.GetMember() != null)
-                    {
-                        BoolEvent.AddListener(_ => { Debug.Log($"result: {_}"); });
-                    }
-                    if (VoidEvent.GetMember() != null)
-                    {
-                        VoidEvent.AddListener(() => { Debug.Log($"result: yay!"); });
-                    }
-                }
-                if (GUILayout.Button("Invoke Actions..."))
-                {
-                    MyAction.Invoke();
-                    MyActionWithParam.Invoke(42);
-                }
-            }
-        }
-    }
-
     public abstract class SerializedMemberDrawer<TMemberInfo> : PropertyDrawer where TMemberInfo : MemberInfo
     {
         static Dictionary<Type, MemberInfo[]> cache = new();

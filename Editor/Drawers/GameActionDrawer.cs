@@ -16,10 +16,9 @@ namespace Neeto
     [CustomPropertyDrawer(typeof(GameMethod), true)]
     public class GameActionDrawer : PropertyDrawer
     {
-        GameMethod target;
+        //GameMethod target;
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            target = property.GetProperValue(fieldInfo) as GameMethod;
             using (NGUI.Property(position, label, property))
             {
 
@@ -29,29 +28,23 @@ namespace Neeto
                 }
             }
 
-            if (!target.IsValid())
+            var target = property.GetProperValue(fieldInfo) as GameMethod;
+            if (target == null || !target.IsValid())
             {
                 EditorGUI.DrawRect(position, Color.red.With(a: .2f));
             }
         }
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var args = target.arguments;
             var argsProp = property.FindPropertyRelative(nameof(GameMethod.arguments));
-            var count = args.Length;
             var height = NGUI.FullLineHeight;
 
-            if (property.isExpanded && count > 0)
+            for (int i = 0; property.isExpanded && i < argsProp.arraySize; i++)
             {
-                for (int i = 0; i < count; i++)
-                {
-                    //var prop = argsProp.GetArrayElementAtIndex(i);
-                    
-                    var prop = ArgumentDrawer.GetSelectedProperty(argsProp.GetArrayElementAtIndex(i));
+                var prop = ArgumentDrawer.GetSelectedProperty(argsProp.GetArrayElementAtIndex(i));
 
-                    if (prop != null)
-                        height += EditorGUI.GetPropertyHeight(prop);
-                }
+                if (prop != null)
+                    height += EditorGUI.GetPropertyHeight(prop);
             }
 
             return height;

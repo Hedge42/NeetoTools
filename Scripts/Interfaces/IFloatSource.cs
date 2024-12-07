@@ -20,9 +20,9 @@ namespace Neeto
         public bool isAbsolute;
         [HideInInspector]
         public bool shouldMultiply;
-        [FieldToggle(nameof(shouldClamp))]
+        [InlineToggle(nameof(shouldClamp))]
         public Vector2 clampRange = Vector2.up;
-        [FieldToggle(nameof(shouldMultiply))]
+        [InlineToggle(nameof(shouldMultiply))]
         public float multiplyAmount = 1f;
 
         [SerializeReference, Polymorphic]
