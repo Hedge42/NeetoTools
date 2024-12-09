@@ -756,6 +756,33 @@ namespace Neeto
             sb.Append($"]({sum:f2})");
             return sb.ToString();
         }
+        public static void Disconnect(this Playable playable)
+        {
+            if (!playable.IsValid()) return;
+            var graph = playable.GetGraph();
+            if (graph.IsValid())
+                graph.Disconnect(playable, 0);
+        }
+        public static void Replace(this Playable original, Playable replacement)
+        {
+            if (!original.IsValid() || !replacement.IsValid()) return;
+
+            var graph = original.GetGraph();
+            if (!graph.IsValid()) return;
+
+            // Disconnect the original playable from all its inputs
+            for (int i = 0; i < original.GetInputCount(); i++)
+            {
+                var input = original.GetInput(i);
+                var weight = original.GetInputWeight(i);
+                graph.Disconnect(original, i);
+                graph.Connect(input, 0, replacement, i);
+                replacement.SetInputWeight(i, weight);
+            }
+
+            // Disconnect the original playable from all outputs
+            graph.Disconnect(original, 0);
+        }
         public static void DisconnectAndDestroy(this Playable mixer, int input)
         {
             var count = mixer.GetInputCount();
