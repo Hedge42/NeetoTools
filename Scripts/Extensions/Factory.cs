@@ -37,7 +37,7 @@ namespace Neeto
             {
                 if (_dic == null)
                 {
-                    _dic = new ();
+                    _dic = new();
                     SceneManager.activeSceneChanged += (_, _) => dic.Clear();
                 }
                 return _dic;

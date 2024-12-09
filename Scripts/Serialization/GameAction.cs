@@ -860,10 +860,23 @@ namespace Neeto
             if (field.TryGetAttribute<BindingFlagsAttribute>(out var f_attr))
                 flags |= f_attr.flags;
 
+            Type[] types = null;
+            Type returnType = null;
+            if (field.TryGetAttribute<ReflectionAttribute>(out var reflection))
+            {
+                if (reflection.scope != null)
+                    types = new [] { reflection.scope };
+                if (reflection.returnType != null)
+                    returnType = reflection.returnType;
+            }
+            types ??= NGUI.GetRuntimeTypes().ToArray();
 
-            var methods = NGUI.GetRuntimeTypes().GetMethods(flags)
+            var methods = types.GetMethods(flags)
                 .Where(m => !m.ContainsGenericParameters && (m.IsStatic || m.ReflectedType.IsSerializable) && !m.DeclaringType.ContainsGenericParameters
                 && !m.GetParameters().Any(p => p.ParameterType.IsGenericType || p.IsOut || p.IsRetval || p.IsLcid || p.IsIn || !p.ParameterType.IsSerializable || p.ParameterType.IsByRef || p.ParameterType.IsArray || typeof(Delegate).IsAssignableFrom(p.ParameterType)));
+
+            if (returnType != null)
+                methods = methods.Where(m => m.ReturnType.Equals(returnType));
 
             if (methods.Count() == 0)
             {
@@ -881,7 +894,7 @@ namespace Neeto
             // GameFunc requires first generic argument to be the return type
             else if (typeof(GameFuncBase).IsAssignableFrom(field.FieldType))
             {
-                var returnType = gs[0];
+                returnType ??= gs[0];
                 methods = methods.Where(m => returnType.IsAssignableFrom(m.ReturnType));
                 gs.RemoveAt(0);
             }
