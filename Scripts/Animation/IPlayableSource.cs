@@ -7,71 +7,14 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
-public class PlayableInstance
-{
-    public enum State
-    {
-        Playing,
-        Finished,
-        Cancelled,
-    }
-
-    public readonly PlayableController controller;
-    public readonly IPlayableSource source;
-    public readonly Playable playable;
-    private readonly Token token;
-
-    public event Action stopped;
-    public State state { get; set; }
-
-    public PlayableInstance(PlayableController controller, IPlayableSource source, CancellationToken token)
-    {
-        this.controller = controller;
-        this.source = source;
-        this.playable = source.GetPlayable(controller.graph);
-        this.token = Token.Create(token);
-        this.token.Register(Cancel);
-    }
-    public void Cancel()
-    {
-        if (!token)
-            return;
-
-        playable.Pause();
-        token.Cancel();
-        stopped?.Invoke();
-    }
-    public void Play()
-    {
-        if (!token)
-            return;
-
-        PlayAsync(token).Forget();
-    }
-    async UniTaskVoid PlayAsync(CancellationToken token)
-    {
-        controller.blender.Blend(playable, controller.enabledToken);
-        await source.PlayAsync(controller.animator, playable, token);
-        controller.Play(controller.BaseState);
-        Cancel();
-    }
-}
-
 public interface IPlayableSource
 {
-    Playable GetPlayable(PlayableGraph graph);
+    Playable CreatePlayable(PlayableGraph graph);
     UniTask PlayAsync(Animator animator, Playable playable, CancellationToken token);
 }
 
-public interface IPlayableListener
-{
-    UniTaskVoid ListenAsync(Animator animator, Playable playable, CancellationToken token);
-}
-public interface IPlayableLoop : IPlayableSource { }
-public interface IPlayableAction : IPlayableSource { }
-
 [Serializable]
-public class AnimatorControllerPlayableLoop : IPlayableLoop
+public class AnimatorControllerPlayableLoop : IPlayableSource
 {
     [field: SerializeField] public string name { get; set; } = "idle";
 
@@ -81,7 +24,7 @@ public class AnimatorControllerPlayableLoop : IPlayableLoop
     [SerializeReference, Polymorphic, ReorderableList(ListStyle.Boxed)]
     public ISourcedAnimatorValue[] values;
 
-    public Playable GetPlayable(PlayableGraph graph) => AnimatorControllerPlayable.Create(graph, asset);
+    public Playable CreatePlayable(PlayableGraph graph) => AnimatorControllerPlayable.Create(graph, asset);
     public async UniTask PlayAsync(Animator animator, Playable playable, CancellationToken token)
     {
         // animator = gameObject.CacheComponent<Animator>();
@@ -97,7 +40,7 @@ public class AnimatorControllerPlayableLoop : IPlayableLoop
 
 }
 [Serializable]
-public class AnimationClipPlayableAction : IPlayableAction
+public class AnimationClipPlayableAction : IPlayableSource
 {
     [field: SerializeField] public string name { get; set; } = "attack";
 
@@ -110,7 +53,7 @@ public class AnimationClipPlayableAction : IPlayableAction
     [MinMax(0f, 1f)] public Vector2 playWindow = Vector2.up;
     [SerializeReference, Polymorphic] public IPlayableListener[] events;
 
-    public Playable GetPlayable(PlayableGraph graph)
+    public Playable CreatePlayable(PlayableGraph graph)
     {
         clip.wrapMode = WrapMode.ClampForever;
         var playable = AnimationClipPlayable.Create(graph, clip);

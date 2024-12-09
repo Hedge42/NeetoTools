@@ -15,7 +15,7 @@ public class PlayableController : MonoBehaviour
     public Animator animator { get; set; }
 
     [field: SerializeField, SerializeReference, Polymorphic]
-    public IPlayableLoop BaseState { get; set; }
+    public IPlayableSource BaseState { get; set; }
 
     public PlayableGraph graph { get; protected set; }
     public PlayableOutput output { get; protected set; }
