@@ -1,6 +1,4 @@
-﻿using Neeto;
-using Cysharp.Threading.Tasks;
-using DG.Tweening;
+﻿using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 using UnityEngine.VFX;

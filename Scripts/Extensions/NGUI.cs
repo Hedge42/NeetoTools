@@ -1721,6 +1721,41 @@ namespace Neeto
         #endregion
 
         #region EVENTS
+        /// <summary> Returns true when objects were dropped on the rect </summary>
+        public static bool TryAcceptDragAndDrop(Rect dropArea, Type objectType, out Object[] droppedObjects)
+        {
+            droppedObjects = new Object[0];
+
+            var e = Event.current;
+            switch (e.type)
+            {
+                case EventType.DragUpdated:
+                case EventType.DragPerform:
+
+                    // get drag and drop references of the given type
+                    droppedObjects = DragAndDrop.objectReferences
+                        .Where(obj => objectType.IsAssignableFrom(obj.GetType()))
+                        .ToArray();
+
+                    if (droppedObjects.Length == 0 || !dropArea.Contains(e.mousePosition))
+                        break;
+
+                    // show drag and drop mouse icon if there are objects
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                    if (e.type != EventType.DragPerform)
+                        return false;
+
+                    // on drop
+                    DragAndDrop.AcceptDrag();
+                    e.Use();
+                    return true;
+
+                default:
+                    return false;
+            }
+
+            return false;
+        }
         public static bool ToolbarButton(GUIContent content)
         {
             return GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.Width(25));
