@@ -43,11 +43,7 @@ public class AnimatorControllerPlayableLoop : IPlayableSource
 public class AnimationClipPlayableAction : IPlayableSource
 {
     [field: SerializeField] public string name { get; set; } = "attack";
-
-    [PreviewAnimation(nameof(clip))]
-    public float preview;
-
-    public AnimationClip clip;
+    [PreviewAnimation] public AnimationClip clip;
     [Min(0f)] public float blendDuration = 0.1f;
     [Min(0f)] public float speed = 1f;
     [MinMax(0f, 1f)] public Vector2 playWindow = Vector2.up;

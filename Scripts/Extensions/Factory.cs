@@ -21,12 +21,14 @@ namespace Neeto
         public static T Cache<T>(T existing, Func<T> func) where T : class
             => existing == null ? func() : existing;
 
-        public static T CacheComponent<T>(this GameObject gameObject) where T : Component
-            => Factory<T>.CacheComponent(gameObject);
+        public static T GetCachedComponent<T>(this GameObject gameObject) where T : Component
+            => Factory<T>.GetCachedComponent(gameObject);
         public static void AddToCache<T>(this T component, bool removeOnDestroy = false) where T : Component
             => Factory<T>.AddToCache(component, removeOnDestroy);
         public static void RemoveFromCache<T>(this T component) where T : Component
             => Factory<T>.RemoveFromCache(component);
+        public static bool TryGetCachedComponent<T>(this GameObject gameObject, out T result, bool removeOnDestroy = true) where T : Component
+            => Factory<T>.TryGetCachedComponent(gameObject, out result, removeOnDestroy);
     }
     public static class Factory<T> where T : Component
     {
@@ -44,14 +46,14 @@ namespace Neeto
             }
         }
 
-        public static T CacheComponent(GameObject gameObject, bool removeOnDestroy = false)
+        public static T GetCachedComponent(GameObject gameObject, bool removeOnDestroy = false)
         {
             T component;
             if (dic.TryGetValue(gameObject, out component))
                 return component;
 
             dic[gameObject] = component = gameObject.GetComponent<T>();
-            if (removeOnDestroy)
+            if (component && removeOnDestroy)
                 gameObject.OnDestroy(() => RemoveFromCache(component));
             return component;
         }
@@ -67,5 +69,17 @@ namespace Neeto
         }
         public static void RemoveFromCache(T component)
             => dic.Remove(component.gameObject);
+
+        public static bool TryGetCachedComponent(GameObject gameObject, out T result, bool removeOnDestroy = true)
+        {
+            if (dic.ContainsKey(gameObject))
+            {
+                return result = dic[gameObject];
+            }
+            else
+            {
+                return result = dic[gameObject] = gameObject.GetComponent<T>();
+            }
+        }
     }
 }

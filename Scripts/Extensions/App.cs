@@ -916,9 +916,8 @@ namespace Neeto
         }
         public static void OnDestroy(this GameObject gameObject, UnityAction action)
         {
-            gameObject.GetOrAddComponent<OnDestroyEvent>().onDestroy.AddListener(action);
+            gameObject?.GetOrAddComponent<OnDestroyEvent>().onDestroy.AddListener(action);
         }
-
         public static void SetEnabled(bool value, params Behaviour[] components)
         {
             foreach (var _ in components)
@@ -974,6 +973,19 @@ namespace Neeto
         #endregion
 
         #region COLLECTIONS
+        public static bool TryPop<T>(this List<T> list, out T instance)
+        {
+            var result = list.Count > 0;
+            instance = default;
+            if (result)
+            {
+                instance = list[0];
+                list.RemoveAt(0);
+
+            }
+            return result;
+        }
+
         public static void SetValue<T1, T2>(this Dictionary<T1, T2> d, T1 key, T2 value)
         {
             if (d.ContainsKey(key))

@@ -53,6 +53,13 @@ namespace Neeto
             size.y = tmp.preferredHeight;
             tmp.rectTransform.sizeDelta = size;
         }
+
+        public static void IfTrue(this bool _, Action callback)
+        {
+            if (_ && callback != null)
+                callback();
+                
+        }
         #endregion RUNTIME
 
         #region RUNTIME_REFLECTION
