@@ -45,11 +45,12 @@ namespace Neeto
             mixer.ConnectInput(NEXT, next, 0, 0);
             graph.Evaluate();
 
-            Phase.Start(duration, PlayerLoopTiming.Update, token, t =>
+            Phase.StartAsync(duration, PlayerLoopTiming.Update, token, t =>
             {
                 mixer.SetInputWeight(PREV, 1 - t);
                 mixer.SetInputWeight(NEXT, t);
-            });
+            }).ContinueWith(() => mixer.DisconnectInput(PREV))
+            .Forget();
         }
         
 

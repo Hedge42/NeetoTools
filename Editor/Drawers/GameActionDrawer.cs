@@ -3,11 +3,14 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Text;
+using Rhinox.Lightspeed;
 #if UNITY_EDITOR
 using UnityEditor;
 using Toolbox.Editor;
 using Rhinox.Lightspeed.Editor;
 using Rhinox.Lightspeed.Reflection;
+using UnityDropdown.Editor;
 #endif
 
 namespace Neeto
@@ -24,7 +27,7 @@ namespace Neeto
 
                 if (HandleDropdownGUI(position.With(h: NGUI.LineHeight), property, label))
                 {
-                    HandleArgumentsGUI(position.Move(y: NGUI.FullLineHeight), property);
+                    HandleArgumentsGUI(position.Offset(y: NGUI.FullLineHeight), property);
                 }
             }
 
@@ -78,8 +81,6 @@ namespace Neeto
 
             var isExpandable = method != null && Arguments(property).arraySize > 0;
 
-
-
             if (target.IsValid() && target.arguments?.Length > 0)
             {
                 NGUI.IsExpanded(property, lbRect);
@@ -87,11 +88,86 @@ namespace Neeto
 
             if (EditorGUI.DropdownButton(ddRect.With(h: NGUI.LineHeight), content, FocusType.Passive))
             {
-                GameActionHelper.MethodDropdown(fieldInfo, GetMethod(property), _ => Switch(_, property, fieldInfo));
+                MethodDropdown(property, fieldInfo, GetMethod(property), _ => Switch(_, property, fieldInfo));
             }
             return isExpandable && property.isExpanded;
         }
+        public static void MethodDropdown(SerializedProperty property, FieldInfo fieldInfo, MethodInfo selected, Action<MethodInfo> onSelect)
+        {
+            var methods = (IEnumerable<MethodInfo>)default;
 
+            if (fieldInfo.TryGetAttribute<ReflectionFilterAttribute>(out var filter))
+            {
+                var target = property.GetDeclaringObject();
+                var filterMethod = target.GetType().GetMethod(filter.source);
+                target = filterMethod.IsStatic ? null : target;
+                methods = (IEnumerable<MethodInfo>)target.GetType().GetValue(target);
+            }
+            else
+            {
+                methods = NGUI.GetRuntimeTypes().GetMethods(GameAction.FLAGS_M);
+            }
+
+            var gs = fieldInfo.FieldType.GetGenericArguments();
+
+            if (typeof(GameAction).Equals(fieldInfo.FieldType))
+            {
+                methods = methods.Where(m => m.ReturnType.Equals(typeof(void)));
+            }
+            else if (typeof(GameFuncBase).IsAssignableFrom(fieldInfo.FieldType))
+            {
+                methods = methods.Where(m => fieldInfo.GetReturnType().IsAssignableFrom(m.ReturnType));
+                gs = gs.RemoveAt(0);
+            }
+            if (gs.Count() > 0)
+            {
+                methods = methods.Where(m => m.ContainsTargetableParameter(gs.ToArray()));
+            }
+            if (methods.Count() == 0)
+            {
+                Debug.LogError("No methods found!");
+                return;
+            }
+            else
+            {
+
+                var items = methods.Select(m => new DropdownItem<MethodInfo>(m, GetDisplayString(m))).ToList();
+                var menu = new DropdownMenu<MethodInfo>(items, onSelect, sortItems: true);
+
+                foreach (var _ in items)
+                {
+                    Debug.Log(_.Path);
+                }
+
+                menu.ShowAsContext();
+            }
+
+        }
+        public static string GetDisplayString(MethodInfo info)
+        {
+            if (info == null)
+                return "(none)";
+
+            var text = new StringBuilder();
+
+            // Append type name
+            var tt = info.DeclaringType;
+            text.Append($"{info.GetModuleName()}/{NGUI.GetDeclaringString(info.DeclaringType)}.");
+            text.Append(info.Name).Append(' ');
+            if (info.IsStatic)
+                text.Append('*');
+
+            // Append parameter types
+            var paramTypes = info.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}");
+            text.Append('(').Append(string.Join(",", paramTypes)).Append(')');
+
+            if (info.ReturnType != null)
+            {
+                text.Append($" => {info.ReturnType.Name}");
+            }
+
+            return text.ToString();
+        }
         public void HandleArgumentsGUI(Rect position, SerializedProperty property)
         {
             var size = Arguments(property).arraySize;

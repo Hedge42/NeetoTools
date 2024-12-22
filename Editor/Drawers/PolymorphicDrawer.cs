@@ -45,7 +45,7 @@ public class PolymorphicDrawer : PropertyDrawer
         var dropdownRect = EditorGUI.PrefixLabel(line, label);
         if (ScriptAttribute.TryFindScript(property.managedReferenceValue, out var script))
         {
-            dropdownRect = dropdownRect.Move(xMax: -22);
+            dropdownRect = dropdownRect.Offset(xMax: -22);
             var scriptRect = line.With(xMin: dropdownRect.xMax);
             if (GUI.Button(scriptRect, EditorGUIUtility.IconContent("d_TextScriptImporter Icon")))
             {
@@ -67,7 +67,7 @@ public class PolymorphicDrawer : PropertyDrawer
             {
                 dropdownRect.y += NGUI.FullLineHeight;
                 EditorGUI.indentLevel++;
-                property.DrawProperties(line.Move(y: NGUI.FullLineHeight));
+                property.DrawProperties(line.Offset(y: NGUI.FullLineHeight));
                 EditorGUI.indentLevel--;
             }
         }

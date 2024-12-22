@@ -13,7 +13,7 @@ public class PreviewAnimationAttribute : PropertyAttribute
     {
         private static GameObject lastSelectedObject;
 
-        float t;
+        float s;
 
         bool rootXZ;
         bool rootY = true;
@@ -30,9 +30,8 @@ public class PreviewAnimationAttribute : PropertyAttribute
             {
                 position.height = NGUI.LineHeight;
 
-                property.isExpanded = NGUI.IsExpanded(property, position, label);
 
-                EditorGUI.PropertyField(position, property, label);
+                EditorGUI.PropertyField(position.With(xMax: position.xMax - 20), property, label);
 
                 if (property.propertyType != SerializedPropertyType.ObjectReference)
                 {
@@ -40,7 +39,7 @@ public class PreviewAnimationAttribute : PropertyAttribute
                     return;
                 }
 
-
+                property.isExpanded = NGUI.IsExpanded(property, position.Offset(w: -NGUI.FieldWidth));
 
                 // Get the attribute and find the AnimationClip by field name
                 PreviewAnimationAttribute previewAttr = (PreviewAnimationAttribute)attribute;
@@ -52,9 +51,10 @@ public class PreviewAnimationAttribute : PropertyAttribute
                 {
                     if (Selection.activeGameObject?.GetComponent<Animator>() is Animator animator)
                     {
-                        animator.Rebind();
-                        animator.Update(0f); // Force immediate reset to T-pose or default pose
-                        EditorUtility.SetDirty(Selection.activeGameObject);
+                        animator.TPose();
+                        //animator.Rebind();
+                        //animator.Update(0f); // Force immediate reset to T-pose or default pose
+                        //EditorUtility.SetDirty(Selection.activeGameObject);
                         return;
                     }
                 }
@@ -70,12 +70,24 @@ public class PreviewAnimationAttribute : PropertyAttribute
 
                 EditorGUI.BeginChangeCheck();
                 EditorGUI.indentLevel++;
-                rootY = EditorGUI.ToggleLeft(position.With(xMin: position.xMax -= 50), new GUIContent("Y"), rootY);
-                rootXZ = EditorGUI.ToggleLeft(position.With(xMin: position.xMax -= 50), new GUIContent("XZ"), rootXZ);
+
+                var w = 42f;
+                var rect = new Rect(position);
+                rect.xMin = rect.xMax - (2 * w);
+                position.xMax -= rect.width;
+                rect.width = w;
+
+                var style = EditorStyles.centeredGreyMiniLabel.With(alignment: TextAnchor.MiddleRight);
+                rootY = EditorGUI.ToggleLeft(rect, GUIContent.none, rootY);
+                GUI.Label(rect.Offset(x: -14), "Y", style);
+                rect.x += rect.width;
+                rootXZ = EditorGUI.ToggleLeft(rect, GUIContent.none, rootXZ);
+                GUI.Label(rect.Offset(x: -14), "XZ", style);
+
 
                 AnimationClip clip = property.objectReferenceValue as AnimationClip;
                 if (clip)
-                    t = EditorGUI.Slider(position, t, 0f, 1f);
+                    s = EditorGUI.Slider(position, s, 0f, 1f);
                 else
                     EditorGUI.HelpBox(position, "Use with AnimationClip", MessageType.Error);
                 position.xMax -= 20;
@@ -92,28 +104,18 @@ public class PreviewAnimationAttribute : PropertyAttribute
 
                     if (animator)
                     {
-                        //var root = animator.applyRootMotion;
-                        // animator.applyRootMotion = false;
-
                         var hips = animator.GetBoneTransform(HumanBodyBones.Hips);
 
+                        var hipsPosition = hips.position;
 
-                        var hipsPosition = hips.localPosition;
+                        clip.SampleAnimation(target, s);
 
-                        //clip.
+                        var y = rootY ? hips.position.y : hipsPosition.y;
+                        var x = rootXZ ? hips.position.x : hipsPosition.x;
+                        var z = rootXZ ? hips.position.z : hipsPosition.z;
 
-                        clip.SampleAnimation(target, t);
+                        hips.position = new (x, y, z);
 
-                        if (!rootXZ) // reset XZ
-                            hips.localPosition = hipsPosition.With(y: hips.localPosition.y);
-                        if (!rootY) // reset y
-                            hips.localPosition = hips.localPosition.With(y: hipsPosition.y);
-
-
-                        // Sample the animation at the specified time only if Animator and AnimationClip are available
-                        //float time = t * clip.length;
-                        //AnimationMode.StartAnimationMode();
-                        //AnimationMode.SampleAnimationClip(target, clip, time);
                     }
                     else
                     {

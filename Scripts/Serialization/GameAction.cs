@@ -719,9 +719,6 @@ namespace Neeto
     public static class GameActionHelper
     {
         public const string NONE = "(none)";
-
-
-
         public static void Invoke(this GameAction[] actions)
         {
             for (int i = 0; i < actions.Length; i++)
@@ -730,32 +727,7 @@ namespace Neeto
                 actions[i].Invoke();
             }
         }
-
-        public static string GetDisplayPath(MethodInfo info)
-        {
-            if (info == null)
-                return NONE;
-
-            StringBuilder option = new StringBuilder();
-
-            // Append type name
-            var tt = info.DeclaringType;
-            option.Append($"{info.GetModuleName()}/{NGUI.GetDeclaringString(info.DeclaringType)}.");
-            option.Append(info.Name).Append(' ');
-            if (info.IsStatic)
-                option.Append('*');
-
-            // Append parameter types
-            var paramTypes = info.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}");
-            option.Append('(').Append(string.Join(",", paramTypes)).Append(')');
-
-            if (info.ReturnType != null)
-            {
-                option.Append($" => {info.ReturnType.Name}");
-            }
-
-            return option.ToString();
-        }
+        
         public static string GetDisplayPath(EventInfo info)
         {
             if (info == null)
@@ -850,64 +822,7 @@ namespace Neeto
 
             NGUI.ShowDropdown(onSelect, true, true, GameActionHelper.GetDisplayPath(selected), items);
         }
-        public static void MethodDropdown(FieldInfo field, MethodInfo selected, Action<MethodInfo> onSelect)
-        {
-            var flags = GameAction.FLAGS_M;
-
-            if (field.FieldType.TryGetAttribute<BindingFlagsAttribute>(out var f))
-                flags &= f.flags;
-
-            if (field.TryGetAttribute<BindingFlagsAttribute>(out var f_attr))
-                flags |= f_attr.flags;
-
-            Type[] types = null;
-            Type returnType = null;
-            if (field.TryGetAttribute<ReflectionAttribute>(out var reflection))
-            {
-                if (reflection.scope != null)
-                    types = new [] { reflection.scope };
-                if (reflection.returnType != null)
-                    returnType = reflection.returnType;
-            }
-            types ??= NGUI.GetRuntimeTypes().ToArray();
-
-            var methods = types.GetMethods(flags)
-                .Where(m => !m.ContainsGenericParameters && (m.IsStatic || m.ReflectedType.IsSerializable) && !m.DeclaringType.ContainsGenericParameters
-                && !m.GetParameters().Any(p => p.ParameterType.IsGenericType || p.IsOut || p.IsRetval || p.IsLcid || p.IsIn || !p.ParameterType.IsSerializable || p.ParameterType.IsByRef || p.ParameterType.IsArray || typeof(Delegate).IsAssignableFrom(p.ParameterType)));
-
-            if (returnType != null)
-                methods = methods.Where(m => m.ReturnType.Equals(returnType));
-
-            if (methods.Count() == 0)
-            {
-                Debug.LogError("No methods found!");
-                return;
-            }
-
-            var gs = field.FieldType.GetGenericArguments().ToList();
-
-            if (typeof(GameAction).Equals(field.FieldType))
-            {
-                methods = methods.Where(m => m.ReturnType.Equals(typeof(void)));
-            }
-
-            // GameFunc requires first generic argument to be the return type
-            else if (typeof(GameFuncBase).IsAssignableFrom(field.FieldType))
-            {
-                returnType ??= gs[0];
-                methods = methods.Where(m => returnType.IsAssignableFrom(m.ReturnType));
-                gs.RemoveAt(0);
-            }
-            if (gs.Count > 0)
-            {
-                methods = methods.Where(m => m.ContainsTargetableParameter(gs.ToArray()));
-            }
-            var items = methods.Select(method => (method, GetDisplayPath(method)))
-                .Where(_ => !_.Item2.Contains("&"))
-                .ToArray();
-
-            NGUI.ShowDropdown(onSelect, true, true, GetDisplayPath(selected), items);
-        }
+        
 
         public static string GetSearchName(MethodInfo info)
         {
@@ -965,11 +880,6 @@ namespace Neeto
 
             return option.ToString();
         }
-
-
-
-
-
     }
 
 #if UNITY_EDITOR

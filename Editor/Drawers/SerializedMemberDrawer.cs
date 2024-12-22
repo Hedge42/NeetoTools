@@ -51,7 +51,7 @@ namespace Neeto
                     EditorGUI.indentLevel++;
                     Undo.RecordObject(property.serializedObject.targetObject, "Set Member");
                     var targetType = value.GetMember().DeclaringType;
-                    value.target = EditorGUI.ObjectField(position.Move(y: NGUI.FullLineHeight), "target", value.target, targetType, true);
+                    value.target = EditorGUI.ObjectField(position.Offset(y: NGUI.FullLineHeight), "target", value.target, targetType, true);
 
                     // helper to try get component if it is null
                     if (!value.target)

@@ -40,9 +40,9 @@ namespace Neeto
 
                     // show listeners count
                     text += $") [{(property.GetProperValue(fieldInfo) as UnityEventBase).GetPersistentListeners().Count}]";
-                    position = position.Move(xMin: 2f);
+                    position = position.Offset(xMin: 2f);
                     EditorGUI.DrawRect(position, Color.black * .25f);
-                    EditorGUI.LabelField(position.Move(xMin: 5f), text);
+                    EditorGUI.LabelField(position.Offset(xMin: 5f), text);
                 }
             }
         }

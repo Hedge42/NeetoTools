@@ -30,7 +30,7 @@ namespace Neeto
 
                     EditorGUI.BeginChangeCheck();
                     var reference = EditorGUI.ObjectField(position, label, property.objectReferenceValue, typeof(Object), true);
-                    EditorGUI.LabelField(position.Move(xMax: -25), referenceType.Name, EditorStyles.label.With(alignment: TextAnchor.MiddleRight));
+                    EditorGUI.LabelField(position.Offset(xMax: -25), referenceType.Name, EditorStyles.label.With(alignment: TextAnchor.MiddleRight));
                     if (EditorGUI.EndChangeCheck())
                     {
                         if (reference == null)

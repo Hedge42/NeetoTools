@@ -14,7 +14,7 @@ namespace Neeto
             {
                 var attribute = base.attribute as InlineToggleAttribute;
                 var toggleProperty = property.FindSiblingProperty(attribute.fieldName);
-                var fieldRect = EditorGUI.PrefixLabel(position.Move(xMin: 17), label).Move(xMin: -30);
+                var fieldRect = EditorGUI.PrefixLabel(position.Offset(xMin: 17), label).Offset(xMin: -30);
 
                 EditorGUI.PropertyField(fieldRect, property, GUIContent.none);
                 if (!(toggleProperty.boolValue = EditorGUI.ToggleLeft(position, GUIContent.none, toggleProperty.boolValue)))

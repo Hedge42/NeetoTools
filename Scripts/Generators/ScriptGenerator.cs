@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using System.Reflection;
 using System.Collections.Generic;
+using System;
+using Object = UnityEngine.Object;
 using UnityEngine.AddressableAssets;
 
 #if UNITY_EDITOR
@@ -18,7 +20,6 @@ namespace Neeto
     {
         private static readonly Regex InvalidCharsRgx = new Regex(@"[^a-zA-Z0-9]", RegexOptions.Compiled);
         private static readonly Regex StartingCharsRgx = new Regex(@"^[^a-zA-Z]*", RegexOptions.Compiled);
-
 
         public static string GenerateTags()
         {
@@ -162,8 +163,67 @@ namespace Neeto
             return sb.ToString();
         }
 
+
+
+        public static IEnumerable<string> AddressableAssetPaths(string folderPath = null)
+        {
+            /*
+             uses reflection so an editor assembly is not referenced 
+             */
+
+            var settingsType = Type.GetType("UnityEditor.AddressableAssets.Settings.AddressableAssetSettings, Unity.Addressables.Editor");
+            if (settingsType == null)
+            {
+                Debug.LogError("AddressableAssetSettings type not found. Ensure the Addressables package is installed.");
+                yield break;
+            }
+
+            var defaultSettingsProperty = settingsType.GetProperty("DefaultObject", BindingFlags.Public | BindingFlags.Static);
+            var settingsObject = defaultSettingsProperty?.GetValue(null);
+            if (settingsObject == null)
+            {
+                Debug.LogError("Could not retrieve AddressableAssetSettingsDefaultObject.");
+                yield break;
+            }
+
+            var settings = settingsObject.GetType().GetProperty("Settings", BindingFlags.Public | BindingFlags.Instance)?.GetValue(settingsObject);
+            if (settings == null)
+            {
+                Debug.LogError("AddressableAssetSettings not found.");
+                yield break;
+            }
+
+            var groupsProperty = settings.GetType().GetProperty("groups", BindingFlags.Public | BindingFlags.Instance);
+            var groups = groupsProperty?.GetValue(settings) as IEnumerable<object>;
+            if (groups == null) yield break;
+
+            foreach (var group in groups)
+            {
+                var entriesProperty = group.GetType().GetProperty("entries", BindingFlags.Public | BindingFlags.Instance);
+                var entries = entriesProperty?.GetValue(group) as IEnumerable<object>;
+                if (entries == null) continue;
+
+                foreach (var entry in entries)
+                {
+                    var assetPathProperty = entry.GetType().GetProperty("AssetPath", BindingFlags.Public | BindingFlags.Instance);
+                    var assetPath = assetPathProperty?.GetValue(entry) as string;
+                    if (!assetPath.IsEmpty()
+                        && (folderPath.IsEmpty() || assetPath.Contains(folderPath)))
+                    {
+                        yield return assetPath;
+                    }
+                }
+            }
+        }
+
         public static void OverwriteRegion(TextAsset script, string region, string content)
         {
+            if (!script)
+            {
+                Debug.LogError($"Null script passed to OverwriteRegion");
+                return;
+            }    
+
             string startRegion = $"#region {region}";
             string endRegion = "#endregion";
             string scriptText = script.text;
@@ -231,8 +291,23 @@ namespace Neeto
             if (source == null || target == null)
                 return false;
 
+
             // Check if the script assembly directly references the target assembly
             return source.GetReferencedAssemblies().Any(a => a.FullName == target.FullName);
         }
+
+    }
+
+#if UNITY_EDITOR
+    [InitializeOnLoad]
+#endif
+    public class ScriptGeneratorAttribute : Attribute
+    {
+#if UNITY_EDITOR
+        [QuickMenu("Run Script Generation", order = 696969)]
+        public static void RunScriptGeneration() => 
+            TypeCache.GetMethodsWithAttribute<ScriptGeneratorAttribute>()
+                .Foreach(method => method.Invoke(null, null));
+#endif
     }
 }

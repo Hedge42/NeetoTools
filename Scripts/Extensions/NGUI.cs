@@ -58,7 +58,7 @@ namespace Neeto
         {
             if (_ && callback != null)
                 callback();
-                
+
         }
         #endregion RUNTIME
 
@@ -925,6 +925,29 @@ namespace Neeto
             }
             return list.ToArray();
         }
+        public static bool TryAdd<inT, outT>(this Dictionary<inT, outT> _, inT key, outT value)
+        {
+            bool added = false;
+            if (_ != null && (added = !_.ContainsKey(key)))
+                _.Add(key, value);
+            return added;
+        }
+        public static outT TryRemove<inT, outT>(this Dictionary<inT, outT> _, inT key)
+        {
+            if (_ != null && _.TryGetValue(key, out var value))
+            {
+                _.Remove(key);
+                return value;
+            }
+
+            return default;
+        }
+        public static outT GetOrCreate<inT, outT>(this Dictionary<inT, outT> _, inT key) where outT : new()
+        {
+            if (!_.TryGetValue(key, out var instance))
+                instance = new();
+            return instance;
+        }
         #endregion
 
 #if UNITY_EDITOR
@@ -933,6 +956,7 @@ namespace Neeto
         public static object buffer;
         public static float IndentWidth => 17f;
         public static float FullLineHeight => LineHeight + VerticalSpacing;
+        public static float FieldWidth => EditorGUIUtility.fieldWidth;
         public static float LineHeight => EditorGUIUtility.singleLineHeight;
         public static float LabelWidth => EditorGUIUtility.labelWidth;
         public static float ButtonWidth => 22f;
@@ -941,6 +965,7 @@ namespace Neeto
         public static Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public static GUIContent locked => EditorGUIUtility.IconContent("Locked@2x");
         public static GUIContent unlocked => EditorGUIUtility.IconContent("Unlocked@2x");
+        public static GUIContent LockedOrUnlocked(bool isLocked) => isLocked ? locked : unlocked;
         public static GUIContent settings => EditorGUIUtility.IconContent("d_SettingsIcon@2x");
         public static GUIContent select => EditorGUIUtility.IconContent("d_scenepicking_pickable_hover@2x");
         public static GUIContent refresh => EditorGUIUtility.IconContent("d_Refresh@2x");
@@ -949,6 +974,7 @@ namespace Neeto
         public static GUIContent sceneIn => EditorGUIUtility.IconContent("SceneLoadIn");
         public static GUIContent hidden => EditorGUIUtility.IconContent("scenevis_hidden@2x");
         public static GUIContent visible => EditorGUIUtility.IconContent("d_animationvisibilitytoggleon@2x");
+        public static GUIContent HiddenOrVisible(bool isVisible) => isVisible ? visible : hidden;
         #endregion
 
         #region USING_SCOPES
@@ -1207,30 +1233,21 @@ namespace Neeto
             }
             return null;
         }
-        public static TextAsset FindScript(this Action action)
+        public static TextAsset TraceToScript(this Action action)
         {
             return FindScriptAsset(action.Method);
         }
         public static TextAsset FindScript(this Type type)
         {
-            if (type == null)
-                throw new System.ArgumentException("f u");
-
-            var stackTrace = new StackTrace(true);
-            foreach (var frame in stackTrace.GetFrames())
-            {
-                if (frame.GetType() == type)
-                {
-                    string filePath = frame.GetFileName();
-                    if (!string.IsNullOrEmpty(filePath))
-                    {
-                        var assetPath = SystemToAssetPath(filePath);
-                        return AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
-                    }
-                }
-            }
-            return null;
+            /*
+             return first MonoScript whose GetClass function returns this type
+             */
+            return AssetDatabase.FindAssets("t:monoscript")
+                .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
+                .Select(path => AssetDatabase.LoadAssetAtPath<MonoScript>(path))
+                .FirstOrDefault(script => script && type.Equals(script.GetClass()));
         }
+
 
         #endregion
 
@@ -1248,6 +1265,9 @@ namespace Neeto
                 .Where(asset => asset);
         }
         public static string GetAssetPath(this Object _) => AssetDatabase.GetAssetPath(_);
+        public static string GetAssetDirectory(this Object _) => Path.GetDirectoryName(GetAssetPath(_)).Replace('\\', '/') + "/";
+        public static string GetScriptDirectory(Type scriptType) => GetAssetDirectory(FindScript(scriptType));
+        public static string GetScriptDirectory(Action method) => GetAssetDirectory(TraceToScript(method));
         public static T LoadAssetFromGUID<T>(string guid) where T : UnityEngine.Object
         {
             return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
@@ -1560,7 +1580,7 @@ namespace Neeto
 
             return rect;
         }
-        public static Rect Move(this Rect rect, Vector2? position = null, Vector2? size = null, float? x = null, float? y = null, float? w = null, float? h = null, float? xMin = null, float? xMax = null, float? yMin = null, float? yMax = null, Vector2? min = null, Vector2? max = null)
+        public static Rect Offset(this Rect rect, Vector2? position = null, Vector2? size = null, float? x = null, float? y = null, float? w = null, float? h = null, float? xMin = null, float? xMax = null, float? yMin = null, float? yMax = null, Vector2? min = null, Vector2? max = null)
         {
             if (y is float Y)
             {
@@ -1620,7 +1640,7 @@ namespace Neeto
 
             return rect;
         }
-        public static RectInt Move(this RectInt rect, Vector2Int? position = null, Vector2Int? size = null, int? x = null, int? y = null, int? width = null, int? height = null, int? xMin = null, int? xMax = null, int? yMin = null, int? yMax = null, Vector2Int? min = null, Vector2Int? max = null)
+        public static RectInt Offset(this RectInt rect, Vector2Int? position = null, Vector2Int? size = null, int? x = null, int? y = null, int? width = null, int? height = null, int? xMin = null, int? xMax = null, int? yMin = null, int? yMax = null, Vector2Int? min = null, Vector2Int? max = null)
         {
             if (y.HasValue)
             {
@@ -2101,6 +2121,13 @@ namespace Neeto
         {
             label ??= GUIContent.none;
             return property.isExpanded = EditorGUI.Foldout(position.With(h: LineHeight), property.isExpanded, label, true);
+        }
+        public static bool IsPrefixExpanded(this SerializedProperty property, ref Rect position, GUIContent label)
+        {
+            position.height = NGUI.LineHeight;
+            var result = property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, label, true);
+
+            return result;
         }
         public static bool GetArrayProperty(this SerializedProperty property, out SerializedProperty arrayProperty)
         {

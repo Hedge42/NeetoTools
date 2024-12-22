@@ -782,7 +782,7 @@ namespace Neeto
         public static void TPose(this Animator animator)
         {
             animator.Rebind();
-            animator.Update(0f); // Force immediate reset to T-pose or default pose
+            //animator.Update(0f); // Force immediate reset to T-pose or default pose
 #if UNITY_EDITOR
             EditorUtility.SetDirty(Selection.activeGameObject);
 #endif
