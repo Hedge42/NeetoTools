@@ -20,6 +20,12 @@ namespace Neeto
     {
         void Perform();
     }
+
+    public interface IReflectionSource
+    {
+        IEnumerable<MemberInfo> GetMembers();
+    }
+
     [Serializable]
     public class ScriptedAction : IScriptedAction
     {
@@ -27,19 +33,19 @@ namespace Neeto
         public string excludeAssemblyNames;
         public string excludeTypeNames;
 
-        [ReflectionFilter(nameof(DoReflection))]
+        [ReflectionFilter(factoryMethod: nameof(GetMembers))]
         public GameAction action;
 
-        public IEnumerable<MemberInfo> DoReflection()
+        IEnumerable<MemberInfo> GetMembers()
         {
             var assemblies = NGUI.RuntimeAssemblies;
             if (!excludeAssemblyNames.IsEmpty())
-                assemblies = assemblies.Where(_ => _.GetName().ToString().ToLower().Contains(excludeAssemblyNames));
+                assemblies = assemblies.Where(_ => _.GetName().ToString().ContainsInvariant(excludeAssemblyNames));
 
             var types = assemblies.SelectMany(_ => _.GetTypes());
             if (!excludeTypeNames.IsEmpty())
-                types = types.Where(type => excludeTypeNames.ToLower().Split(',')
-                    .All(typeName => !type.FullName.Contains(typeName)));
+                types = types.Where(type => excludeTypeNames.Split(',')
+                    .All(typeName => !type.FullName.ContainsInvariant(typeName)));
 
             var members = types.SelectMany(type => type.GetMethods(flags))
                 .Where(method => method.IsStatic && method.GetParameters().Length == 0);

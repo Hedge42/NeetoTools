@@ -99,7 +99,7 @@ namespace Neeto
             if (fieldInfo.TryGetAttribute<ReflectionFilterAttribute>(out var filter))
             {
                 var target = property.GetDeclaringObject();
-                var filterMethod = target.GetType().GetMethod(filter.source);
+                var filterMethod = target.GetType().GetMethod(filter.memberFactory);
                 target = filterMethod.IsStatic ? null : target;
                 methods = (IEnumerable<MethodInfo>)target.GetType().GetValue(target);
             }

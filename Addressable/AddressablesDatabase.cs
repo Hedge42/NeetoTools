@@ -107,7 +107,7 @@ namespace Neeto
 #if UNITY_EDITOR
         [ScriptGenerator]
         static void GenerateReferences() =>
-            GenerateReferences(NGUI.TraceToScript(GenerateReferences));
+            GenerateReferences(NGUI.FindScript(GenerateReferences));
 
         public static void GenerateReferences(TextAsset script)
         {

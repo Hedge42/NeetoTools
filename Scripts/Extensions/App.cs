@@ -985,6 +985,16 @@ namespace Neeto
             }
             return result;
         }
+        public static T Pop<T>(this List<T> list)
+        {
+            if (list?.Count > 0)
+            {
+                var instance = list[0];
+                list.RemoveAt(0);
+                return instance;
+            }
+            return default;
+        }
 
         public static void SetValue<T1, T2>(this Dictionary<T1, T2> d, T1 key, T2 value)
         {

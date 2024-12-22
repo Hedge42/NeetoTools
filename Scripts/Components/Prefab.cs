@@ -1,44 +1,41 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Neeto
 {
-    public class Prefab : MonoBehaviour
+    [DisallowMultipleComponent]
+    public abstract class Prefab : MonoBehaviour
     {
-        static readonly Dictionary<GameObject, Queue<GameObject>> registry = new();
+        static readonly Dictionary<GameObject, List<GameObject>> registry = new();
 
-        public static bool HasInstances(GameObject prefab)
+        protected virtual void OnDestroy()
         {
-            return registry.TryGetValue(prefab, out var pool) 
-                && pool.Count > 0;
+            registry[gameObject].Remove(gameObject);
+            registry.Remove(gameObject);
         }
-
-        public static void Return(GameObject prefab, GameObject instance)
+        public static void Return(GameObject instance)
         {
-            if (!prefab || !instance)
-                return;
-
-            var pool = registry.ContainsKey(prefab)
-                ? registry[prefab]
-                : new();
-
-            pool.Enqueue(instance);
+            if (registry.TryGetValue(instance, out var list))
+                list.Add(instance);
         }
-        public static GameObject Spawn(GameObject prefab)
+        public static GameObject Instantiate(GameObject prefab)
         {
-            return HasInstances(prefab)
-                ? registry[prefab].Dequeue()
+            if (!registry.TryGetValue(prefab, out var pool))
+                pool = registry[prefab] = new();
+
+            var instance = pool.Count > 0
+                ? registry[prefab].Pop()
                 : GameObject.Instantiate(prefab);
+
+            registry[instance] = pool;
+            return instance;
+        }
+        public static new T Instantiate<T>(T prefab) where T : Component
+        {
+            return Instantiate(prefab.gameObject)?.GetComponent<T>();
         }
 
-        public static T Spawn<T>(T prefab) where T : Component
-        {
-            return Spawn(prefab.gameObject)?.GetComponent<T>();
-        }
-        public static void Return<T>(T prefab, T instance) where T : Component
-        {
-            Return(prefab.gameObject, instance.gameObject);
-        }
     }
 }

@@ -913,6 +913,13 @@ namespace Neeto
         }
         #endregion
 
+        #region strings
+        public static bool ContainsInvariant(this string s1, string s2)
+        {
+            return s1.ToLower().Contains(s2.ToLower());
+        }
+        #endregion
+
         #region IDK
         public static string[] GetLayerNames()
         {
@@ -1211,7 +1218,7 @@ namespace Neeto
             }
         }
 
-        public static TextAsset FindScriptAsset(this MethodInfo method)
+        public static TextAsset FindScript(this MethodInfo method)
         {
             if (method == null)
                 throw new System.ArgumentException("f u");
@@ -1233,9 +1240,9 @@ namespace Neeto
             }
             return null;
         }
-        public static TextAsset TraceToScript(this Action action)
+        public static TextAsset FindScript(this Action action)
         {
-            return FindScriptAsset(action.Method);
+            return FindScript(action.Method);
         }
         public static TextAsset FindScript(this Type type)
         {
@@ -1267,7 +1274,7 @@ namespace Neeto
         public static string GetAssetPath(this Object _) => AssetDatabase.GetAssetPath(_);
         public static string GetAssetDirectory(this Object _) => Path.GetDirectoryName(GetAssetPath(_)).Replace('\\', '/') + "/";
         public static string GetScriptDirectory(Type scriptType) => GetAssetDirectory(FindScript(scriptType));
-        public static string GetScriptDirectory(Action method) => GetAssetDirectory(TraceToScript(method));
+        public static string GetScriptDirectory(Action method) => GetAssetDirectory(FindScript(method));
         public static T LoadAssetFromGUID<T>(string guid) where T : UnityEngine.Object
         {
             return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
